@@ -1,0 +1,63 @@
+# ========================================================
+# LINGLOW / VIDEO NARRATOR AI - .GITIGNORE
+# ========================================================
+
+# Secret Environment Files
+.env
+*.env
+*.env.local
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+[Pp]ublish_single/
+dist_package/
+single_file/
+Output_Installer/
+
+# Binaries & Executables (100MB+ FFmpeg and single-file build outputs)
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdb
+*.msi
+Assets/ffmpeg/*.exe
+VideoNarrator/Assets/ffmpeg/*.exe
+!**/Assets/ffmpeg/.gitkeep
+!**/VideoNarrator/Assets/ffmpeg/.gitkeep
+
+# Visual Studio & IDE cache
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+
+# Logs & Temporary debug & media files
+*.log
+*.tmp
+temp_*
+test_frame.jpg
+thumb_test.jpg
+title_bar_crop.png
+tiktok_info.json
+test_report.txt
+test_video_result.txt
+test_req*.json
+*.wav
+*.flac
+*.mp3
+*.mp4
+*.m4a
+*.aac
+*.avi
+*.mkv
+*.webm
+app_preview.png
+screenshot_test.png
+
+# Microsoft WebView2 XML docs (if build generated)
+Microsoft.Web.WebView2.*.xml

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 200" width="100%" height="100%">
+  <defs>
+    <!-- Vibrant Modern Gradients -->
+    <linearGradient id="linglowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <linearGradient id="glowEffect" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366F1" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.3" />
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background subtle glow -->
+  <rect x="25" y="25" width="150" height="150" rx="36" fill="url(#glowEffect)" filter="url(#softGlow)" />
+
+  <!-- Clean Icon Container -->
+  <rect x="35" y="35" width="130" height="130" rx="32" fill="#18181B" stroke="#27272A" stroke-width="2" />
+
+  <!-- Stylized Minimalist Geometric "L" & Play Spark -->
+  <g transform="translate(68, 64)">
+    <!-- Vertical stem of L -->
+    <rect x="0" y="0" width="16" height="72" rx="8" fill="url(#linglowGrad)" />
+    <!-- Horizontal base of L -->
+    <rect x="0" y="56" width="56" height="16" rx="8" fill="url(#linglowGrad)" />
+    <!-- Dynamic Play Beam / Spark Triangle -->
+    <path d="M 28 22 L 54 36 L 28 50 Z" fill="url(#linglowGrad)" />
+    <!-- Glowing core dot -->
+    <circle cx="56" cy="18" r="5" fill="#38BDF8" />
+  </g>
+
+  <!-- Typography -->
+  <!-- Main Brand Name -->
+  <text x="195" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', sans-serif" font-size="74" font-weight="800" letter-spacing="-1.5" fill="#FFFFFF">
+    LING<tspan fill="url(#linglowGrad)">LOW</tspan>
+  </text>
+
+  <!-- Tagline / Subtitle -->
+  <text x="200" y="148" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="4" fill="#94A3B8">
+    AUTONOMOUS AI VIDEO STUDIO &amp; SHORTS ENGINE
+  </text>
+</svg>

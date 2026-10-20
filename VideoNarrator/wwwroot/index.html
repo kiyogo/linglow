@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Narrator AI - Studio Tự Động Hóa Video</title>
+    <!-- Modern Typography: Google Fonts (Inter, Roboto, Outfit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==================== BESPOKE VECTOR SVG ICON SYSTEM ==================== -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="icon-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="currentColor" fill-opacity="0.25"/>
+            <path d="M19 3L19.8 5.2L22 6L19.8 6.8L19 9L18.2 6.8L16 6L18.2 5.2L19 3Z" fill="currentColor"/>
+        </symbol>
+        <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4.5" fill="currentColor" fill-opacity="0.25"/>
+            <line x1="12" y1="1.5" x2="12" y2="3.5"/>
+            <line x1="12" y1="20.5" x2="12" y2="22.5"/>
+            <line x1="4.5" y1="4.5" x2="6" y2="6"/>
+            <line x1="18" y1="18" x2="19.5" y2="19.5"/>
+            <line x1="1.5" y1="12" x2="3.5" y2="12"/>
+            <line x1="20.5" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.5" y1="19.5" x2="6" y2="18"/>
+            <line x1="18" y1="6" x2="19.5" y2="4.5"/>
+        </symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor" fill-opacity="0.25"/>
+        </symbol>
+        <symbol id="icon-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 6C2 4.9 2.9 4 4 4H9L11 6H20C21.1 6 22 6.9 22 8V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6Z" fill="currentColor" fill-opacity="0.15"/>
+            <path d="M2 10H22L20 20H4L2 10Z" fill="currentColor" fill-opacity="0.3"/>
+        </symbol>
+        <symbol id="icon-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19C22 20.1 21.1 21 20 21H4C2.9 21 2 20.1 2 19V5C2 3.9 2.9 3 4 3H9L11 5H20C21.1 5 22 5.9 22 7V19Z" fill="currentColor" fill-opacity="0.25"/>
+        </symbol>
+        <symbol id="icon-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.2" fill="currentColor" fill-opacity="0.25"/>
+            <path d="M19.4 15A1.65 1.65 0 0 0 19.7 16.8L20 17.3A2 2 0 1 1 17.3 20L16.8 19.7A1.65 1.65 0 0 0 15 19.4A1.65 1.65 0 0 0 13.6 20.6V21.4A2 2 0 1 1 9.6 21.4V20.6A1.65 1.65 0 0 0 8.2 19.4A1.65 1.65 0 0 0 6.4 19.7L5.9 20A2 2 0 1 1 3.2 17.3L3.5 16.8A1.65 1.65 0 0 0 3.2 15A1.65 1.65 0 0 0 2 13.6H1.2A2 2 0 1 1 1.2 9.6H2A1.65 1.65 0 0 0 3.2 8.2A1.65 1.65 0 0 0 2.9 6.4L2.6 5.9A2 2 0 1 1 5.3 3.2L5.8 3.5A1.65 1.65 0 0 0 7.6 3.2A1.65 1.65 0 0 0 9 2V1.2A2 2 0 1 1 13 1.2V2A1.65 1.65 0 0 0 14.4 3.2A1.65 1.65 0 0 0 16.2 2.9L16.7 2.6A2 2 0 1 1 19.4 5.3L19.1 5.8A1.65 1.65 0 0 0 19.4 7.6A1.65 1.65 0 0 0 20.8 9H21.6A2 2 0 1 1 21.6 13H20.8A1.65 1.65 0 0 0 19.4 15Z"/>
+        </symbol>
+        <symbol id="icon-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7" fill="currentColor" fill-opacity="0.3"/>
+            <rect x="1" y="5" width="15" height="14" rx="2.5" ry="2.5" fill="currentColor" fill-opacity="0.18"/>
+        </symbol>
+        <symbol id="icon-magic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4.5L19.5 9.5L6.5 22.5L1.5 17.5L14.5 4.5Z" fill="currentColor" fill-opacity="0.2"/>
+            <path d="M12 2L13 5L16 6L13 7L12 10L11 7L8 6L11 5L12 2Z" fill="currentColor"/>
+            <path d="M19 13L19.5 14.5L21 15L19.5 15.5L19 17L18.5 15.5L17 15L18.5 14.5L19 13Z" fill="currentColor"/>
+        </symbol>
+        <symbol id="icon-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2C10.3 2 9 3.3 9 5V11C9 12.7 10.3 14 12 14C13.7 14 15 12.7 15 11V5C15 3.3 13.7 2 12 2Z" fill="currentColor" fill-opacity="0.25"/>
+            <path d="M19 10V11C19 14.9 15.9 18 12 18C8.1 18 5 14.9 5 11V10"/>
+            <line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="8" y1="22" x2="16" y2="22"/>
+        </symbol>
+        <symbol id="icon-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"/>
+            <line x1="4" y1="10" x2="4" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12" y2="3"/>
+            <line x1="20" y1="21" x2="20" y2="16"/>
+            <line x1="20" y1="12" x2="20" y2="3"/>
+            <line x1="1" y1="14" x2="7" y2="14"/>
+            <line x1="9" y1="8" x2="15" y2="8"/>
+            <line x1="17" y1="16" x2="23" y2="16"/>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+        </symbol>
+        <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.2"/>
+            <polyline points="8 12 11 15 16 9"/>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 16L12 12L8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9H16.74A8 8 0 1 0 3 16.3"/>
+            <polyline points="16 16 12 12 8 16"/>
+        </symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </symbol>
+        <symbol id="icon-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.15"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+        </symbol>
+        <symbol id="icon-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3" fill="currentColor" fill-opacity="0.18"/>
+            <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/>
+        </symbol>
+        <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </symbol>
+        <symbol id="icon-caret-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+        </symbol>
+        <symbol id="icon-waveform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="10" x2="3" y2="14"/>
+            <line x1="7" y1="6" x2="7" y2="18"/>
+            <line x1="11" y1="3" x2="11" y2="21"/>
+            <line x1="15" y1="8" x2="15" y2="16"/>
+            <line x1="19" y1="5" x2="19" y2="19"/>
+            <line x1="23" y1="11" x2="23" y2="13"/>
+        </symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="6 4 20 12 6 20 6 4"/>
+        </symbol>
+        <symbol id="icon-pause" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1.2"/>
+            <rect x="14" y="4" width="4" height="16" rx="1.2"/>
+        </symbol>
+        <symbol id="icon-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3" fill="currentColor" fill-opacity="0.25"/>
+            <circle cx="6" cy="18" r="3" fill="currentColor" fill-opacity="0.25"/>
+            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+        </symbol>
+        <symbol id="icon-crop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/>
+            <path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/>
+        </symbol>
+        <symbol id="icon-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="currentColor" fill-opacity="0.2"/>
+            <circle cx="12" cy="13" r="4" fill="currentColor" fill-opacity="0.15"/>
+        </symbol>
+        <symbol id="icon-subtitles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3" fill="currentColor" fill-opacity="0.15"/>
+            <line x1="6" y1="14" x2="10" y2="14"/>
+            <line x1="14" y1="14" x2="18" y2="14"/>
+            <line x1="6" y1="10" x2="14" y2="10"/>
+        </symbol>
+        <symbol id="icon-brush" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.37 2.63L14 7L17 10L21.37 5.63a2.12 2.12 0 1 0-3-3Z" fill="currentColor" fill-opacity="0.3"/>
+            <path d="M9 12l5 5L9 22H2v-7l7-3Z" fill="currentColor" fill-opacity="0.15"/>
+        </symbol>
+        <symbol id="icon-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3" fill="currentColor" fill-opacity="0.3"/>
+            <circle cx="18" cy="16" r="3" fill="currentColor" fill-opacity="0.3"/>
+        </symbol>
+        <symbol id="icon-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" fill-opacity="0.3"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </symbol>
+        <symbol id="icon-fullscreen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <polyline points="21 15 21 21 15 21"/>
+            <polyline points="3 9 3 3 9 3"/>
+        </symbol>
+        <symbol id="icon-zoom-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" fill="currentColor" fill-opacity="0.15"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="11" y1="8" x2="11" y2="14"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+        </symbol>
+        <symbol id="icon-zoom-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" fill="currentColor" fill-opacity="0.15"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+        </symbol>
+        <symbol id="icon-film-slate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2.5" fill="currentColor" fill-opacity="0.2"/>
+            <path d="M2 7l3.5-4h4L6 7m4 0l3.5-4h4L14 7m4 0l3.5-4H22l-2.5 4"/>
+        </symbol>
+        <symbol id="icon-lightning" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+        </symbol>
+        <symbol id="icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16L21 8V19C21 20.1 20.1 21 19 21Z" fill="currentColor" fill-opacity="0.2"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+        </symbol>
+        <symbol id="icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="currentColor" fill-opacity="0.2"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </symbol>
+        <symbol id="icon-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M12 2A10 10 0 0 1 22 12A10 10 0 0 1 12 22"/>
+        </symbol>
+        <symbol id="icon-play-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.2"/>
+            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+        </symbol>
+        <symbol id="icon-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2.5" fill="currentColor" fill-opacity="0.15"/>
+            <line x1="7" y1="2" x2="7" y2="22"/>
+            <line x1="17" y1="2" x2="17" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+        </symbol>
+        <symbol id="icon-monitor-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.15"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <polygon points="10 7 15 10 10 13 10 7" fill="currentColor"/>
+        </symbol>
+    </svg>
+
+    <div class="vn-app-layout">
+        
+        <!-- ==================== TOP HEADER ==================== -->
+        <header class="vn-header">
+            <div class="header-left">
+                <div class="brand-badge-icon">
+                    <svg class="vn-icon"><use href="#icon-sparkle"></use></svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">Video Narrator AI</span>
+                    <span class="brand-pill">Studio</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="ai-status-chip" id="aiStatusChip">
+                    <span class="status-indicator-dot"></span>
+                    <span class="status-indicator-text" id="aiStatusText">Sẵn sàng tạo video</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- Theme Toggle Button -->
+                <button class="vn-icon-btn" id="btnToggleTheme" title="Giao diện Sáng / Tối">
+                    <svg class="vn-icon" id="themeIcon"><use href="#icon-sun"></use></svg>
+                </button>
+
+                <!-- Open Output Directory -->
+                <button class="vn-icon-btn" id="btnOpenFolder" title="Mở thư mục video đã xuất">
+                    <svg class="vn-icon"><use href="#icon-folder-open"></use></svg>
+                </button>
+
+                <!-- Settings Button -->
+                <button class="vn-icon-btn" id="btnSettings" title="Cài đặt AI & Cấu hình">
+                    <svg class="vn-icon"><use href="#icon-gear"></use></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ==================== BODY WORKSPACE ==================== -->
+        <div class="vn-workspace">
+            
+            <!-- MAIN CONTENT -->
+            <main class="vn-main">
+                
+                <!-- LEFT COLUMN: STUDIO CONTROLS -->
+                <section class="vn-config-col">
+                    
+                    <!-- UNIFIED STUDIO PANEL (STEP 1) -->
+                    <div class="step-panel active studio-panel" id="panelStep1">
+                        
+                        <!-- 1. VIDEO SOURCE SECTION -->
+                        <div class="form-group mb-1">
+                            <label class="section-label">
+                                <span>Video Gốc</span>
+                            </label>
+                            
+                            <!-- Dropzone -->
+                            <div class="vn-dropzone compact" id="dropzoneVideo">
+                                <h3 class="dropzone-title">Kéo thả hoặc bấm để chọn video</h3>
+                                <p class="dropzone-hint">MP4, MOV, MKV, AVI, WEBM</p>
+                                <button class="vn-btn vn-btn-tonal btn-sm mt-1" id="btnSelectVideo" type="button">
+                                    Chọn tệp video
+                                </button>
+                            </div>
+                            <input type="file" id="nativeFileInput" accept="video/mp4,video/mkv,video/mov,video/avi,video/webm" style="display:none">
+
+                            <!-- Video Info Card (Shown when selected) -->
+                            <div class="video-info-card hidden mt-2" id="videoInfoCard">
+                                <div class="video-thumb-preview" id="videoThumbBox">
+                                    <svg class="vn-icon"><use href="#icon-video"></use></svg>
+                                </div>
+                                <div class="video-details">
+                                    <div class="video-filename" id="videoFilename">Chưa chọn video</div>
+                                    <div class="video-meta-tags">
+                                        <span class="meta-tag" id="metaDuration"><svg class="vn-icon"><use href="#icon-clock"></use></svg> --:--</span>
+                                        <span class="meta-tag" id="metaResolution"><svg class="vn-icon"><use href="#icon-monitor"></use></svg> --x--</span>
+                                        <span class="meta-tag badge-ratio" id="badgeTargetRatio">9:16</span>
+                                    </div>
+                                </div>
+                                <button class="vn-icon-btn btn-sm" id="btnChangeVideo" title="Chọn video khác">
+                                    <svg class="vn-icon"><use href="#icon-refresh"></use></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. AI SCRIPT SECTION -->
+                        <div class="form-group">
+                            <label class="section-label">
+                                <span>Kịch Bản Thuyết Minh</span>
+                            </label>
+                            <input type="text" id="topicInput" class="vn-input" placeholder="Mô tả nội dung / chủ đề (VD: Cu cậu giả lập hacker, lái xe chill, nấu ăn, cắt xà phòng...)">
+                            <div class="topic-quick-tags">
+                                <button type="button" class="quick-tag-chip" data-topic="Thế Giới Có Gì Hay? / Mẹo độc lạ / Zack D. Films">Thế Giới Có Gì Hay?</button>
+                                <button type="button" class="quick-tag-chip" data-topic="Hài hước / Cà khịa / Bắt trend Gen Z">Hài hước / Gen Z</button>
+                                <button type="button" class="quick-tag-chip" data-topic="Kỹ năng đỉnh cao / Thao tác bậc thầy">Kỹ năng đỉnh cao</button>
+                                <button type="button" class="quick-tag-chip" data-topic="Lái xe đường đêm chill / Hành trình">Lái xe chill</button>
+                                <button type="button" class="quick-tag-chip" data-topic="Bí ẩn / Khám phá kỳ thú">Bí ẩn / Khám phá</button>
+                                <button type="button" class="quick-tag-chip" data-topic="Đời Có Gì Hay / Thuyết minh đời sống">Đời sống thú vị</button>
+                            </div>
+                            
+                            <div class="script-gen-action flex gap-2 mt-2">
+                                <button class="vn-btn vn-btn-tonal flex-1" id="btnGenerateScriptAction" type="button">
+                                    <span>Viết Kịch Bản AI</span>
+                                </button>
+                                <button class="vn-btn vn-btn-outlined btn-sm" id="btnClearScript" type="button" title="Xóa kịch bản cũ">
+                                    <span>Xóa kịch bản</span>
+                                </button>
+                            </div>
+
+                            <div class="mt-2">
+                                <div class="flex-between mb-1">
+                                    <span style="font-size: 11.5px; color: var(--vn-on-surface-variant);">Nội dung lời thoại:</span>
+                                    <span class="word-counter" id="scriptWordCounter">0 từ (~0s)</span>
+                                </div>
+                                <textarea id="scriptInput" class="vn-textarea" placeholder="Kịch bản AI tạo sẽ hiển thị tại đây. Bạn có thể tự do gõ hoặc chỉnh sửa..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 3. QUICK CONFIG ROW -->
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 11.5px;">Khung hình:</label>
+                                <div class="vn-select-wrap">
+                                    <select id="resolutionSelect" class="vn-select">
+                                        <option value="1080x1920 (9:16 Dọc TikTok/Shorts)" selected>9:16 Dọc (TikTok/Reels)</option>
+                                        <option value="1920x1080 (16:9 Ngang YouTube/Facebook)">16:9 Ngang (YouTube)</option>
+                                        <option value="1080x1080 (1:1 Vuông Instagram)">1:1 Vuông (Instagram)</option>
+                                        <option value="Original (Giữ nguyên kích thước video gốc)">Giữ nguyên gốc (Không cắt viền)</option>
+                                    </select>
+                                    <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                                </div>
+                                <span class="hidden" id="valSelectedAspect">9:16 Dọc TikTok</span>
+                                <span class="hidden" id="resolutionHint"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 11.5px;">Giọng đọc:</label>
+                                <div class="vn-select-wrap">
+                                    <select id="ttsVoiceSelect" class="vn-select">
+                                        <option value="vi-VN-NamMinhNeural (Nam - Tiếng Việt)" selected>Nam Minh (Nam truyền cảm)</option>
+                                        <option value="vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)">Hoài My (Nữ ấm áp)</option>
+                                        <option value="en-US-GuyNeural (Nam - Tiếng Anh)">Guy (Nam English)</option>
+                                        <option value="en-US-JennyNeural (Nữ - Tiếng Anh)">Jenny (Nữ English)</option>
+                                    </select>
+                                    <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="flex-between">
+                                    <label class="form-label" style="font-size: 11.5px;">Tốc độ:</label>
+                                    <span class="badge-val" id="valSpeechRate" style="font-size: 11px;">1.20x</span>
+                                </div>
+                                <input type="range" class="vn-range" id="rangeSpeechRate" min="0.80" max="1.80" step="0.05" value="1.20" style="margin-top: 6px;">
+                            </div>
+                        </div>
+
+                        <!-- 4. BIG PRIMARY CREATE BUTTON -->
+                        <div class="generate-big-box mt-1">
+                            <button class="vn-hero-btn w-full" id="btnBigCreateVideo" type="button">
+                                <span>TẠO VIDEO</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- STEP 5: RESULT & EXPORT PANEL -->
+                    <div class="step-panel" id="panelStep5">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <span class="badge-step badge-success">Hoàn thành</span>
+                                <h2 class="panel-title">Video Đã Sẵn Sàng!</h2>
+                            </div>
+                        </div>
+
+                        <div class="result-details-card">
+                            <div class="result-icon-success">
+                                <svg class="vn-icon"><use href="#icon-check-circle"></use></svg>
+                            </div>
+                            <div class="result-meta-info">
+                                <h3 class="result-title" id="resVideoTitle">Video Hoàn Thiện Chất Lượng Cao</h3>
+                                <div class="result-tags">
+                                    <span class="res-tag"><svg class="vn-icon"><use href="#icon-mobile"></use></svg> 9:16</span>
+                                    <span class="res-tag" id="resDurationTag"><svg class="vn-icon"><use href="#icon-clock"></use></svg> --:--</span>
+                                    <span class="res-tag"><svg class="vn-icon"><use href="#icon-film"></use></svg> MP4</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="result-actions-grid mt-3">
+                            <button class="vn-btn vn-btn-primary" id="btnPlayResultVideo">
+                                <svg class="vn-icon"><use href="#icon-play-circle"></use></svg>
+                                <span>Phát Video</span>
+                            </button>
+
+                            <button class="vn-btn vn-btn-tonal" id="btnExportResultVideo">
+                                <svg class="vn-icon"><use href="#icon-download"></use></svg>
+                                <span>Xuất Video</span>
+                            </button>
+
+                            <button class="vn-btn vn-btn-outlined" id="btnOpenResultFolder">
+                                <svg class="vn-icon"><use href="#icon-folder"></use></svg>
+                                <span>Mở Thư Mục</span>
+                            </button>
+                        </div>
+
+                        <div class="panel-footer-actions mt-4">
+                            <button class="vn-btn vn-btn-text" id="btnRestartWorkflow">
+                                <svg class="vn-icon"><use href="#icon-refresh"></use></svg> Tạo video mới khác
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DUMMY HIDDEN CONTAINER TO SATISFY ALL LEGACY EVENT LISTENERS SAFELY -->
+                    <div style="display:none;" aria-hidden="true">
+                        <div id="stepNav">
+                            <button id="stepBtn1"></button>
+                            <button id="stepBtn2"></button>
+                            <button id="stepBtn3"></button>
+                            <button id="stepBtn4"></button>
+                            <button id="stepBtn5"></button>
+                        </div>
+                        <span id="step1Desc"></span>
+                        <span id="step5Desc"></span>
+                        <div id="panelStep2"></div>
+                        <div id="panelStep3"></div>
+                        <div id="panelStep4"></div>
+                        <button id="btnNextToStep2"></button>
+                        <button id="btnNextToStep3"></button>
+                        <button id="btnNextToStep4"></button>
+                        <button id="btnBackToStep1"></button>
+                        <button id="btnBackToStep2"></button>
+                        <button id="btnBackToStep3"></button>
+                        <button id="btnSidebarGenerate"></button>
+                    </div>
+
+                </section>
+
+                <!-- RIGHT COLUMN: VIDEO PREVIEW & REAL-TIME PROGRESS OVERLAY -->
+                <section class="vn-preview-col">
+                    <div class="preview-stage-card preview-expanded" id="previewStageCard">
+                        
+                        <!-- Header of Preview Card -->
+                        <div class="preview-card-header">
+                            <div class="preview-title-group">
+                                <span>Trình Xem Trước Video</span>
+                            </div>
+                            <div class="preview-header-actions">
+                                <button class="vn-icon-btn btn-xs" id="btnToggleZoomPreview" title="Thu nhỏ khung xem trước">
+                                    <svg class="vn-icon" id="iconZoomPreview"><use href="#icon-zoom-out"></use></svg>
+                                </button>
+                                <span class="ratio-pill" id="previewRatioPill">9:16 Dọc</span>
+                            </div>
+                        </div>
+
+                        <!-- 9:16 Video Player Container -->
+                        <div class="preview-viewport-box" id="previewViewportBox">
+                            
+                            <!-- Empty State View -->
+                            <div class="preview-empty-state" id="previewEmptyState">
+                                <h4 class="empty-state-title">Chưa có video xem trước</h4>
+                                <p class="empty-state-desc">Chọn tệp video hoặc nhấn <strong>"TẠO VIDEO"</strong> để xem kết quả tại đây.</p>
+                            </div>
+
+                            <!-- Active HTML5 Video Player -->
+                            <video id="videoPlayer" class="preview-video-element hidden" playsinline></video>
+
+                            <!-- Badge overlay on video -->
+                            <div class="video-badge-overlay hidden" id="videoBadgeOverlay">
+                                <svg class="vn-icon"><use href="#icon-lightning"></use></svg>
+                                <span id="videoBadgeText">Bản xem trước 9:16</span>
+                            </div>
+
+                            <!-- Real-time Multi-step Processing Overlay -->
+                            <div class="pipeline-progress-overlay hidden" id="pipelineProgressOverlay">
+                                <div class="pipeline-card">
+                                    <div class="pipeline-header">
+                                        <div class="pipeline-spinner-ring">
+                                            <svg class="vn-icon spin-anim"><use href="#icon-spinner"></use></svg>
+                                        </div>
+                                        <div class="pipeline-title-group">
+                                            <h3 class="pipeline-headline" id="pipelineHeadline">Đang Xử Lý Video AI...</h3>
+                                            <span class="pipeline-substatus" id="pipelineSubstatus">Vui lòng đợi giây lát</span>
+                                        </div>
+                                        <span class="pipeline-percentage" id="pipelinePercentage">0%</span>
+                                    </div>
+
+                                    <!-- Progress Track Bar -->
+                                    <div class="pipeline-track-bar">
+                                        <div class="pipeline-track-fill" id="pipelineTrackFill" style="width: 0%;"></div>
+                                    </div>
+
+                                    <!-- Cancel Process Button -->
+                                    <button class="vn-btn vn-btn-text text-danger mt-2" id="btnCancelPipeline">
+                                        <svg class="vn-icon"><use href="#icon-close"></use></svg> Hủy tiến trình
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Error Alert Banner -->
+                            <div class="error-toast-banner hidden" id="errorBanner">
+                                <svg class="vn-icon"><use href="#icon-warning"></use></svg>
+                                <span class="error-msg-text" id="errorMessageText">Đã xảy ra lỗi</span>
+                                <button class="vn-icon-btn btn-xs" id="btnCloseError"><svg class="vn-icon"><use href="#icon-close"></use></svg></button>
+                            </div>
+                        </div>
+
+                        <!-- Player Controls Bar -->
+                        <div class="preview-controls-bar">
+                            <button class="ctrl-play-btn" id="btnPlayPause" title="Phát / Dừng">
+                                <svg class="vn-icon" id="iconPlayPause"><use href="#icon-play"></use></svg>
+                            </button>
+
+                            <span class="time-readout" id="timecodeDisplay">00:00 / 00:00</span>
+
+                            <div class="seek-wrapper">
+                                <input type="range" class="vn-seekbar" id="seekBar" min="0" max="100" value="0" step="0.1">
+                            </div>
+
+                            <button class="vn-icon-btn btn-sm" id="btnMute" title="Bật / Tắt tiếng">
+                                <svg class="vn-icon" id="iconVolume"><use href="#icon-speaker"></use></svg>
+                            </button>
+
+                            <button class="vn-icon-btn btn-sm" id="btnFullscreen" title="Toàn màn hình">
+                                <svg class="vn-icon"><use href="#icon-fullscreen"></use></svg>
+                            </button>
+                        </div>
+
+                        <!-- Quick Generate Box in Preview Col (Hidden by CSS) -->
+                        <div class="preview-footer-action">
+                            <button class="vn-hero-btn w-full" id="btnPreviewColGenerate">
+                                <span>TẠO VIDEO NGAY</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </section>
+
+            </main>
+        </div>
+
+    </div>
+
+    <!-- ==================== SETTINGS MODAL (CÀI ĐẶT TÙY CHỌN NÂNG CAO) ==================== -->
+    <div id="settingsModal" class="vn-modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <svg class="vn-icon"><use href="#icon-sliders"></use></svg>
+                    <span>Cài Đặt Tùy Chọn Nâng Cao</span>
+                </div>
+                <button class="vn-icon-btn btn-sm" id="btnCloseSettings"><svg class="vn-icon"><use href="#icon-close"></use></svg></button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- 1. CÂU HOOK & THỜI LƯỢNG -->
+                <div class="modal-section">
+                    <h4 class="modal-sec-title">Mở Đầu & Thời Lượng Video</h4>
+                    <div class="form-group mt-1">
+                        <label class="form-label" style="font-size: 11.5px;">Câu Hook 3 Giây Mở Đầu:</label>
+                        <input type="text" id="hookInput" class="vn-input" placeholder="Câu mở đầu giật gân, cuốn hút người xem trong 3 giây...">
+                    </div>
+                    <div class="form-group mt-2">
+                        <label class="form-label" style="font-size: 11.5px;">Chiến lược thời lượng:</label>
+                        <div class="vn-select-wrap">
+                            <select id="durationModeSelect" class="vn-select">
+                                <option value="Tự Động Thông Minh (Thuật toán tự quyết định)" selected>Tự động khớp video & giọng nói (Đề xuất)</option>
+                                <option value="Giữ nguyên toàn bộ video gốc (Không cắt)">Giữ nguyên toàn bộ video gốc</option>
+                                <option value="Cắt ghép Highlight (Khớp 100% giọng đọc)">Cắt ghép Highlight theo câu nói</option>
+                            </select>
+                            <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. PHONG CÁCH & GIỌNG ĐỌC -->
+                <div class="modal-section">
+                    <h4 class="modal-sec-title">Phong Cách & Giọng Đọc</h4>
+                    <div class="form-row-2 mt-1">
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 11.5px;">AI Persona:</label>
+                            <div class="vn-select-wrap">
+                                <select id="personaSelect" class="vn-select">
+                                    <option value="the_gioi_co_gi_hay" selected>Thế Giới Có Gì Hay? (Sự Thật & Mẹo Độc Lạ)</option>
+                                    <option value="mad_muse">Nàng Thơ Điên Rồ (Mad Muse)</option>
+                                    <option value="genz_troll">Gen Z Sát Thủ Bắt Trend</option>
+                                    <option value="hypnotic_zen">Thôi Miên Thiền Định</option>
+                                    <option value="dark_documentarian">Hồ Sơ Đen Tối</option>
+                                    <option value="high_octane_hype">Bùng Nổ Năng Lượng</option>
+                                    <option value="doi_co_gi_hay">Đời Có Gì Hay</option>
+                                </select>
+                                <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 11.5px;">Phong cách kịch bản:</label>
+                            <div class="vn-select-wrap">
+                                <select id="stylePresetSelect" class="vn-select">
+                                    <option value="Thế Giới Có Gì Hay" selected>Thế Giới Có Gì Hay? (Zack D. Films)</option>
+                                    <option value="TikTok Shorts">TikTok Shorts (Hook nhanh)</option>
+                                    <option value="Documentary">Phim tài liệu (Sâu lắng)</option>
+                                    <option value="News">Bản tin tức (Dồn dập)</option>
+                                    <option value="Educational">Kiến thức thú vị (Dễ hiểu)</option>
+                                </select>
+                                <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2 mt-2">
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 11.5px;">Bộ máy TTS:</label>
+                            <div class="vn-select-wrap">
+                                <select id="ttsProviderSelect" class="vn-select">
+                                    <option value="Edge-TTS" selected>Edge-TTS (Miễn phí chuẩn tự nhiên)</option>
+                                    <option value="OpenAI">OpenAI TTS</option>
+                                    <option value="ElevenLabs">ElevenLabs</option>
+                                </select>
+                                <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="flex-between">
+                                <label class="form-label" style="font-size: 11.5px;">Cao độ / Pitch:</label>
+                                <span class="badge-val" id="valSpeechPitch" style="font-size: 11px;">+2.0</span>
+                            </div>
+                            <input type="range" class="vn-range" id="rangeSpeechPitch" min="-5.0" max="5.0" step="0.5" value="2.0">
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <button class="vn-btn vn-btn-tonal btn-sm w-full" id="btnPreviewVoice" type="button">
+                            Nghe Thử Voice Giọng Đọc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. HẬU KỲ TỰ ĐỘNG (7 CÔNG TẮC) -->
+                <div class="modal-section">
+                    <h4 class="modal-sec-title">Tính Năng Hậu Kỳ Tự Động</h4>
+                    <div class="switches-list mt-1">
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">AI Auto Cut</span>
+                                <span class="switch-sub">Tự động chọn lọc khoảnh khắc cao trào</span>
+                            </div>
+                            <input type="checkbox" id="chkAutoCut" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Crop 9:16 & Pan Focus</span>
+                                <span class="switch-sub">Tự canh đối tượng trung tâm màn hình</span>
+                            </div>
+                            <input type="checkbox" id="chkAutoPan" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Ken Burns Effect</span>
+                                <span class="switch-sub">Zoom chậm tăng độ cuốn hút thị giác</span>
+                            </div>
+                            <input type="checkbox" id="chkAutoZoom" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Auto Subtitle ASS Động</span>
+                                <span class="switch-sub">Đồng bộ phụ đề chuẩn xác từng từ</span>
+                            </div>
+                            <input type="checkbox" id="chkAutoSubtitle" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Highlight Từ Khóa</span>
+                                <span class="switch-sub">Tô màu vàng kim nổi bật chữ quan trọng</span>
+                            </div>
+                            <input type="checkbox" id="chkKeywordHighlight" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Background Music & Ducking</span>
+                                <span class="switch-sub">Tự chèn nhạc nền và hạ âm khi có lời</span>
+                            </div>
+                            <input type="checkbox" id="chkMusicDucking" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Hiệu Ứng Âm Thanh (SFX)</span>
+                                <span class="switch-sub">Chèn âm thanh whoosh chuyển cảnh</span>
+                            </div>
+                            <input type="checkbox" id="chkSoundEffects">
+                            <span class="switch-pill"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. THƯ MỤC XUẤT VIDEO -->
+                <div class="modal-section">
+                    <h4 class="modal-sec-title">Thư Mục Xuất Bản</h4>
+                    <div class="form-group mt-1">
+                        <label class="form-label" style="font-size: 11.5px;">Thư mục xuất video (Output Directory):</label>
+                        <input type="text" id="outputDir" class="vn-input" placeholder="Mặc định: Videos\VideoNarrator">
+                    </div>
+                </div>
+
+                <!-- DUMMY HIDDEN SYSTEM ELEMENTS -->
+                <div style="display:none;" aria-hidden="true">
+                    <input type="text" id="geminiApiUrlInput" value="http://192.168.1.15:6660/api">
+                    <select id="geminiModelSelect"><option value="gemini-3.1-flash-lite" selected></option></select>
+                    <input type="password" id="geminiKey" value="">
+                    <button id="btnToggleGeminiKey"></button>
+                    <input type="password" id="ttsKey" value="">
+                    <div id="personaHighlightBox"><span id="personaNameTag"></span><span id="personaDescText"></span></div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="vn-btn vn-btn-text" id="btnCancelSettings">Đóng</button>
+                <button class="vn-btn vn-btn-primary" id="btnSaveSettings">
+                    <svg class="vn-icon"><use href="#icon-save"></use></svg> Lưu Cài Đặt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastMessage" class="vn-toast hidden">
+        <svg class="vn-icon toast-icon"><use href="#icon-check-circle"></use></svg>
+        <span id="toastText">Thành công!</span>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
