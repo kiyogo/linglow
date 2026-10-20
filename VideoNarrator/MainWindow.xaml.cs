@@ -149,6 +149,34 @@ namespace VideoNarrator
 
                 if (File.Exists(htmlPath))
                 {
+                    webView.NavigationCompleted += async (s, e) =>
+                    {
+                        try
+                        {
+                            if (App.DemoDataRequested)
+                            {
+                                await Task.Delay(800);
+                                string demoScript = "🌍 [00:00 - 00:02] ĐÂY LÀ CÁCH MỘT SỐ NGƯỜI GIAN LẬN KHI ĐÁNH GOLF...\\n⚡ [00:02 - 00:05] Luật chỉ cho bạn đúng 3 phút để tìm quả bóng trong bụi rậm.\\n🔍 [00:05 - 00:09] Thay vì mò mẫm, họ đeo một chiếc kính lọc quang phổ đặc biệt.\\n🎯 [00:09 - 00:13] Mọi cành lá bị triệt tiêu sắc xanh, chỉ còn quả bóng phát sáng rực rỡ!\\n👉 [00:13 - 00:15] Bấm like nếu bạn thấy mánh khóe này quá đỉnh!";
+                                string js = $@"
+                                    const scriptEl = document.getElementById('scriptInput');
+                                    if (scriptEl) {{ scriptEl.value = '{demoScript}'; }}
+                                    const topicEl = document.getElementById('topicInput');
+                                    if (topicEl) {{ topicEl.value = 'Mẹo gian lận tinh vi khi đánh golf'; }}
+                                    const personaSelect = document.getElementById('personaSelect');
+                                    if (personaSelect) {{ personaSelect.value = 'the_gioi_co_gi_hay'; }}
+                                ";
+                                await webView.CoreWebView2.ExecuteScriptAsync(js);
+                            }
+
+                            if (App.OpenSettingsRequested)
+                            {
+                                await Task.Delay(1000);
+                                await webView.CoreWebView2.ExecuteScriptAsync("document.getElementById('settingsModal')?.classList.remove('hidden');");
+                            }
+                        }
+                        catch { }
+                    };
+
                     webView.CoreWebView2.Navigate(new Uri(htmlPath).AbsoluteUri);
                 }
                 else

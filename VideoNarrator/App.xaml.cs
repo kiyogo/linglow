@@ -14,9 +14,23 @@ namespace VideoNarrator
     {
         private ServiceProvider? _serviceProvider;
 
+        public static bool DemoDataRequested { get; private set; }
+        public static bool OpenSettingsRequested { get; private set; }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            if (e.Args.Length > 0)
+            {
+                foreach (var arg in e.Args)
+                {
+                    if (string.Equals(arg, "--demo-data", StringComparison.OrdinalIgnoreCase))
+                        DemoDataRequested = true;
+                    else if (string.Equals(arg, "--open-settings", StringComparison.OrdinalIgnoreCase))
+                        OpenSettingsRequested = true;
+                }
+            }
 
             if (e.Args.Length > 0 && e.Args[0] == "--test")
             {
