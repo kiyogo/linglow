@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/kiyogo/linglow">
-    <img src="docs/assets/logo.svg" alt="Linglow Logo" width="680">
+    <img src="docs/assets/logo.svg" alt="Linglow Logo" width="250">
   </a>
 </p>
 

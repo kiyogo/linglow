@@ -1,27 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
   <defs>
-    <linearGradient id="linglowGradIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="linglowIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#6366F1" />
       <stop offset="50%" stop-color="#3B82F6" />
       <stop offset="100%" stop-color="#06B6D4" />
     </linearGradient>
-    <filter id="iconShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#4F46E5" flood-opacity="0.35" />
-    </filter>
   </defs>
 
-  <!-- Base App Rounded Container -->
-  <rect x="32" y="32" width="448" height="448" rx="112" fill="#0F172A" stroke="#1E293B" stroke-width="4" filter="url(#iconShadow)" />
+  <!-- Clean Squircle Frame -->
+  <rect x="4" y="4" width="120" height="120" rx="32" fill="#0B0F19" stroke="#1E293B" stroke-width="2" />
 
-  <!-- Monogram L + Play Triangle -->
-  <g transform="translate(145, 130)">
-    <!-- Vertical stem -->
-    <rect x="0" y="0" width="48" height="230" rx="24" fill="url(#linglowGradIcon)" />
-    <!-- Horizontal base -->
-    <rect x="0" y="182" width="180" height="48" rx="24" fill="url(#linglowGradIcon)" />
-    <!-- Play Spark Triangle -->
-    <path d="M 88 70 L 175 115 L 88 160 Z" fill="url(#linglowGradIcon)" />
-    <!-- Glowing pulse accent -->
-    <circle cx="180" cy="55" r="16" fill="#38BDF8" />
-  </g>
+  <!-- Play Symbol & Spark -->
+  <path d="M 48 38 C 48 35.5 50.8 34 53 35.3 L 83 53.3 C 85.2 54.6 85.2 57.4 83 58.7 L 53 76.7 C 50.8 78 48 76.5 48 74 Z" fill="url(#linglowIconGrad)" />
+  <circle cx="82" cy="34" r="6" fill="#38BDF8" />
 </svg>
