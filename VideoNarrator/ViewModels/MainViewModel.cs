@@ -36,6 +36,8 @@ namespace VideoNarrator.ViewModels
         private readonly ITopicToVideoService? _topicToVideoService;
         private readonly IProjectService? _projectService;
         private readonly IVideoProbeService? _videoProbeService;
+        private readonly IVideoDownloadService? _videoDownloadService;
+        private readonly IMultiStageNarrationEngine? _multiStageNarrationEngine;
 
         private VideoProject? _currentProject;
         public VideoProject? CurrentProject
@@ -615,6 +617,16 @@ namespace VideoNarrator.ViewModels
         public ICommand ToggleGeminiKeyVisibilityCommand { get; }
         public ICommand ToggleTtsKeyVisibilityCommand { get; }
 
+        private string _videoUrlInput = string.Empty;
+        public string VideoUrlInput
+        {
+            get => _videoUrlInput;
+            set => SetProperty(ref _videoUrlInput, value);
+        }
+
+        public ICommand DownloadAndAutoProduceCommand { get; }
+        public ICommand DownloadVideoOnlyCommand { get; }
+
         // ==================== PERSONA STUDIO PROPERTIES ====================
         public ObservableCollection<PersonaProfile> Personas { get; } = new();
 
@@ -1111,7 +1123,9 @@ namespace VideoNarrator.ViewModels
             IStyleValidator styleValidator,
             ITopicToVideoService? topicToVideoService = null,
             IProjectService? projectService = null,
-            IVideoProbeService? videoProbeService = null)
+            IVideoProbeService? videoProbeService = null,
+            IVideoDownloadService? videoDownloadService = null,
+            IMultiStageNarrationEngine? multiStageNarrationEngine = null)
         {
             _geminiService = geminiService;
             _ttsService = ttsService;
@@ -1136,11 +1150,16 @@ namespace VideoNarrator.ViewModels
             _topicToVideoService = topicToVideoService;
             _projectService = projectService;
             _videoProbeService = videoProbeService;
+            _videoDownloadService = videoDownloadService;
+            _multiStageNarrationEngine = multiStageNarrationEngine;
 
             // Initialize commands
             SwitchToStudioCommand = new RelayCommand(() => SelectedTabIndex = 0);
             SwitchToSettingsCommand = new RelayCommand(() => SelectedTabIndex = 1);
             SwitchToPersonaStudioCommand = new RelayCommand(() => SelectedTabIndex = 2);
+
+            DownloadAndAutoProduceCommand = new RelayCommand(async () => await DownloadAndAutoProduceAsync(), () => !IsBusy);
+            DownloadVideoOnlyCommand = new RelayCommand(async () => await DownloadVideoOnlyAsync(), () => !IsBusy);
 
             SelectVideoCommand = new RelayCommand(ExecuteSelectVideo, () => !IsBusy);
             SelectMusicCommand = new RelayCommand(ExecuteSelectMusic, () => !IsBusy);
@@ -1893,6 +1912,189 @@ namespace VideoNarrator.ViewModels
                 _cts?.Dispose();
                 _cts = null;
             }
+        }
+
+        #endregion
+
+        #region 1-Click Social Video Download & Auto Pipeline
+
+        public async Task<string> DownloadVideoOnlyAsync(string? url = null)
+        {
+            string targetUrl = !string.IsNullOrWhiteSpace(url) ? url.Trim() : VideoUrlInput?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(targetUrl))
+            {
+                SetError("Vui lòng nhập đường link video (TikTok, YouTube Shorts, Facebook, Reels, Douyin, X...).");
+                return string.Empty;
+            }
+
+            if (_videoDownloadService == null)
+            {
+                SetError("Dịch vụ tải video chưa được khởi tạo.");
+                return string.Empty;
+            }
+
+            ClearError();
+            IsBusy = true;
+            CanCancel = true;
+            _cts = new CancellationTokenSource();
+            ProgressPercentage = 10;
+            StatusMessage = "Đang tải video từ mạng xã hội về máy...";
+
+            try
+            {
+                var downloadResult = await _videoDownloadService.DownloadVideoAsync(
+                    targetUrl,
+                    null,
+                    (msg, pct) =>
+                    {
+                        Application.Current?.Dispatcher?.Invoke(() =>
+                        {
+                            StatusMessage = msg;
+                            ProgressPercentage = pct;
+                        });
+                    },
+                    _cts.Token);
+
+                if (!downloadResult.Success || string.IsNullOrEmpty(downloadResult.FilePath) || !File.Exists(downloadResult.FilePath))
+                {
+                    throw new InvalidOperationException(downloadResult.ErrorMessage ?? "Không thể tải video từ đường link đã cung cấp.");
+                }
+
+                await LoadVideoFileAsync(downloadResult.FilePath);
+                if (!string.IsNullOrWhiteSpace(downloadResult.Title) && string.IsNullOrWhiteSpace(CustomTopic))
+                {
+                    CustomTopic = downloadResult.Title;
+                }
+
+                StatusMessage = $"Đã tải video thành công: {downloadResult.Title ?? Path.GetFileName(downloadResult.FilePath)}";
+                ProgressPercentage = 100;
+                return downloadResult.FilePath;
+            }
+            catch (OperationCanceledException)
+            {
+                StatusMessage = "Đã hủy tải video.";
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                SetError($"Lỗi khi tải video: {ex.Message}");
+                StatusMessage = "Tải video thất bại.";
+                return string.Empty;
+            }
+            finally
+            {
+                IsBusy = false;
+                CanCancel = false;
+                _cts?.Dispose();
+                _cts = null;
+            }
+        }
+
+        public async Task<string> DownloadAndAutoProduceAsync(string? url = null)
+        {
+            string targetUrl = !string.IsNullOrWhiteSpace(url) ? url.Trim() : VideoUrlInput?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(targetUrl))
+            {
+                SetError("Vui lòng nhập đường link video (TikTok, YouTube Shorts, Facebook, Reels, Douyin, X...).");
+                return string.Empty;
+            }
+
+            if (_videoDownloadService == null)
+            {
+                SetError("Dịch vụ tải video chưa được khởi tạo.");
+                return string.Empty;
+            }
+
+            ClearError();
+            _fileService.Log($"[1-Click Pipeline] Bắt đầu tự động tải và dựng trọn gói video từ link: {targetUrl}");
+
+            string downloadedFilePath = string.Empty;
+            string videoTitle = string.Empty;
+
+            // Bước 1: Tải video
+            IsBusy = true;
+            CanCancel = true;
+            _cts = new CancellationTokenSource();
+            ProgressPercentage = 5;
+            StatusMessage = "⚡ [1-Click] Đang tải video từ mạng xã hội...";
+
+            try
+            {
+                var downloadResult = await _videoDownloadService.DownloadVideoAsync(
+                    targetUrl,
+                    null,
+                    (msg, pct) =>
+                    {
+                        Application.Current?.Dispatcher?.Invoke(() =>
+                        {
+                            StatusMessage = $"⚡ [1-Click] {msg}";
+                            ProgressPercentage = Math.Min(35, pct * 0.35);
+                        });
+                    },
+                    _cts.Token);
+
+                if (!downloadResult.Success || string.IsNullOrEmpty(downloadResult.FilePath) || !File.Exists(downloadResult.FilePath))
+                {
+                    throw new InvalidOperationException(downloadResult.ErrorMessage ?? "Không thể tải video từ URL.");
+                }
+
+                downloadedFilePath = downloadResult.FilePath;
+                videoTitle = downloadResult.Title ?? string.Empty;
+            }
+            catch (OperationCanceledException)
+            {
+                StatusMessage = "Đã hủy tiến trình 1-Click.";
+                IsBusy = false;
+                CanCancel = false;
+                _cts?.Dispose();
+                _cts = null;
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                SetError($"[1-Click] Lỗi tải video: {ex.Message}");
+                StatusMessage = "Tải video thất bại.";
+                IsBusy = false;
+                CanCancel = false;
+                _cts?.Dispose();
+                _cts = null;
+                return string.Empty;
+            }
+            finally
+            {
+                IsBusy = false;
+                CanCancel = false;
+                _cts?.Dispose();
+                _cts = null;
+            }
+
+            // Bước 2: Nạp video vào hệ thống
+            await LoadVideoFileAsync(downloadedFilePath);
+            if (!string.IsNullOrWhiteSpace(videoTitle) && string.IsNullOrWhiteSpace(CustomTopic))
+            {
+                CustomTopic = videoTitle;
+            }
+
+            // Bước 3: Tự động chạy Auto Edit Pipeline (Kể chuyện AI, TTS, Subtitles, Cắt cúp)
+            StatusMessage = "⚡ [1-Click] Đang phân tích video và tạo kịch bản hấp dẫn...";
+            await ExecuteAutoEditPipelineAsync();
+
+            // Bước 4: Tự động render xuất file video 9:16 chất lượng cao hoàn thiện
+            if (HasEditingPlan)
+            {
+                StatusMessage = "⚡ [1-Click] Đang xuất video 9:16 hoàn chỉnh...";
+                await ExecuteRenderFinalShortAsync();
+
+                if (HasFinalVideo && !string.IsNullOrEmpty(FinalVideoPath))
+                {
+                    StatusMessage = "🎉 [1-Click Thành Công] Đã xuất video hoàn tất! Bạn có thể lấy file và đăng ngay.";
+                    ProgressPercentage = 100;
+                    _fileService.Log($"[1-Click Pipeline] Hoàn tất 100%! Video sẵn sàng tại: {FinalVideoPath}");
+                    return FinalVideoPath;
+                }
+            }
+
+            return string.Empty;
         }
 
         #endregion

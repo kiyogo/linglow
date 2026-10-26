@@ -179,6 +179,24 @@ const safeBridge = {
         showToast("Vui lòng nạp video trước khi thực hiện dựng video.");
     },
 
+    async downloadAndAutoProduce(url) {
+        const b = getBridge();
+        if (b) {
+            try { await b.DownloadAndAutoProduce(url); return; } catch {}
+            try { await b.downloadAndAutoProduce(url); return; } catch {}
+        }
+        showToast("Vui lòng khởi chạy ứng dụng để tự động hóa 1-Click.");
+    },
+
+    async downloadVideoOnly(url) {
+        const b = getBridge();
+        if (b) {
+            try { await b.DownloadVideoOnly(url); return; } catch {}
+            try { await b.downloadVideoOnly(url); return; } catch {}
+        }
+        showToast("Vui lòng khởi chạy ứng dụng để tải video.");
+    },
+
     async cancelProcess() {
         const b = getBridge();
         if (b) {
@@ -478,6 +496,10 @@ async function initBridgeConnection() {
                 }
             }
 
+            if (settings.videoUrlInput && document.getElementById('videoUrlInput')) {
+                document.getElementById('videoUrlInput').value = settings.videoUrlInput;
+            }
+
             if (settings.hookText) document.getElementById('hookInput').value = settings.hookText;
             if (settings.scriptText) {
                 document.getElementById('scriptInput').value = settings.scriptText;
@@ -538,6 +560,13 @@ function handleBridgeMessage(msg) {
             }
             break;
 
+        case 'videoUrlInput':
+            const urlInputBox = document.getElementById('videoUrlInput');
+            if (urlInputBox && msg.url !== undefined) {
+                urlInputBox.value = msg.url || "";
+            }
+            break;
+
         case 'script':
             if (msg.script !== undefined) {
                 document.getElementById('scriptInput').value = msg.script || "";
@@ -582,6 +611,48 @@ function initEventListeners() {
         settingsModal?.classList.add('hidden');
         showToast("Đã lưu các tùy chọn nâng cao thành công!");
     });
+
+    // STEP 1: 1-Click Social Video Download & Auto Produce
+    const btnOneClick = document.getElementById('btnOneClickProduce');
+    const btnDlOnly = document.getElementById('btnDownloadOnly');
+    const inputUrl = document.getElementById('videoUrlInput');
+
+    if (btnOneClick) {
+        btnOneClick.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const url = inputUrl?.value?.trim();
+            if (!url) {
+                showToast("Vui lòng dán link video (TikTok, YouTube Shorts, Reels, FB...)");
+                inputUrl?.focus();
+                return;
+            }
+            showToast("⚡ Đang bắt đầu tự động tải và dựng video 1-Click...");
+            await safeBridge.downloadAndAutoProduce(url);
+        });
+    }
+
+    if (btnDlOnly) {
+        btnDlOnly.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const url = inputUrl?.value?.trim();
+            if (!url) {
+                showToast("Vui lòng dán link video (TikTok, YouTube Shorts, Reels, FB...)");
+                inputUrl?.focus();
+                return;
+            }
+            showToast("Đang tải video về máy...");
+            await safeBridge.downloadVideoOnly(url);
+        });
+    }
+
+    if (inputUrl) {
+        inputUrl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnOneClick?.click();
+            }
+        });
+    }
 
     // STEP 1: Video Selection
     const btnSelect = document.getElementById('btnSelectVideo');

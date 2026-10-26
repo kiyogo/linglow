@@ -81,9 +81,39 @@ namespace VideoNarrator.Services.PersonalityEngine
 
         public PersonaProfile? GetPersonaById(string id)
         {
+            if (string.IsNullOrWhiteSpace(id)) return GetActivePersona();
+
             lock (_lock)
             {
-                return _personas.FirstOrDefault(p => p.Id == id);
+                var direct = _personas.FirstOrDefault(p => string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase));
+                if (direct != null) return direct;
+
+                // Alias mapping for standard presets
+                string norm = id.ToLowerInvariant().Replace("_", " ").Replace("-", " ").Trim();
+                var alias = _personas.FirstOrDefault(p =>
+                    p.Id.ToLowerInvariant().Replace("_", " ").Replace("-", " ").Trim() == norm ||
+                    p.Name.ToLowerInvariant().Contains(norm));
+                if (alias != null) return alias;
+
+                // Built-in aliases mapping
+                if (norm.Contains("curiosity") || norm.Contains("the gioi co gi hay"))
+                    return _personas.FirstOrDefault(p => p.Id == "Curiosity" || p.Id == "the_gioi_co_gi_hay");
+                if (norm.Contains("oddly satisfying") || norm.Contains("satisfying") || norm.Contains("hypnotic"))
+                    return _personas.FirstOrDefault(p => p.Id == "Oddly Satisfying" || p.Id == "hypnotic_zen");
+                if (norm.Contains("science") || norm.Contains("khoa hoc"))
+                    return _personas.FirstOrDefault(p => p.Id == "Science Explained");
+                if (norm.Contains("story") || norm.Contains("mad muse"))
+                    return _personas.FirstOrDefault(p => p.Id == "Storytelling" || p.Id == "mad_muse");
+                if (norm.Contains("fast") || norm.Contains("hype"))
+                    return _personas.FirstOrDefault(p => p.Id == "Fast-Paced" || p.Id == "high_octane_hype");
+                if (norm.Contains("cinematic"))
+                    return _personas.FirstOrDefault(p => p.Id == "Cinematic");
+                if (norm.Contains("humor") || norm.Contains("genz") || norm.Contains("troll"))
+                    return _personas.FirstOrDefault(p => p.Id == "Dry Humor" || p.Id == "genz_troll");
+                if (norm.Contains("custom"))
+                    return _personas.FirstOrDefault(p => p.Id == "Custom Persona");
+
+                return _personas.FirstOrDefault(p => p.IsDefault) ?? _personas.FirstOrDefault();
             }
         }
 
@@ -256,6 +286,14 @@ namespace VideoNarrator.Services.PersonalityEngine
         {
             return new List<PersonaProfile>
             {
+                CreateCuriosityPreset(),
+                CreateOddlySatisfyingPreset(),
+                CreateScienceExplainedPreset(),
+                CreateStorytellingPreset(),
+                CreateFastPacedPreset(),
+                CreateCinematicPreset(),
+                CreateDryHumorPreset(),
+                CreateCustomPersonaPreset(),
                 CreateTheGioiCoGiHayPreset(),
                 CreateMadMusePreset(),
                 CreateDoiCoGiHayPreset(),
@@ -263,6 +301,252 @@ namespace VideoNarrator.Services.PersonalityEngine
                 CreateHypnoticZenPreset(),
                 CreateDarkDocumentarianPreset(),
                 CreateHighOctaneHypePreset()
+            };
+        }
+
+        private static PersonaProfile CreateCuriosityPreset()
+        {
+            var p = CreateTheGioiCoGiHayPreset();
+            p.Id = "Curiosity";
+            p.Name = "🌍 Curiosity (Khám Phá & Sự Thật Độc Lạ)";
+            p.IsDefault = true;
+            return p;
+        }
+
+        private static PersonaProfile CreateOddlySatisfyingPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Oddly Satisfying",
+                Name = "🌀 Oddly Satisfying (Thỏa Mãn Thị Giác)",
+                Description = "Tập trung vào quy trình mượt mà, âm thanh ma sát/chuyển động và cảm giác thỏa mãn thị giác tuyệt đối, tiết chế lời thừa.",
+                VoiceTone = "Thư thái, êm dịu, nhả chữ chậm rãi, tinh tế",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 60,
+                    DramaticLevel = 30,
+                    WeirdnessLevel = 30,
+                    SarcasmLevel = 10,
+                    VisualLanguageLevel = 100,
+                    HookIntensity = 80,
+                    SuspenseLevel = 40,
+                    SatisfactionLevel = 100,
+                    SentenceRhythm = "slow_burn",
+                    NarrationSpeed = "normal_1.0x",
+                    EndingStyle = "loop_seamless",
+                    Verbosity = "concise"
+                },
+                CustomRules = new List<string>
+                {
+                    "Tập trung miêu tả độ mịn, đường cắt, âm thanh ma sát và cảm giác thỏa mãn thị giác.",
+                    "Tiết chế lời thừa, dùng câu ngắn cô đọng để hình ảnh tự lên tiếng.",
+                    "Tạo cảm giác giải tỏa căng thẳng và thư giãn dopamine."
+                }
+            };
+        }
+
+        private static PersonaProfile CreateScienceExplainedPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Science Explained",
+                Name = "🔬 Science Explained (Giải Mã Khoa Học & Cơ Chế)",
+                Description = "Giải thích nguyên lý vật lý, cơ học hoặc hiện tượng khoa học bằng ngôn ngữ đời thường dễ hình dung, bóc tách mối quan hệ nhân quả rõ ràng.",
+                VoiceTone = "Sắc sảo, logic, hào hứng, tự nhiên, giải thích sáng rõ",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 95,
+                    DramaticLevel = 60,
+                    WeirdnessLevel = 40,
+                    SarcasmLevel = 15,
+                    VisualLanguageLevel = 90,
+                    HookIntensity = 90,
+                    SuspenseLevel = 75,
+                    SatisfactionLevel = 95,
+                    SentenceRhythm = "alternating",
+                    NarrationSpeed = "normal_1.0x",
+                    EndingStyle = "mind_bending",
+                    Verbosity = "balanced"
+                },
+                CustomRules = new List<string>
+                {
+                    "Hook ngay bằng hiện tượng trái trực giác hoặc câu hỏi cơ chế cụ thể.",
+                    "Giải thích logic nhân - quả từng bước bằng các động từ giàu tính cơ học thực tế.",
+                    "Không dùng thuật ngữ hàn lâm khô cứng, dùng ví von trực quan dễ hiểu."
+                }
+            };
+        }
+
+        private static PersonaProfile CreateStorytellingPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Storytelling",
+                Name = "📖 Storytelling (Kể Chuyện Kịch Tính & Nhân Vật)",
+                Description = "Kể chuyện có nhân vật/chủ thể, rào cản thử thách, hành động giải quyết và kết quả thuyết phục.",
+                VoiceTone = "Truyền cảm, có chiều sâu, nhập vai cuốn hút",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 90,
+                    DramaticLevel = 80,
+                    WeirdnessLevel = 50,
+                    SarcasmLevel = 25,
+                    VisualLanguageLevel = 85,
+                    HookIntensity = 90,
+                    SuspenseLevel = 85,
+                    SatisfactionLevel = 90,
+                    SentenceRhythm = "alternating",
+                    NarrationSpeed = "rapid_1.2x",
+                    EndingStyle = "payoff_climax",
+                    Verbosity = "balanced"
+                },
+                CustomRules = new List<string>
+                {
+                    "Nhập vai người kể chuyện chứng kiến tình huống tận mắt.",
+                    "Xây dựng nút thắt - trở ngại - hành động và cú chốt hạ thỏa mãn.",
+                    "Tương phản nhịp điệu giữa lúc rào cản xuất hiện và khi vấn đề được giải quyết."
+                }
+            };
+        }
+
+        private static PersonaProfile CreateFastPacedPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Fast-Paced",
+                Name = "⚡ Fast-Paced (Nhịp Nhanh Dồn Dập)",
+                Description = "Nhịp dồn dập, câu ngắn gọn 3-6 từ, giàu động từ mạnh, loại bỏ hoàn toàn từ đệm và triết lý.",
+                VoiceTone = "Nhanh, dứt khoát, dồn dập, giàu năng lượng",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 85,
+                    DramaticLevel = 90,
+                    WeirdnessLevel = 60,
+                    SarcasmLevel = 30,
+                    VisualLanguageLevel = 80,
+                    HookIntensity = 95,
+                    SuspenseLevel = 80,
+                    SatisfactionLevel = 85,
+                    SentenceRhythm = "rapid_fire",
+                    NarrationSpeed = "rapid_1.2x",
+                    EndingStyle = "punchline",
+                    Verbosity = "concise"
+                },
+                CustomRules = new List<string>
+                {
+                    "Câu cực ngắn, dứt khoát, cắt bỏ toàn bộ từ nối và liên từ rườm rà.",
+                    "Động từ hành động chiếm ưu thế, đẩy nhịp kể lên tốc độ cao.",
+                    "Ngắt nhịp câu chuẩn xác bằng dấu chấm để đọc không bị vấp."
+                }
+            };
+        }
+
+        private static PersonaProfile CreateCinematicPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Cinematic",
+                Name = "🎬 Cinematic (Điện Ảnh Sâu Lắng & Khoảng Lặng)",
+                Description = "Giàu hình ảnh thị giác, câu từ trau chuốt, có khoảng lặng pause hợp lý, tạo chiều sâu không gian.",
+                VoiceTone = "Trầm ấm, sâu lắng, đậm chất điện ảnh",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 80,
+                    DramaticLevel = 75,
+                    WeirdnessLevel = 50,
+                    SarcasmLevel = 10,
+                    VisualLanguageLevel = 95,
+                    HookIntensity = 85,
+                    SuspenseLevel = 85,
+                    SatisfactionLevel = 85,
+                    SentenceRhythm = "slow_burn",
+                    NarrationSpeed = "normal_1.0x",
+                    EndingStyle = "mind_bending",
+                    Verbosity = "balanced"
+                },
+                CustomRules = new List<string>
+                {
+                    "Ngôn từ gợi cảm xúc và hình ảnh điện ảnh sắc nét.",
+                    "Chèn khoảng lặng nhịp thở để hình ảnh tỏa sáng.",
+                    "Kết thúc có dư âm gợi mở."
+                }
+            };
+        }
+
+        private static PersonaProfile CreateDryHumorPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Dry Humor",
+                Name = "😏 Dry Humor (Hài Hước Khô & Châm Biếm Nhẹ)",
+                Description = "Hài hước khô, tỉnh rụi, nhận xét sắc sảo châm biếm nhẹ nhàng về sự vô lý của tình huống, không pha trò lố.",
+                VoiceTone = "Hài hước, tỉnh rụi, duyên dáng, châm biếm thông minh",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 80,
+                    DramaticLevel = 50,
+                    WeirdnessLevel = 70,
+                    SarcasmLevel = 80,
+                    VisualLanguageLevel = 80,
+                    HookIntensity = 85,
+                    SuspenseLevel = 60,
+                    SatisfactionLevel = 80,
+                    SentenceRhythm = "alternating",
+                    NarrationSpeed = "normal_1.0x",
+                    EndingStyle = "punchline",
+                    Verbosity = "balanced"
+                },
+                CustomRules = new List<string>
+                {
+                    "Giọng điệu tỉnh rụi như không có gì xảy ra trước những pha xử lý cồng kềnh.",
+                    "Nhận xét hóm hỉnh tinh tế, tuyệt đối không dùng tiếng cười giả tạo.",
+                    "Chốt hạ bất ngờ bằng cú twist châm biếm nhẹ."
+                }
+            };
+        }
+
+        private static PersonaProfile CreateCustomPersonaPreset()
+        {
+            return new PersonaProfile
+            {
+                Id = "Custom Persona",
+                Name = "⚙️ Custom Persona (Tùy Chỉnh Cá Nhân Hóa)",
+                Description = "Nhận toàn bộ giá trị tùy chỉnh từ người dùng trên giao diện để tạo phong cách độc nhất.",
+                VoiceTone = "Linh hoạt theo cấu hình tùy chọn của người dùng",
+                IsDefault = false,
+                IsBuiltIn = true,
+                StyleConfig = new StyleEngineConfig
+                {
+                    CuriosityLevel = 85,
+                    DramaticLevel = 70,
+                    WeirdnessLevel = 50,
+                    SarcasmLevel = 30,
+                    VisualLanguageLevel = 85,
+                    HookIntensity = 90,
+                    SuspenseLevel = 75,
+                    SatisfactionLevel = 85,
+                    SentenceRhythm = "alternating",
+                    NarrationSpeed = "normal_1.0x",
+                    EndingStyle = "mind_bending",
+                    Verbosity = "balanced"
+                },
+                CustomRules = new List<string>
+                {
+                    "Áp dụng chính xác chỉ đạo riêng từ người dùng.",
+                    "Tuân thủ các nguyên tắc chống sáo rỗng và bám sát thực tế video."
+                }
             };
         }
 

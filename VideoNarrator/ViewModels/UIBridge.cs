@@ -58,6 +58,10 @@ namespace VideoNarrator.ViewModels
                         PostMessage(new { type = "customTopic", topic = _viewModel.CustomTopic });
                         break;
 
+                    case nameof(_viewModel.VideoUrlInput):
+                        PostMessage(new { type = "videoUrlInput", url = _viewModel.VideoUrlInput });
+                        break;
+
                     case nameof(_viewModel.HasVideo):
                     case nameof(_viewModel.VideoInfo):
                         if (_viewModel.HasVideo && _viewModel.VideoInfo != null)
@@ -212,6 +216,24 @@ namespace VideoNarrator.ViewModels
             });
         }
 
+        public void DownloadAndAutoProduce(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _ = _viewModel.DownloadAndAutoProduceAsync(url);
+            });
+        }
+
+        public void DownloadVideoOnly(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _ = _viewModel.DownloadVideoOnlyAsync(url);
+            });
+        }
+
         public void RenderFinalShort()
         {
             App.Current.Dispatcher.Invoke(() =>
@@ -281,6 +303,7 @@ namespace VideoNarrator.ViewModels
                 videoFps = _viewModel.VideoInfo?.Fps ?? 0,
                 durationModes = _viewModel.DurationModes.ToList(),
                 selectedDurationMode = _viewModel.SelectedDurationMode,
+                videoUrlInput = _viewModel.VideoUrlInput,
                 customTopic = _viewModel.CustomTopic,
                 enableBackgroundMusic = _viewModel.EnableBackgroundMusic,
                 backgroundMusicVolume = _viewModel.BackgroundMusicVolume,

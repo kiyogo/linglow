@@ -1814,3 +1814,32 @@ button:hover .vn-icon,
 .pipeline-steps-checklist {
     display: none !important;
 }
+
+/* 1-Click Social Video Download & Auto Pipeline */
+.one-click-url-box {
+    display: flex;
+    align-items: center;
+    background: var(--vn-surface-container, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--vn-outline-variant, rgba(255, 255, 255, 0.12));
+    border-radius: var(--vn-radius-md, 8px);
+    padding: 3px 6px;
+    gap: 6px;
+    transition: border-color var(--vn-transition-fast), box-shadow var(--vn-transition-fast);
+}
+
+.one-click-url-box:focus-within {
+    border-color: var(--vn-primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.one-click-url-box .vn-input {
+    border: none !important;
+    background: transparent !important;
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.one-click-url-box .vn-input:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}

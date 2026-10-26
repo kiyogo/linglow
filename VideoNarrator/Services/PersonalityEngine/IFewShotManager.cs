@@ -132,6 +132,15 @@ namespace VideoNarrator.Services.PersonalityEngine
                     }
                 }
 
+                if (scored.Count == 0)
+                {
+                    var fallback = _examples
+                        .Where(e => string.IsNullOrEmpty(personaId) || e.PersonaId == personaId || e.PersonaId == "the_gioi_co_gi_hay" || e.PersonaId == "mad_muse")
+                        .Take(Math.Max(1, maxCount))
+                        .ToList();
+                    return fallback.Count > 0 ? fallback : _examples.Take(Math.Max(1, maxCount)).ToList();
+                }
+
                 return scored.OrderByDescending(s => s.score)
                              .Take(Math.Max(1, maxCount))
                              .Select(s => s.ex)

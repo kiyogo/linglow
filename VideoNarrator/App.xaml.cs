@@ -37,7 +37,7 @@ namespace VideoNarrator
                 var reports = VideoNarrator.Tests.PersonalityEngineTestSuite.RunAllTests();
                 string reportPath = Path.Combine(AppContext.BaseDirectory, "test_report.txt");
                 var sb = new System.Text.StringBuilder();
-                sb.AppendLine("=== KẾT QUẢ KIỂM THỬ PERSONALITY ENGINE (10/10 TIÊU CHÍ) ===");
+                sb.AppendLine($"=== KẾT QUẢ KIỂM THỬ PERSONALITY & NARRATION ENGINE ({reports.Count(r => r.Passed)}/{reports.Count} TIÊU CHÍ ĐẠT) ===");
                 foreach (var r in reports)
                 {
                     sb.AppendLine($"[{(r.Passed ? "PASS" : "FAIL")}] {r.TestName}\n    -> {r.Details}\n");
@@ -154,6 +154,7 @@ namespace VideoNarrator
             services.AddSingleton<ISettingsService, SettingsService>();
             services.AddSingleton<IFfmpegService, FfmpegService>();
             services.AddSingleton<IVideoService, VideoService>();
+            services.AddSingleton<IVideoDownloadService, VideoDownloadService>();
             services.AddSingleton<IGeminiService, GeminiService>();
             services.AddSingleton<ITtsService, TtsService>();
 
@@ -178,6 +179,7 @@ namespace VideoNarrator
             services.AddSingleton<ISystemPromptBuilder, SystemPromptBuilder>();
             services.AddSingleton<IStyleValidator, StyleValidator>();
             services.AddSingleton<IOutputFormatter, OutputFormatter>();
+            services.AddSingleton<IMultiStageNarrationEngine, MultiStageNarrationEngine>();
             services.AddSingleton<GeminiAiProvider>();
             services.AddSingleton<OpenAiCompatibleProvider>();
             services.AddSingleton<IScriptGenerator, ScriptGenerator>();

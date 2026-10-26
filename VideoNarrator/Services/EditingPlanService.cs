@@ -42,6 +42,8 @@ namespace VideoNarrator.Services
         private readonly ISystemPromptBuilder? _promptBuilder;
         private readonly IFewShotManager? _fewShotManager;
         private readonly IVideoProbeService? _videoProbeService;
+        private readonly IMultiStageNarrationEngine? _narrationEngine;
+        private readonly IStyleEngine? _styleEngine;
         private const string BaseApiUrl = "https://generativelanguage.googleapis.com";
 
         public EditingPlanService(
@@ -51,7 +53,9 @@ namespace VideoNarrator.Services
             IPersonaManager? personaManager = null,
             ISystemPromptBuilder? promptBuilder = null,
             IFewShotManager? fewShotManager = null,
-            IVideoProbeService? videoProbeService = null)
+            IVideoProbeService? videoProbeService = null,
+            IMultiStageNarrationEngine? narrationEngine = null,
+            IStyleEngine? styleEngine = null)
         {
             _httpClient = httpClient;
             _fileService = fileService;
@@ -60,6 +64,8 @@ namespace VideoNarrator.Services
             _promptBuilder = promptBuilder;
             _fewShotManager = fewShotManager;
             _videoProbeService = videoProbeService;
+            _narrationEngine = narrationEngine;
+            _styleEngine = styleEngine;
         }
 
         public static bool IsGenericDownloaderName(string name)
@@ -177,8 +183,6 @@ namespace VideoNarrator.Services
             string targetModel = string.IsNullOrWhiteSpace(model) ? (isCustomApi ? "gemini-3.1-flash-lite" : "gemini-3.5-flash") : model;
             _fileService.Log($"Tạo AI Auto Editing Plan: Chủ đề '{logTopic}', Model '{targetModel}', Duration {videoDurationSeconds:F1}s (API: {(isCustomApi ? apiUrl : "Google Cloud")})");
 
-            string prompt = BuildEditingPrompt(videoDurationSeconds, stylePreset, detectedScenes, settings, topic, customScript, probeResult);
-
             // Attempt to upload video file to Gemini File API so Gemini can watch the actual video (chỉ khả dụng trên Google Cloud)
             string? fileUri = null;
             if (!isCustomApi && File.Exists(videoFilePath))
@@ -197,6 +201,69 @@ namespace VideoNarrator.Services
                     _fileService.Log($"Không thể tải video trực tiếp lên Gemini ({ex.Message}). Tiếp tục phân tích theo chủ đề bám sát...", "WARN");
                 }
             }
+
+            // GIAI ĐOẠN MULTI-STAGE NARRATION ENGINE (NÂNG CẤP KỂ CHUYỆN ĐA GIAI ĐOẠN A -> B -> C)
+            if (string.IsNullOrWhiteSpace(customScript) && _narrationEngine != null && (!string.IsNullOrWhiteSpace(apiKey) || isCustomApi))
+            {
+                try
+                {
+                    progressCallback?.Invoke("AI đang chạy Multi-Stage Narration Engine (Phân tích bối cảnh & Tạo lời thoại hấp dẫn)...", 30);
+                    var persona = _personaManager?.GetPersonaById(stylePreset) ?? _personaManager?.GetPersonaById("curiosity") ?? new PersonaProfile();
+                    var personaConfig = new NarrationPersonaConfig { TargetDurationSeconds = videoDurationSeconds };
+                    if (_styleEngine != null)
+                    {
+                        var (minW, maxW, _) = _styleEngine.CalculateDurationBudget(videoDurationSeconds, settings?.SpeechRate ?? 1.20);
+                        personaConfig.MinWords = minW;
+                        personaConfig.MaxWords = maxW;
+                    }
+
+                    var (generatedScript, analysis, evaluation) = await _narrationEngine.RunFullNarrationPipelineAsync(
+                        apiKey,
+                        targetModel,
+                        fileUri,
+                        !string.IsNullOrEmpty(fileUri) ? _geminiService.GetMimeType(videoFilePath) : null,
+                        videoFilePath,
+                        videoDurationSeconds,
+                        personaConfig,
+                        persona,
+                        probeResult,
+                        topic,
+                        isCustomApi ? apiUrl : null,
+                        progressCallback,
+                        cancellationToken);
+
+                    if (!string.IsNullOrWhiteSpace(generatedScript))
+                    {
+                        customScript = generatedScript;
+                        _fileService.Log($"[Multi-Stage Engine] Sinh kịch bản thành công: {MultiStageNarrationEngine.CountWords(customScript)} từ | Đánh giá Stage C: {evaluation.AverageScore:F1}/10 (Passed: {evaluation.Passed})");
+
+                        if (string.IsNullOrWhiteSpace(topic) && !string.IsNullOrWhiteSpace(analysis.VideoTopic))
+                        {
+                            topic = analysis.VideoTopic;
+                        }
+
+                        if ((detectedScenes == null || detectedScenes.Count <= 1) && analysis.SceneTimeline != null && analysis.SceneTimeline.Count > 1)
+                        {
+                            detectedScenes = analysis.SceneTimeline.Select(st => new VideoScene
+                            {
+                                Start = st.StartTime,
+                                End = Math.Min(videoDurationSeconds, st.EndTime),
+                                Description = $"{st.NarrativeRole}: {st.VisualDescription}",
+                                Importance = st.NarrativeRole.Equals("Hook", StringComparison.OrdinalIgnoreCase) || st.NarrativeRole.Equals("Payoff", StringComparison.OrdinalIgnoreCase) ? "High" : "Medium",
+                                ImportanceScore = 0.9,
+                                FocusX = 0.5,
+                                FocusY = 0.5
+                            }).ToList();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _fileService.Log($"[Multi-Stage Engine] Ngoại lệ: {ex.Message}. Tiếp tục quy trình phân tích mặc định...", "WARN");
+                }
+            }
+
+            string prompt = BuildEditingPrompt(videoDurationSeconds, stylePreset, detectedScenes, settings, topic, customScript, probeResult);
 
             // Setup candidate models list
             var candidateModels = new List<string>();
@@ -402,6 +469,11 @@ namespace VideoNarrator.Services
                 };
             }
 
+            if (!string.IsNullOrWhiteSpace(customScript))
+            {
+                plan.NarrationScript = customScript;
+            }
+
             // Normalize narration script, hook and subtitles for Vietnamese TTS
             if (!string.IsNullOrWhiteSpace(plan.NarrationScript))
             {
@@ -416,8 +488,8 @@ namespace VideoNarrator.Services
 
                 _fileService.Log($"Kiểm tra độ dài kịch bản AI: {currentWords} từ (Tốc độ {speechRate:0.##}x ~{wordsPerSec:F1} từ/s; Yêu cầu: {minRequiredWords} - {targetRequiredWords} từ cho video {videoDurationSeconds:F1}s).");
 
-                // Nếu AI viết thiếu từ (< minRequiredWords) và có Gemini API key hoặc Custom API:
-                if (currentWords < minRequiredWords && (!string.IsNullOrWhiteSpace(apiKey) || isCustomApi))
+                // Nếu AI viết thiếu từ (< minRequiredWords) và có Gemini API key hoặc Custom API (chỉ mở rộng khi kịch bản chưa qua Multi-Stage Engine hoặc quá ngắn):
+                if (string.IsNullOrWhiteSpace(customScript) && currentWords < minRequiredWords && (!string.IsNullOrWhiteSpace(apiKey) || isCustomApi))
                 {
                     _fileService.Log($"Kịch bản AI chỉ có {currentWords} từ (thiếu so với yêu cầu {minRequiredWords} từ). Tự động mở rộng kịch bản để giọng nói bao phủ trọn vẹn {videoDurationSeconds:F1}s...", "WARN");
                     progressCallback?.Invoke($"Đang bổ sung chi tiết thuyết minh ({currentWords}/{targetRequiredWords} từ) để phủ trọn video...", 50);

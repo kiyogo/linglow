@@ -18,6 +18,8 @@ namespace VideoNarrator.Services.PersonalityEngine
         string GetRhythmDirective(string rhythm);
         string GetEndingDirective(string endingStyle);
         string GetVerbosityDirective(string verbosity);
+        string MapLinguisticDirectives(NarrationPersonaConfig config);
+        (int minWords, int maxWords, double targetWords) CalculateDurationBudget(double durationSeconds, double speedMultiplier, string rhythm = "normal");
     }
 
     public class StyleEngine : IStyleEngine
@@ -171,6 +173,94 @@ namespace VideoNarrator.Services.PersonalityEngine
                 "detailed" => "• Tỉ mỉ: Miêu tả sâu sắc, giàu liên tưởng, diễn giải trọn vẹn từng cung bậc.",
                 _ => "• Cân đối: Vừa đủ số từ tương ứng thời lượng video (trung bình 2.5 - 3 từ/giây), không dày đặc cũng không thừa thãi."
             };
+        }
+
+        public string MapLinguisticDirectives(NarrationPersonaConfig config)
+        {
+            if (config == null) return string.Empty;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("=== CHỈ DẪN NGÔN NGỮ ĐIỀU KHIỂN PHONG CÁCH (DYNAMIC LINGUISTIC DIRECTIVES) ===");
+
+            // 1. Energy
+            if (config.Energy <= 3)
+                sb.AppendLine("• Năng lượng & Tông giọng: Giữ năng lượng thư thái, điềm tĩnh, nhả chữ trầm ấm, chậm rãi, tạo cảm giác thư giãn.");
+            else if (config.Energy <= 7)
+                sb.AppendLine("• Năng lượng & Tông giọng: Năng lượng hào hứng vừa phải, tự nhiên như một người bạn đang hào hứng kể chuyện mắt thấy tai nghe.");
+            else
+                sb.AppendLine("• Năng lượng & Tông giọng: Năng lượng bùng nổ đỉnh cao, nhịp điệu dồn dập, ngữ điệu cuốn hút, thôi thúc người xem xem liên tục không rời mắt.");
+
+            // 2. Curiosity
+            if (config.Curiosity <= 3)
+                sb.AppendLine("• Mức độ gợi tò mò: Đi thẳng vào thông tin chính, không úp mở, giải thích trực diện.");
+            else if (config.Curiosity <= 6)
+                sb.AppendLine("• Mức độ gợi tò mò: Mở đầu bằng gợi ý tò mò nhẹ nhàng, dẫn dắt tự nhiên từng bước.");
+            else
+                sb.AppendLine("• Mức độ gợi tò mò: Kích thích tò mò tột độ. Giấu kín mấu chốt ở 3 giây đầu bằng nghịch lý hoặc câu hỏi xoáy, mở ra từng lớp thông tin khiến người xem buộc phải đợi đến giây cuối.");
+
+            // 3. Humor
+            if (config.Humor <= 2)
+                sb.AppendLine("• Yếu tố hài hước: Giữ thái độ hoàn toàn nghiêm túc, khách quan, không pha trò.");
+            else if (config.Humor <= 6)
+                sb.AppendLine("• Yếu tố hài hước: Hóm hỉnh nhẹ nhàng, có nụ cười ẩn hiện trong câu chữ, nhận xét tinh tế.");
+            else
+                sb.AppendLine("• Yếu tố hài hước: Chèn 1-2 nhận xét dí dỏm, hơi châm biếm nhẹ hoặc cà khịa duyên dáng về sự vô lý của tình huống nhưng tuyệt đối không pha trò lố hay dùng từ sáo rỗng.");
+
+            // 4. Drama
+            if (config.Drama <= 3)
+                sb.AppendLine("• Tính kịch tính: Giữ tông giọng bình ổn, mộc mạc, không cường điệu hóa.");
+            else if (config.Drama <= 6)
+                sb.AppendLine("• Tính kịch tính: Có cao trào rõ ràng ở giữa video khi xung đột hoặc rào cản xuất hiện.");
+            else
+                sb.AppendLine("• Tính kịch tính: Đẩy mức độ hồi hộp, căng thẳng lên mức cao nhất, dùng động từ mạnh và câu ngắn dứt khoát tạo áp lực thời gian.");
+
+            // 5. Technical Depth
+            if (config.TechnicalDepth <= 3)
+                sb.AppendLine("• Độ sâu giải thích: Giải thích hoàn toàn bằng ngôn ngữ đời thường, ví von hình ảnh trực quan, không dùng thuật ngữ chuyên môn.");
+            else if (config.TechnicalDepth <= 7)
+                sb.AppendLine("• Độ sâu giải thích: Giải thích rõ nguyên lý và cơ chế hoạt động thực tế (vật lý, cơ học, quy tắc) bằng các bước nhân - quả mạch lạc.");
+            else
+                sb.AppendLine("• Độ sâu giải thích: Bóc tách sâu cơ chế vi mô, cấu tạo chi tiết, định lượng thông số chính xác để thỏa mãn người xem sành sỏi.");
+
+            // 6. Sentence Variation
+            if (config.SentenceVariation <= 4)
+                sb.AppendLine("• Biến thiên nhịp câu: Các câu có độ dài tương đối đồng đều, nhịp điệu ổn định, dễ theo dõi.");
+            else
+                sb.AppendLine("• Biến thiên nhịp câu: Đan xen tương phản mạnh giữa câu cực ngắn (2-4 từ) để nhấn mạnh khoảnh khắc giật mình và câu trung bình (8-14 từ) để giải thích cơ chế.");
+
+            // 7. Audience Level
+            switch (config.AudienceLevel?.ToLowerInvariant())
+            {
+                case "expert":
+                    sb.AppendLine("• Đối tượng người nghe: Phục vụ người xem am hiểu, ngôn từ chuẩn xác, phân tích sâu cơ chế hoạt động.");
+                    break;
+                case "enthusiast":
+                    sb.AppendLine("• Đối tượng người nghe: Phục vụ người đam mê tìm hiểu, chú trọng tính logic, mẹo hay và chi tiết đắt giá.");
+                    break;
+                default:
+                    sb.AppendLine("• Đối tượng người nghe: Phục vụ đại chúng mọi lứa tuổi, từ ngữ bình dân, bắt tai, dễ hiểu ngay lập tức.");
+                    break;
+            }
+
+            return sb.ToString().Trim();
+        }
+
+        public (int minWords, int maxWords, double targetWords) CalculateDurationBudget(double durationSeconds, double speedMultiplier, string rhythm = "normal")
+        {
+            if (durationSeconds <= 0) durationSeconds = 30.0;
+            if (speedMultiplier <= 0) speedMultiplier = 1.15;
+
+            // Tiếng Việt đơn âm tiết: Shorts đọc tự nhiên 3.8 - 4.3 âm tiết/giây
+            double baseWordsPerSec = 4.05 * speedMultiplier;
+
+            // Trừ khoảng đệm ngắt nghỉ dấu câu và kết thúc an toàn (~1.2s - 2.0s)
+            double effectiveSpeechSeconds = Math.Max(10.0, durationSeconds - 1.5);
+
+            double target = effectiveSpeechSeconds * baseWordsPerSec;
+            int min = (int)Math.Max(35, Math.Round(target * 0.90));
+            int max = (int)Math.Max(min + 15, Math.Round(target * 1.08));
+
+            return (min, max, target);
         }
     }
 }

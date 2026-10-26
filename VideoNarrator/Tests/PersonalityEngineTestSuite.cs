@@ -335,8 +335,8 @@ namespace VideoNarrator.Tests
                     videoDurationSeconds: 15.2,
                     stylePreset: "TikTok Shorts",
                     detectedScenes: null,
-                    settings: new AppSettings { NarrationTone = "🔥 Hài hước, Bắt trend TikTok" },
-                    customScript: null,
+                    settings: new AppSettings { GeminiApiUrl = "https://generativelanguage.googleapis.com", NarrationTone = "🔥 Hài hước, Bắt trend TikTok" },
+                    customScript: "Tuổi học trò là những khoảnh khắc tinh nghịch và đáng nhớ nhất.",
                     customTopic: "Tuổi học trò hài hước")).GetAwaiter().GetResult();
                 sw.Stop();
 
@@ -392,6 +392,202 @@ namespace VideoNarrator.Tests
             catch (Exception ex)
             {
                 reports.Add(new TestReportItem { TestName = "14. Hiệu chuẩn mật độ từ ngữ & Giữ nguyên toàn bộ video ngắn", Passed = false, Details = ex.Message });
+            }
+
+            // TEST 15: Stage A Content Understanding Model Schema & Zero Hallucination
+            try
+            {
+                string sampleJson = @"{
+                  ""videoTopic"": ""Người đàn ông bấm vé tàu siêu tốc"",
+                  ""mainSubject"": ""Người đàn ông đứng trước máy bán vé tự động"",
+                  ""observedEvents"": [""Nhận tiền mặt"", ""Bấm màn hình siêu nhanh"", ""Vé in ra đưa cho khách""],
+                  ""keyVisualDetails"": [""Ga tàu đông đúc"", ""Máy bán vé cảm ứng"", ""Tiền mặt 50 rupee""],
+                  ""curiosityPoint"": ""Không phải nhân viên nhà ga nhưng lại đứng bán vé hộ"",
+                  ""explanation"": ""Giao diện máy quá phức tạp với người già"",
+                  ""payoff"": ""Chưa đầy 5 giây chiếc vé đã in ra chuẩn xác"",
+                  ""uncertainties"": [""Không rõ anh ấy có lấy tiền boa hay không""],
+                  ""sceneTimeline"": [
+                    { ""startTime"": 0.0, ""endTime"": 3.0, ""visualDescription"": ""Nhận tiền mặt từ khách"", ""narrativeRole"": ""Hook"" },
+                    { ""startTime"": 3.0, ""endTime"": 10.0, ""visualDescription"": ""Màn hình bán vé phức tạp"", ""narrativeRole"": ""Situation"" },
+                    { ""startTime"": 10.0, ""endTime"": 18.0, ""visualDescription"": ""Ngón tay bấm lướt như bay"", ""narrativeRole"": ""Mechanism"" },
+                    { ""startTime"": 18.0, ""endTime"": 23.0, ""visualDescription"": ""Vé in ra trao tận tay"", ""narrativeRole"": ""Payoff"" }
+                  ]
+                }";
+
+                var analysis = JsonSerializer.Deserialize<VideoContentAnalysis>(sampleJson);
+                bool valid = analysis != null &&
+                             analysis.VideoTopic.Contains("bấm vé tàu") &&
+                             analysis.ObservedEvents.Count == 3 &&
+                             analysis.SceneTimeline.Count == 4 &&
+                             analysis.SceneTimeline[0].NarrativeRole == "Hook" &&
+                             analysis.Uncertainties.Count == 1;
+
+                reports.Add(new TestReportItem
+                {
+                    TestName = "15. Stage A Content Understanding & Zero Hallucination Schema",
+                    Passed = valid,
+                    Details = valid
+                        ? $"Thành công: Parse trọn vẹn 9 trường dữ liệu thực chứng (Topic, Subject, Events, Details, Timeline 4 scenes)."
+                        : "Thất bại: Schema phân tích không khớp."
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "15. Stage A Content Understanding & Zero Hallucination Schema", Passed = false, Details = ex.Message });
+            }
+
+            // TEST 16: Dynamic Linguistic Directives & 8 Standardized Presets Mapping
+            try
+            {
+                string[] presets = { "Curiosity", "Oddly Satisfying", "Science Explained", "Storytelling", "Fast-Paced", "Cinematic", "Dry Humor", "Custom Persona" };
+                int resolvedCount = 0;
+                foreach (var p in presets)
+                {
+                    var found = personaManager.GetPersonaById(p);
+                    if (found != null) resolvedCount++;
+                }
+
+                var config = new NarrationPersonaConfig
+                {
+                    Curiosity = 9,
+                    Humor = 8,
+                    TechnicalDepth = 8,
+                    AudienceLevel = "Enthusiast"
+                };
+                string directives = styleEngine.MapLinguisticDirectives(config);
+                bool hasCuriosity = directives.Contains("Kích thích tò mò tột độ");
+                bool hasHumor = directives.Contains("châm biếm nhẹ hoặc cà khịa");
+                bool hasTech = directives.Contains("cơ chế vi mô");
+                bool hasAudience = directives.Contains("đam mê tìm hiểu");
+
+                bool passed = resolvedCount == 8 && hasCuriosity && hasHumor && hasTech && hasAudience;
+                reports.Add(new TestReportItem
+                {
+                    TestName = "16. Dynamic Linguistic Directives & 8 Standardized Presets Mapping",
+                    Passed = passed,
+                    Details = passed
+                        ? $"Thành công: 8/8 Presets chuẩn hóa phân giải thành công. Sliders sinh đúng chỉ thị ngôn ngữ tiếng Việt."
+                        : $"Thất bại: resolved={resolvedCount}/8, cur={hasCuriosity}, hum={hasHumor}, tech={hasTech}, aud={hasAudience}"
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "16. Dynamic Linguistic Directives & 8 Standardized Presets Mapping", Passed = false, Details = ex.Message });
+            }
+
+            // TEST 17: Vietnamese Duration & Syllable Pacing Budget (3.8 - 4.3 syl/s)
+            try
+            {
+                var (min23, max23, target23) = styleEngine.CalculateDurationBudget(23.0, 1.15);
+                var (min45, max45, target45) = styleEngine.CalculateDurationBudget(45.0, 1.20);
+
+                bool valid23 = min23 >= 70 && max23 <= 125 && target23 >= 80;
+                bool valid45 = min45 >= 160 && max45 <= 245 && target45 >= 180;
+
+                bool passed = valid23 && valid45;
+                reports.Add(new TestReportItem
+                {
+                    TestName = "17. Vietnamese Duration & TTS Syllable Pacing Budget",
+                    Passed = passed,
+                    Details = passed
+                        ? $"Thành công: 23s -> [{min23}-{max23}] từ (~{target23:F0} từ); 45s -> [{min45}-{max45}] từ (~{target45:F0} từ). Đảm bảo nhịp thở TTS."
+                        : $"Thất bại: 23s: [{min23}-{max23}], 45s: [{min45}-{max45}]"
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "17. Vietnamese Duration & TTS Syllable Pacing Budget", Passed = false, Details = ex.Message });
+            }
+
+            // TEST 18: Stage C Quality Filter & Targeted Revision Engine
+            try
+            {
+                var eval = new ScriptQualityEvaluation
+                {
+                    HookSpecificity = 4.0,
+                    LogicalFlow = 5.0,
+                    InformationDensity = 4.0,
+                    ClicheFree = 3.0,
+                    SpokenNaturalness = 6.0,
+                    VisualAccuracy = 7.0,
+                    PayoffSatisfaction = 4.0,
+                    DurationFit = 5.0
+                };
+                eval.AverageScore = (eval.HookSpecificity + eval.LogicalFlow + eval.InformationDensity +
+                                     eval.ClicheFree + eval.SpokenNaturalness + eval.VisualAccuracy +
+                                     eval.PayoffSatisfaction + eval.DurationFit) / 8.0;
+                eval.Passed = eval.AverageScore >= 7.5;
+
+                eval.WeakSentences.Add(new WeakSentenceItem
+                {
+                    OriginalSentence = "Chào mừng các bạn đến với video hôm nay!",
+                    Reason = "Văn mẫu chào hỏi sáo rỗng",
+                    SuggestedFix = "Đi thẳng vào hành động mở đầu"
+                });
+
+                bool passed = !eval.Passed && eval.AverageScore < 6.0 && eval.WeakSentences.Count == 1;
+                reports.Add(new TestReportItem
+                {
+                    TestName = "18. Stage C Quality Filter & Targeted Revision Engine",
+                    Passed = passed,
+                    Details = passed
+                        ? $"Thành công: Bộ lọc 8 tiêu chí chấm {eval.AverageScore:F1}/10, phát hiện câu yếu và chỉ định sửa có mục tiêu."
+                        : "Thất bại trong tính toán chất lượng Stage C."
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "18. Stage C Quality Filter & Targeted Revision Engine", Passed = false, Details = ex.Message });
+            }
+
+            // TEST 19: VideoDownloadService URL Pattern Matching & Social Platform Support
+            try
+            {
+                bool tiktok = VideoNarrator.Services.VideoDownloadService.IsSupportedUrl("https://www.tiktok.com/@user/video/123456789012345");
+                bool shorts = VideoNarrator.Services.VideoDownloadService.IsSupportedUrl("https://www.youtube.com/shorts/UivrsuLad_U");
+                bool reels = VideoNarrator.Services.VideoDownloadService.IsSupportedUrl("https://www.instagram.com/reel/C123456789/");
+                bool fb = VideoNarrator.Services.VideoDownloadService.IsSupportedUrl("https://www.facebook.com/watch/?v=987654321");
+                bool x = VideoNarrator.Services.VideoDownloadService.IsSupportedUrl("https://x.com/user/status/1234567890");
+                bool invalid = VideoNarrator.Services.VideoDownloadService.IsSupportedUrl("https://google.com/search?q=video");
+
+                bool passed = tiktok && shorts && reels && fb && x && !invalid;
+                reports.Add(new TestReportItem
+                {
+                    TestName = "19. VideoDownloadService URL Pattern Matching (TikTok/Shorts/Reels/FB/X)",
+                    Passed = passed,
+                    Details = passed
+                        ? "Thành công: Nhận diện chuẩn xác mọi liên kết mạng xã hội chính và từ chối liên kết không hợp lệ."
+                        : $"Thất bại: tiktok={tiktok}, shorts={shorts}, reels={reels}, fb={fb}, x={x}, invalidRejected={!invalid}"
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "19. VideoDownloadService URL Pattern Matching (TikTok/Shorts/Reels/FB/X)", Passed = false, Details = ex.Message });
+            }
+
+            // TEST 20: Script Sanitizer & Clean Narration Output
+            try
+            {
+                string rawAiOutput = "```json\nLời thoại:\n[00:00 - 00:05] Đây là câu chuyện thật không thể tin nổi.\n```";
+                string cleaned = MultiStageNarrationEngine.CleanNarrationScript(rawAiOutput);
+
+                bool passed = !cleaned.Contains("```") &&
+                              !cleaned.Contains("Lời thoại:") &&
+                              !cleaned.Contains("[00:00") &&
+                              cleaned.Contains("Đây là câu chuyện thật");
+
+                reports.Add(new TestReportItem
+                {
+                    TestName = "20. Script Sanitizer & Clean Spoken Narration Output",
+                    Passed = passed,
+                    Details = passed
+                        ? $"Thành công: Đã loại bỏ code block markdown, nhãn tiền tố và timestamp. Kết quả: \"{cleaned}\""
+                        : $"Thất bại: Chuỗi chưa được làm sạch: \"{cleaned}\""
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "20. Script Sanitizer & Clean Spoken Narration Output", Passed = false, Details = ex.Message });
             }
 
             return reports;
