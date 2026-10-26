@@ -23,6 +23,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             string? mimeType,
             string videoFilePath,
             VideoProbeResult? probeResult,
+            string? topic = null,
             string? apiUrl = null,
             Action<string, double>? progressCallback = null,
             CancellationToken cancellationToken = default);
@@ -92,6 +93,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             string? mimeType,
             string videoFilePath,
             VideoProbeResult? probeResult,
+            string? topic = null,
             string? apiUrl = null,
             Action<string, double>? progressCallback = null,
             CancellationToken cancellationToken = default)
@@ -109,16 +111,29 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbPrompt.AppendLine("CHỈ GHI NHẬN NHỮNG GÌ THỰC SỰ THẤY HOẶC NGHE THẤY. Không tự suy diễn hay bịa đặt.");
             sbPrompt.AppendLine();
 
-            if (probeResult != null && probeResult.Success)
+            if (!string.IsNullOrWhiteSpace(topic))
             {
-                sbPrompt.AppendLine("=== DỮ LIỆU ĐO ĐẠC THỰC TẾ TỪ CẢNH QUAY ===");
-                if (!string.IsNullOrWhiteSpace(probeResult.AudioText))
-                    sbPrompt.AppendLine($"- Lời thoại/Âm thanh gốc trong video: \"{probeResult.AudioText}\"");
-                if (!string.IsNullOrWhiteSpace(probeResult.OcrText))
-                    sbPrompt.AppendLine($"- Văn bản OCR trên màn hình: \"{probeResult.OcrText}\"");
-                if (!string.IsNullOrWhiteSpace(probeResult.SuggestedTopic))
-                    sbPrompt.AppendLine($"- Gợi ý chủ đề quan sát: \"{probeResult.SuggestedTopic}\"");
-                sbPrompt.AppendLine("===========================================");
+                sbPrompt.AppendLine($"- Chủ đề hoặc tiêu đề gốc của video: \"{topic.Trim()}\"");
+            }
+
+            if (probeResult != null)
+            {
+                if (probeResult.KeyframeBase64List != null && probeResult.KeyframeBase64List.Count > 0)
+                {
+                    sbPrompt.AppendLine($"- Đã đính kèm {probeResult.KeyframeBase64List.Count} khung hình thực tế từ các mốc thời gian trong video. Hãy quan sát thật kỹ các ảnh này để nhận diện chính xác chủ thể, bối cảnh, công cụ, hành động và không gian.");
+                }
+
+                if (probeResult.Success)
+                {
+                    sbPrompt.AppendLine("=== DỮ LIỆU ĐO ĐẠC THỰC TẾ TỪ CẢNH QUAY ===");
+                    if (!string.IsNullOrWhiteSpace(probeResult.AudioText))
+                        sbPrompt.AppendLine($"- Lời thoại/Âm thanh gốc trong video: \"{probeResult.AudioText}\"");
+                    if (!string.IsNullOrWhiteSpace(probeResult.OcrText))
+                        sbPrompt.AppendLine($"- Văn bản OCR trên màn hình: \"{probeResult.OcrText}\"");
+                    if (!string.IsNullOrWhiteSpace(probeResult.SuggestedTopic))
+                        sbPrompt.AppendLine($"- Gợi ý chủ đề quan sát: \"{probeResult.SuggestedTopic}\"");
+                    sbPrompt.AppendLine("===========================================");
+                }
             }
 
             sbPrompt.AppendLine(@"XUẤT RA DUY NHẤT MỘT ĐỐI TƯỢNG JSON VỚI CÁC TRƯỜNG SAU:
@@ -150,7 +165,7 @@ namespace VideoNarrator.Services.PersonalityEngine
   ""overallPacing"": ""medium""
 }");
 
-            string? responseJson = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), fileUri, mimeType, isCustomApi, apiUrl, cancellationToken);
+            string? responseJson = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), fileUri, mimeType, isCustomApi, apiUrl, probeResult?.KeyframeBase64List, cancellationToken);
             VideoContentAnalysis? analysis = null;
 
             if (!string.IsNullOrWhiteSpace(responseJson))
@@ -158,25 +173,37 @@ namespace VideoNarrator.Services.PersonalityEngine
                 analysis = JsonHelper.DeserializeSafe<VideoContentAnalysis>(responseJson);
             }
 
-            // Fallback an toàn nếu chưa phân tích được từ AI
-            if (analysis == null || string.IsNullOrWhiteSpace(analysis.MainSubject))
+            // Fallback an toàn nếu chưa phân tích được từ AI hoặc AI trả về cụm từ rác "chưa xác định"
+            bool isInvalidAnalysis = analysis == null ||
+                                     string.IsNullOrWhiteSpace(analysis.MainSubject) ||
+                                     analysis.MainSubject.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase) ||
+                                     analysis.MainSubject.Contains("chưa có", StringComparison.OrdinalIgnoreCase) ||
+                                     analysis.VideoTopic.Contains("chưa có dữ liệu", StringComparison.OrdinalIgnoreCase) ||
+                                     analysis.VideoTopic.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase);
+
+            if (isInvalidAnalysis)
             {
-                _fileService.Log("Tạo VideoContentAnalysis dự phòng từ probeResult và metadata file.", "INFO");
-                string topic = probeResult?.SuggestedTopic ?? Path.GetFileNameWithoutExtension(videoFilePath);
+                _fileService.Log("Tạo VideoContentAnalysis dự phòng từ metadata file và dữ liệu đo đạc.", "INFO");
+                string resolvedTopic = !string.IsNullOrWhiteSpace(topic)
+                    ? topic.Trim()
+                    : (!string.IsNullOrWhiteSpace(probeResult?.SuggestedTopic)
+                        ? probeResult.SuggestedTopic
+                        : Path.GetFileNameWithoutExtension(videoFilePath));
+
                 analysis = new VideoContentAnalysis
                 {
-                    VideoTopic = topic,
-                    MainSubject = !string.IsNullOrWhiteSpace(probeResult?.SuggestedTopic) ? probeResult.SuggestedTopic : "Chủ thể trong video",
+                    VideoTopic = resolvedTopic,
+                    MainSubject = resolvedTopic,
                     ObservedEvents = new List<string>
                     {
-                        "Bắt đầu hành động với tình huống bất thường",
-                        "Các bước xử lý cụ thể xuất hiện liên tiếp",
-                        "Khoảnh khắc cao trào và kết quả hoàn tất"
+                        "Bắt đầu với tình huống gây chú ý ngay từ giây đầu",
+                        "Diễn biến hành động nối tiếp theo nhịp điệu hình ảnh",
+                        "Khoảnh khắc ấn tượng và kết quả cuối cùng"
                     },
-                    KeyVisualDetails = new List<string> { probeResult?.OcrText ?? "Chuyển động trên màn hình" },
-                    CuriosityPoint = "Cách xử lý độc lạ và kết quả bất ngờ ngoài dự đoán",
-                    Explanation = "Cơ chế phối hợp thao tác chính xác và công cụ hỗ trợ",
-                    Payoff = "Mục tiêu ban đầu được giải quyết trọn vẹn",
+                    KeyVisualDetails = new List<string> { probeResult?.OcrText ?? "Hình ảnh thực tế từ cảnh quay" },
+                    CuriosityPoint = "Chi tiết đối lập hoặc diễn biến bất ngờ thu hút ánh nhìn",
+                    Explanation = "Diễn biến thực tế được ghi lại trọn vẹn qua từng khung hình",
+                    Payoff = "Mang lại trải nghiệm cuốn hút và thỏa mãn trí tò mò của người xem",
                     Uncertainties = new List<string>(),
                     OverallPacing = "medium"
                 };
@@ -261,7 +288,7 @@ namespace VideoNarrator.Services.PersonalityEngine
 
             sbPrompt.AppendLine("CHỈ XUẤT RA DUY NHẤT LỜI THOẠI THUYẾT MINH HOÀN CHỈNH BẰNG TIẾNG VIỆT, KHÔNG THÊM LỜI DẪN, KHÔNG THÊM NGOẶC VUÔNG GIẢI THÍCH.");
 
-            string? draft = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), null, null, isCustomApi, apiUrl, cancellationToken);
+            string? draft = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken);
             if (string.IsNullOrWhiteSpace(draft))
             {
                 draft = GenerateFallbackScript(analysis, personaConfig);
@@ -324,7 +351,7 @@ namespace VideoNarrator.Services.PersonalityEngine
   ""revisionInstructions"": ""chỉ thị chỉnh sửa nếu cần...""
 }");
 
-            string? evalJson = await CallGeminiAsync(apiKey, model, sbEval.ToString(), null, null, isCustomApi, apiUrl, cancellationToken);
+            string? evalJson = await CallGeminiAsync(apiKey, model, sbEval.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken);
             ScriptQualityEvaluation? evaluation = null;
 
             if (!string.IsNullOrWhiteSpace(evalJson))
@@ -371,7 +398,7 @@ namespace VideoNarrator.Services.PersonalityEngine
                 sbRevise.AppendLine();
                 sbRevise.AppendLine("YÊU CẦU: CHỈ VIẾT LẠI ĐÚNG CÁC CÂU LỖI, GIỮ NGUYÊN CÁC CÂU ĐÃ ĐẠT CHUẨN VÀ GIỮ TRỌN VẸN CÁ TÍNH PHONG CÁCH. Xuất ra toàn bộ kịch bản hoàn chỉnh sau khi thay thế.");
 
-                string? revised = await CallGeminiAsync(apiKey, model, sbRevise.ToString(), null, null, isCustomApi, apiUrl, cancellationToken);
+                string? revised = await CallGeminiAsync(apiKey, model, sbRevise.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken);
                 if (!string.IsNullOrWhiteSpace(revised))
                 {
                     draftScript = CleanNarrationScript(revised);
@@ -400,7 +427,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             personaConfig.TargetDurationSeconds = videoDurationSeconds;
 
             // STAGE A
-            var analysis = await AnalyzeContentAsync(apiKey, model, fileUri, mimeType, videoFilePath, probeResult, apiUrl, progressCallback, cancellationToken);
+            var analysis = await AnalyzeContentAsync(apiKey, model, fileUri, mimeType, videoFilePath, probeResult, customUserInstructions, apiUrl, progressCallback, cancellationToken);
 
             // STAGE B
             string draft = await GenerateNarrativeAsync(apiKey, model, analysis, personaConfig, personaProfile, customUserInstructions, apiUrl, progressCallback, cancellationToken);
@@ -419,6 +446,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             string? mimeType,
             bool isCustomApi,
             string? apiUrl,
+            List<string>? keyframeBase64List,
             CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(apiKey) && !isCustomApi)
@@ -426,79 +454,136 @@ namespace VideoNarrator.Services.PersonalityEngine
                 return null;
             }
 
-            string targetModel = !string.IsNullOrWhiteSpace(model) ? model : (isCustomApi ? "gemini-3.1-flash-lite" : "gemini-3.5-flash");
-            string url = isCustomApi
-                ? $"{apiUrl!.TrimEnd('/')}/generate"
-                : $"{BaseApiUrl}/v1beta/models/{targetModel}:generateContent?key={apiKey}";
+            // Kiểm tra nếu local proxy chưa đăng nhập (UNAUTHENTICATED) thì dừng ngay không để timeout
+            if (isCustomApi && !string.IsNullOrWhiteSpace(apiUrl))
+            {
+                try
+                {
+                    using var pingReq = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+                    using var pingCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    using var pingResp = await _httpClient.SendAsync(pingReq, pingCts.Token);
+                    if (pingResp.IsSuccessStatusCode)
+                    {
+                        string body = await pingResp.Content.ReadAsStringAsync(pingCts.Token);
+                        if (body.Contains("UNAUTHENTICATED", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _fileService.Log($"[Gemini] Server local {apiUrl} báo UNAUTHENTICATED (chưa đăng nhập). Bỏ qua để không treo ứng dụng.", "WARN");
+                            return null;
+                        }
+                    }
+                }
+                catch { }
+            }
 
-            object requestPayload;
+            string[] candidateModels;
             if (isCustomApi)
             {
-                requestPayload = new { prompt, model = targetModel };
+                candidateModels = new[] { !string.IsNullOrWhiteSpace(model) ? model : "gemini-3.1-flash-lite" };
             }
             else
             {
-                var partsList = new List<object>();
-                if (!string.IsNullOrEmpty(fileUri) && !string.IsNullOrEmpty(mimeType))
-                {
-                    partsList.Add(new
-                    {
-                        file_data = new
-                        {
-                            mime_type = mimeType,
-                            file_uri = fileUri
-                        }
-                    });
-                }
-                partsList.Add(new { text = prompt });
-
-                requestPayload = new
-                {
-                    contents = new[]
-                    {
-                        new { parts = partsList.ToArray() }
-                    },
-                    generationConfig = new
-                    {
-                        temperature = 0.72
-                    }
-                };
+                // Danh sách model ưu tiên cho Google Gemini API chính thức
+                string preferred = !string.IsNullOrWhiteSpace(model) ? model : "gemini-3-flash-preview";
+                candidateModels = new[] { preferred, "gemini-3-flash-preview", "gemini-flash-latest", "gemini-3.8-flash" }
+                    .Distinct().ToArray();
             }
 
-            try
+            foreach (var targetModel in candidateModels)
             {
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(50));
+                string url = isCustomApi
+                    ? $"{apiUrl!.TrimEnd('/')}/generate"
+                    : $"{BaseApiUrl}/v1beta/models/{targetModel}:generateContent?key={apiKey}";
 
-                using var req = new HttpRequestMessage(HttpMethod.Post, url);
-                req.Content = new StringContent(JsonSerializer.Serialize(requestPayload), Encoding.UTF8, "application/json");
-
-                using var resp = await _httpClient.SendAsync(req, cts.Token);
-                string text = await resp.Content.ReadAsStringAsync(cts.Token);
-
-                if (resp.IsSuccessStatusCode)
+                object requestPayload;
+                if (isCustomApi)
                 {
-                    using var doc = JsonDocument.Parse(text);
-                    var root = doc.RootElement;
-                    if (root.TryGetProperty("text", out var tp)) return tp.GetString();
-                    if (root.TryGetProperty("candidates", out var cand) && cand.GetArrayLength() > 0)
+                    requestPayload = new { prompt, model = targetModel };
+                }
+                else
+                {
+                    var partsList = new List<object>();
+
+                    // 1. Gửi trực tiếp các khung hình video (Multimodal Vision) nếu có
+                    if (keyframeBase64List != null && keyframeBase64List.Count > 0)
                     {
-                        var first = cand[0];
-                        if (first.TryGetProperty("content", out var cnt) &&
-                            cnt.TryGetProperty("parts", out var parts) && parts.GetArrayLength() > 0)
+                        foreach (var b64 in keyframeBase64List)
                         {
-                            return parts[0].GetProperty("text").GetString();
+                            partsList.Add(new
+                            {
+                                inline_data = new
+                                {
+                                    mime_type = "image/jpeg",
+                                    data = b64
+                                }
+                            });
                         }
                     }
-                    if (root.TryGetProperty("choices", out var ch) && ch.GetArrayLength() > 0)
+                    else if (!string.IsNullOrEmpty(fileUri) && !string.IsNullOrEmpty(mimeType))
                     {
-                        return ch[0].GetProperty("message").GetProperty("content").GetString();
+                        partsList.Add(new
+                        {
+                            file_data = new
+                            {
+                                mime_type = mimeType,
+                                file_uri = fileUri
+                            }
+                        });
+                    }
+
+                    partsList.Add(new { text = prompt });
+
+                    requestPayload = new
+                    {
+                        contents = new[]
+                        {
+                            new { parts = partsList.ToArray() }
+                        },
+                        generationConfig = new
+                        {
+                            temperature = 0.72
+                        }
+                    };
+                }
+
+                try
+                {
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    cts.CancelAfter(TimeSpan.FromSeconds(20));
+
+                    using var req = new HttpRequestMessage(HttpMethod.Post, url);
+                    req.Content = new StringContent(JsonSerializer.Serialize(requestPayload), Encoding.UTF8, "application/json");
+
+                    using var resp = await _httpClient.SendAsync(req, cts.Token);
+                    string text = await resp.Content.ReadAsStringAsync(cts.Token);
+
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        using var doc = JsonDocument.Parse(text);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("text", out var tp)) return tp.GetString();
+                        if (root.TryGetProperty("candidates", out var cand) && cand.GetArrayLength() > 0)
+                        {
+                            var first = cand[0];
+                            if (first.TryGetProperty("content", out var cnt) &&
+                                cnt.TryGetProperty("parts", out var parts) && parts.GetArrayLength() > 0)
+                            {
+                                return parts[0].GetProperty("text").GetString();
+                            }
+                        }
+                        if (root.TryGetProperty("choices", out var ch) && ch.GetArrayLength() > 0)
+                        {
+                            return ch[0].GetProperty("message").GetProperty("content").GetString();
+                        }
+                    }
+                    else
+                    {
+                        _fileService.Log($"[Gemini] Model {targetModel} trả về mã {resp.StatusCode}: {text}", "WARN");
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                _fileService.Log($"CallGeminiAsync ngoại lệ: {ex.Message}", "WARN");
+                catch (Exception ex)
+                {
+                    _fileService.Log($"CallGeminiAsync model {targetModel} ngoại lệ: {ex.Message}", "WARN");
+                }
             }
 
             return null;
@@ -506,12 +591,32 @@ namespace VideoNarrator.Services.PersonalityEngine
 
         private static string GenerateFallbackScript(VideoContentAnalysis analysis, NarrationPersonaConfig config)
         {
+            string subject = analysis.MainSubject;
+            if (string.IsNullOrWhiteSpace(subject) ||
+                subject.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase) ||
+                subject.Contains("chưa có", StringComparison.OrdinalIgnoreCase))
+            {
+                subject = !string.IsNullOrWhiteSpace(analysis.VideoTopic) && !analysis.VideoTopic.Contains("chưa có", StringComparison.OrdinalIgnoreCase)
+                    ? analysis.VideoTopic
+                    : "khoảnh khắc độc đáo này";
+            }
+
+            string explanation = analysis.Explanation;
+            if (string.IsNullOrWhiteSpace(explanation) || explanation.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
+            {
+                explanation = "Từng diễn biến trong video mang lại trải nghiệm vô cùng chân thực và cuốn hút";
+            }
+
+            string payoff = analysis.Payoff;
+            if (string.IsNullOrWhiteSpace(payoff) || payoff.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
+            {
+                payoff = "một góc nhìn hoàn toàn mới lạ mà không phải ai cũng từng thấy";
+            }
+
             var sb = new StringBuilder();
-            sb.Append($"Đây là cách {analysis.MainSubject.ToLowerInvariant()} tạo nên điều bất ngờ. ");
-            sb.Append("Thay vì làm theo cách thông thường, từng bước được thực hiện với độ chuẩn xác đáng nể. ");
-            sb.Append($"{analysis.Explanation}. ");
-            sb.Append($"Và kết quả là {analysis.Payoff.ToLowerInvariant()}. ");
-            sb.Append("Biến nút thích thành một điều may mắn nếu bạn thấy điều này thú vị!");
+            sb.Append($"Nhìn vào {subject.ToLowerInvariant()}, bạn sẽ thấy điều thú vị bắt đầu ngay từ những giây đầu tiên. ");
+            sb.Append($"{explanation}. ");
+            sb.Append($"Và kết quả đem lại {payoff.ToLowerInvariant()}.");
             return sb.ToString();
         }
 

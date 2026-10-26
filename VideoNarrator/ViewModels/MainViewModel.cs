@@ -1228,9 +1228,26 @@ namespace VideoNarrator.ViewModels
         private void LoadSavedSettings()
         {
             var s = _settingsService.CurrentSettings;
-            _geminiApiUrl = !string.IsNullOrWhiteSpace(s.GeminiApiUrl) ? s.GeminiApiUrl : "http://192.168.1.15:6660/api";
-            _geminiApiKey = string.Empty;
-            _selectedGeminiModel = (string.IsNullOrWhiteSpace(s.GeminiModel) || s.GeminiModel.StartsWith("gemini-2.") || s.GeminiModel.StartsWith("gemini-1.")) ? "gemini-3.1-flash-lite" : s.GeminiModel;
+
+            string envKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY", EnvironmentVariableTarget.User)
+                         ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY", EnvironmentVariableTarget.Process)
+                         ?? Environment.GetEnvironmentVariable("GOOGLE_API_KEY")
+                         ?? string.Empty;
+
+            _geminiApiKey = !string.IsNullOrWhiteSpace(s.GeminiApiKey) ? s.GeminiApiKey : envKey;
+
+            // Nếu có API key hợp lệ thì ưu tiên dùng endpoint chính thức của Google
+            if (!string.IsNullOrWhiteSpace(_geminiApiKey) &&
+                (string.IsNullOrWhiteSpace(s.GeminiApiUrl) || s.GeminiApiUrl.Contains("192.168.1.15")))
+            {
+                _geminiApiUrl = "https://generativelanguage.googleapis.com";
+            }
+            else
+            {
+                _geminiApiUrl = !string.IsNullOrWhiteSpace(s.GeminiApiUrl) ? s.GeminiApiUrl : "https://generativelanguage.googleapis.com";
+            }
+
+            _selectedGeminiModel = (string.IsNullOrWhiteSpace(s.GeminiModel) || s.GeminiModel.StartsWith("gemini-1.") || s.GeminiModel.StartsWith("gemini-2.")) ? "gemini-3-flash-preview" : s.GeminiModel;
             _selectedTtsProvider = string.IsNullOrWhiteSpace(s.TtsProvider) ? "Edge-TTS" : s.TtsProvider;
             _ttsApiKey = s.TtsApiKey;
             _selectedTtsVoice = string.IsNullOrWhiteSpace(s.TtsVoice) ? "vi-VN-NamMinhNeural (Nam - Tiếng Việt)" : s.TtsVoice;
@@ -1360,6 +1377,7 @@ namespace VideoNarrator.ViewModels
                 // Tự động xóa sạch kịch bản cũ và dữ liệu biên tập cũ để làm lại hoàn toàn từ đầu
                 ScriptText = string.Empty;
                 HookText = string.Empty;
+                CustomTopic = string.Empty;
                 CurrentEditingPlan = null;
                 HasEditingPlan = false;
                 DetectedScenes.Clear();

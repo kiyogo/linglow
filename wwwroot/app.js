@@ -1199,7 +1199,10 @@ function handleVideoLoaded(data) {
     // Không phát video gốc khi mới tải lên theo yêu cầu người dùng
     resetPlayerToEmptyState();
 
-    // Tự động xóa sạch kịch bản cũ khi nạp video mới để bắt đầu từ đầu
+    // Tự động xóa sạch kịch bản cũ và chủ đề cũ khi nạp video mới để bắt đầu từ đầu
+    const topicEl = document.getElementById('topicInput');
+    if (topicEl) topicEl.value = data.customTopic || "";
+
     const scriptEl = document.getElementById('scriptInput');
     if (scriptEl) {
         scriptEl.value = "";

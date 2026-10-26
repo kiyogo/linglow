@@ -6,9 +6,9 @@ namespace VideoNarrator.Models
     public class AppSettings
     {
         // Core / Classic Settings
-        public string GeminiApiUrl { get; set; } = "http://192.168.1.15:6660/api";
+        public string GeminiApiUrl { get; set; } = "https://generativelanguage.googleapis.com";
         public string GeminiApiKey { get; set; } = string.Empty;
-        public string GeminiModel { get; set; } = "gemini-3.1-flash-lite";
+        public string GeminiModel { get; set; } = "gemini-3-flash-preview";
         public string TtsProvider { get; set; } = "Edge-TTS"; // "Edge-TTS", "OpenAI", "ElevenLabs"
         public string TtsApiKey { get; set; } = string.Empty;
         public string TtsVoice { get; set; } = "vi-VN-NamMinhNeural (Nam - Tiếng Việt)";

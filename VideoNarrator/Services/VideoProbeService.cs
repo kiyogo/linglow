@@ -14,12 +14,14 @@ namespace VideoNarrator.Services
         public string AudioText { get; set; } = string.Empty;
         public string OcrText { get; set; } = string.Empty;
         public string SuggestedTopic { get; set; } = string.Empty;
+        public List<string> KeyframeBase64List { get; set; } = new();
         public string? Error { get; set; }
     }
 
     public interface IVideoProbeService
     {
         Task<VideoProbeResult> ProbeVideoAsync(string videoPath, CancellationToken cancellationToken = default);
+        Task<List<string>> ExtractKeyframesBase64Async(string videoPath, double durationSeconds, int count = 3, CancellationToken cancellationToken = default);
     }
 
     public class VideoProbeService : IVideoProbeService
@@ -95,7 +97,8 @@ namespace VideoNarrator.Services
                         Error = parsed.TryGetProperty("error", out var err) ? err.GetString() : null
                     };
 
-                    _fileService.Log($"Nhận diện bối cảnh video: Audio='{res.AudioText}', OCR='{res.OcrText}', Gợi ý='{res.SuggestedTopic}'");
+                    res.KeyframeBase64List = await ExtractKeyframesBase64Async(videoPath, 0, 3, cancellationToken);
+                    _fileService.Log($"Nhận diện bối cảnh video: Audio='{res.AudioText}', OCR='{res.OcrText}', Gợi ý='{res.SuggestedTopic}', Keyframes={res.KeyframeBase64List.Count}");
                     return res;
                 }
             }
@@ -111,7 +114,74 @@ namespace VideoNarrator.Services
                 }
             }
 
-            return fallbackResult;
+            // Trích xuất khung hình ảnh trực tiếp qua FFmpeg ngay cả khi python probe vắng mặt
+            var keyframes = await ExtractKeyframesBase64Async(videoPath, 0, 3, cancellationToken);
+            return new VideoProbeResult
+            {
+                Success = keyframes.Count > 0,
+                SuggestedTopic = Path.GetFileNameWithoutExtension(videoPath),
+                KeyframeBase64List = keyframes
+            };
+        }
+
+        public async Task<List<string>> ExtractKeyframesBase64Async(string videoPath, double durationSeconds, int count = 3, CancellationToken cancellationToken = default)
+        {
+            var list = new List<string>();
+            if (!File.Exists(videoPath) || !_ffmpegService.IsFfmpegAvailable) return list;
+
+            try
+            {
+                double safeDur = durationSeconds > 1 ? durationSeconds : await _ffmpegService.GetMediaDurationAsync(videoPath, cancellationToken);
+                if (safeDur <= 0.5) safeDur = 10;
+
+                double[] ratios = count switch
+                {
+                    1 => new[] { 0.35 },
+                    2 => new[] { 0.25, 0.70 },
+                    3 => new[] { 0.15, 0.50, 0.85 },
+                    _ => new[] { 0.10, 0.35, 0.65, 0.90 }
+                };
+
+                string tempDir = _fileService.CreateTempDirectory();
+                try
+                {
+                    for (int i = 0; i < ratios.Length; i++)
+                    {
+                        double sec = safeDur * ratios[i];
+                        string outJpg = Path.Combine(tempDir, $"kf_{i}.jpg");
+                        var psi = new ProcessStartInfo
+                        {
+                            FileName = _ffmpegService.FfmpegPath,
+                            Arguments = $"-y -ss {sec.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} -i \"{videoPath}\" -vframes 1 -vf \"scale='min(640,iw)':-2\" -q:v 3 \"{outJpg}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                        using var proc = Process.Start(psi);
+                        if (proc != null)
+                        {
+                            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                            cts.CancelAfter(TimeSpan.FromSeconds(5));
+                            await proc.WaitForExitAsync(cts.Token);
+
+                            if (File.Exists(outJpg) && new FileInfo(outJpg).Length > 0)
+                            {
+                                byte[] bytes = await File.ReadAllBytesAsync(outJpg, cancellationToken);
+                                list.Add(Convert.ToBase64String(bytes));
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    try { Directory.Delete(tempDir, true); } catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                _fileService.Log($"ExtractKeyframesBase64Async gặp lỗi: {ex.Message}", "WARN");
+            }
+
+            return list;
         }
 
         private static string FindPythonExecutable()
