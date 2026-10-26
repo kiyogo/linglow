@@ -197,6 +197,33 @@ const safeBridge = {
         showToast("Vui lòng khởi chạy ứng dụng để tải video.");
     },
 
+    async searchVideos(query) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SearchVideos(query || ""); return; } catch {}
+            try { await b.searchVideos(query || ""); return; } catch {}
+        }
+        showToast("Vui lòng khởi chạy ứng dụng để tìm kiếm video.");
+    },
+
+    async autoDiscoverAndProduce(topic) {
+        const b = getBridge();
+        if (b) {
+            try { await b.AutoDiscoverAndProduce(topic || ""); return; } catch {}
+            try { await b.autoDiscoverAndProduce(topic || ""); return; } catch {}
+        }
+        showToast("Vui lòng khởi chạy ứng dụng để tự động tìm & dựng video.");
+    },
+
+    async selectDiscoveredVideo(url, title) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SelectDiscoveredVideo(url, title || ""); return; } catch {}
+            try { await b.selectDiscoveredVideo(url, title || ""); return; } catch {}
+        }
+        showToast("Vui lòng khởi chạy ứng dụng.");
+    },
+
     async cancelProcess() {
         const b = getBridge();
         if (b) {
@@ -500,6 +527,10 @@ async function initBridgeConnection() {
                 document.getElementById('videoUrlInput').value = settings.videoUrlInput;
             }
 
+            if (settings.discoveredVideos && settings.discoveredVideos.length > 0) {
+                renderDiscoveredVideos(settings.discoveredVideos);
+            }
+
             if (settings.hookText) document.getElementById('hookInput').value = settings.hookText;
             if (settings.scriptText) {
                 document.getElementById('scriptInput').value = settings.scriptText;
@@ -565,6 +596,23 @@ function handleBridgeMessage(msg) {
             if (urlInputBox && msg.url !== undefined) {
                 urlInputBox.value = msg.url || "";
             }
+            break;
+
+        case 'isSearchingVideos':
+            const btnDiscover = document.getElementById('btnDiscoverVideos');
+            if (btnDiscover) {
+                if (msg.isSearching) {
+                    btnDiscover.disabled = true;
+                    btnDiscover.innerHTML = `<svg class="vn-icon animate-spin"><use href="#icon-spinner"></use></svg><span>Đang tìm...</span>`;
+                } else {
+                    btnDiscover.disabled = false;
+                    btnDiscover.innerHTML = `<svg class="vn-icon"><use href="#icon-search"></use></svg><span>Tự Tìm Video</span>`;
+                }
+            }
+            break;
+
+        case 'videosDiscovered':
+            renderDiscoveredVideos(msg.videos || []);
             break;
 
         case 'script':
@@ -653,6 +701,45 @@ function initEventListeners() {
             }
         });
     }
+
+    // Auto Discover & Search Buttons
+    const btnDiscover = document.getElementById('btnDiscoverVideos');
+    if (btnDiscover) {
+        btnDiscover.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const q = inputUrl?.value?.trim();
+            showToast("🔍 Đang tìm kiếm video hay trên mạng...");
+            await safeBridge.searchVideos(q || "");
+        });
+    }
+
+    const btnRandomProduce = document.getElementById('btnRandomAutoProduce');
+    if (btnRandomProduce) {
+        btnRandomProduce.addEventListener('click', async (e) => {
+            e.preventDefault();
+            showToast("🎲 AI đang tự tìm video thịnh hành ngẫu nhiên và tự động dựng trọn gói...");
+            await safeBridge.autoDiscoverAndProduce("");
+        });
+    }
+
+    const btnCloseDiscovered = document.getElementById('btnCloseDiscovered');
+    if (btnCloseDiscovered) {
+        btnCloseDiscovered.addEventListener('click', () => {
+            document.getElementById('discoveredVideosBox')?.classList.add('hidden');
+        });
+    }
+
+    // Trending chips click
+    const trendChips = document.querySelectorAll('#trendingChipsContainer .vn-chip[data-topic]');
+    trendChips.forEach(chip => {
+        chip.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const topic = chip.dataset.topic;
+            if (inputUrl) inputUrl.value = topic;
+            showToast(`🔍 Tìm video về: ${topic}...`);
+            await safeBridge.searchVideos(topic);
+        });
+    });
 
     // STEP 1: Video Selection
     const btnSelect = document.getElementById('btnSelectVideo');
@@ -1260,4 +1347,72 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function renderDiscoveredVideos(videos) {
+    const box = document.getElementById('discoveredVideosBox');
+    const grid = document.getElementById('discoveredGrid');
+    const title = document.getElementById('discoveredHeaderTitle');
+    if (!box || !grid) return;
+
+    if (!videos || videos.length === 0) {
+        box.classList.add('hidden');
+        return;
+    }
+
+    grid.innerHTML = '';
+    if (title) title.textContent = `🎬 Đã tìm thấy ${videos.length} video hay:`;
+
+    videos.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'discovered-card';
+        card.innerHTML = `
+            <div class="discovered-thumb-wrap">
+                <img src="${v.thumbnail || ''}" alt="${escapeHtml(v.title)}" onerror="this.src='https://placehold.co/320x180/1a1a2e/ffffff?text=Video';">
+                <span class="discovered-duration-badge">${v.durationFormatted || '--:--'}</span>
+            </div>
+            <div class="discovered-content">
+                <div class="discovered-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</div>
+                <div class="discovered-uploader">${escapeHtml(v.uploader || 'YouTube Shorts')}</div>
+                <div class="discovered-btn-row">
+                    <button class="vn-btn vn-btn-primary btn-sm btn-produce-discovered" type="button" title="Tải & dựng ngay">
+                        ⚡ Dựng 1-Click
+                    </button>
+                    <button class="vn-btn vn-btn-tonal btn-sm btn-pick-discovered" type="button" title="Chọn video này">
+                        Chọn
+                    </button>
+                </div>
+            </div>
+        `;
+
+        card.querySelector('.btn-produce-discovered')?.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            showToast(`Bắt đầu dựng 1-Click: ${v.title}`);
+            await safeBridge.selectDiscoveredVideo(v.url, v.title);
+        });
+
+        card.querySelector('.btn-pick-discovered')?.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const inp = document.getElementById('videoUrlInput');
+            if (inp) inp.value = v.url;
+            const topInp = document.getElementById('topicInput');
+            if (topInp && !topInp.value) topInp.value = v.title;
+            showToast(`Đã chọn: ${v.title}. Đang tải video về máy...`);
+            await safeBridge.downloadVideoOnly(v.url);
+        });
+
+        grid.appendChild(card);
+    });
+
+    box.classList.remove('hidden');
 }

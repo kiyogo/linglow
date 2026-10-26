@@ -32,7 +32,7 @@ namespace VideoNarrator
                 }
             }
 
-            if (e.Args.Length > 0 && e.Args[0] == "--test")
+            if (e.Args.Length > 0 && e.Args.Any(a => string.Equals(a, "--test", StringComparison.OrdinalIgnoreCase)))
             {
                 var reports = VideoNarrator.Tests.PersonalityEngineTestSuite.RunAllTests();
                 string reportPath = Path.Combine(AppContext.BaseDirectory, "test_report.txt");
@@ -45,6 +45,7 @@ namespace VideoNarrator
                 File.WriteAllText(reportPath, sb.ToString(), System.Text.Encoding.UTF8);
                 Console.WriteLine(sb.ToString());
                 Shutdown(0);
+                Environment.Exit(0);
                 return;
             }
 
@@ -155,6 +156,7 @@ namespace VideoNarrator
             services.AddSingleton<IFfmpegService, FfmpegService>();
             services.AddSingleton<IVideoService, VideoService>();
             services.AddSingleton<IVideoDownloadService, VideoDownloadService>();
+            services.AddSingleton<IVideoDiscoveryService, VideoDiscoveryService>();
             services.AddSingleton<IGeminiService, GeminiService>();
             services.AddSingleton<ITtsService, TtsService>();
 

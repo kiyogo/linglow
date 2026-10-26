@@ -1843,3 +1843,151 @@ button:hover .vn-icon,
     box-shadow: none !important;
     outline: none !important;
 }
+
+/* Trending Chips */
+.trending-chips-container {
+    padding: 2px 0;
+}
+
+.chip-label {
+    color: var(--vn-on-surface-variant);
+    font-size: 11px;
+    margin-right: 4px;
+}
+
+.vn-chip {
+    background: var(--vn-surface-container-high, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--vn-outline-variant, rgba(255, 255, 255, 0.1));
+    border-radius: 9999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    color: var(--vn-on-surface);
+    cursor: pointer;
+    transition: all var(--vn-transition-fast);
+    white-space: nowrap;
+}
+
+.vn-chip:hover {
+    background: var(--vn-primary);
+    color: white;
+    border-color: var(--vn-primary);
+    transform: translateY(-1px);
+}
+
+.vn-chip.chip-highlight {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    border: none;
+    font-weight: 600;
+}
+
+.vn-chip.chip-highlight:hover {
+    opacity: 0.9;
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.35);
+}
+
+/* Discovered Videos Drawer & Grid */
+.discovered-videos-container {
+    background: var(--vn-surface-container, rgba(0, 0, 0, 0.25));
+    border: 1px solid var(--vn-outline-variant, rgba(255, 255, 255, 0.12));
+    border-radius: var(--vn-radius-md, 8px);
+    padding: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.discovered-header {
+    border-bottom: 1px solid var(--vn-outline-variant, rgba(255, 255, 255, 0.08));
+    padding-bottom: 4px;
+}
+
+.discovered-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.discovered-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--vn-surface-container-high, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--vn-outline-variant, rgba(255, 255, 255, 0.08));
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.discovered-card:hover {
+    border-color: var(--vn-primary);
+    transform: translateY(-2px);
+}
+
+.discovered-thumb-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    background: #111;
+    overflow: hidden;
+}
+
+.discovered-thumb-wrap img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.discovered-duration-badge {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.discovered-content {
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+}
+
+.discovered-title {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--vn-on-surface);
+}
+
+.discovered-uploader {
+    font-size: 10px;
+    color: var(--vn-on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.discovered-btn-row {
+    display: flex;
+    gap: 4px;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.discovered-btn-row .vn-btn {
+    font-size: 10px;
+    padding: 3px 6px;
+    flex: 1;
+}

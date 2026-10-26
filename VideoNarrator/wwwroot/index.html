@@ -14,6 +14,10 @@
 
     <!-- ==================== BESPOKE VECTOR SVG ICON SYSTEM ==================== -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </symbol>
         <symbol id="icon-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="currentColor" fill-opacity="0.25"/>
             <path d="M19 3L19.8 5.2L22 6L19.8 6.8L19 9L18.2 6.8L16 6L18.2 5.2L19 3Z" fill="currentColor"/>
@@ -267,10 +271,14 @@
                         <!-- 1. VIDEO SOURCE SECTION -->
                         <div class="form-group mb-2">
                             <label class="section-label">
-                                <span>⚡ Tự Động Hóa 1-Click (Link Mạng Xã Hội)</span>
+                                <span>⚡ Tự Động Hóa 1-Click (Dán Link hoặc AI Tự Tìm Video)</span>
                             </label>
                             <div class="one-click-url-box flex gap-2 mb-2">
-                                <input type="text" id="videoUrlInput" class="vn-input flex-1" placeholder="Dán link TikTok, YouTube Shorts, Reels, FB, Douyin, X...">
+                                <input type="text" id="videoUrlInput" class="vn-input flex-1" placeholder="Dán link mạng xã hội hoặc nhập chủ đề (ví dụ: mẹo vặt, khoa học...)...">
+                                <button class="vn-btn vn-btn-tonal btn-sm flex items-center gap-1" id="btnDiscoverVideos" type="button" title="Tìm kiếm các video ngắn hay nhất trên mạng theo chủ đề">
+                                    <svg class="vn-icon"><use href="#icon-search"></use></svg>
+                                    <span>Tự Tìm Video</span>
+                                </button>
                                 <button class="vn-btn vn-btn-primary btn-sm flex items-center gap-1" id="btnOneClickProduce" type="button" title="Tự động tải về, tạo lời kể chuyện cuốn hút, lồng tiếng và xuất video hoàn chỉnh">
                                     <svg class="vn-icon"><use href="#icon-lightning"></use></svg>
                                     <span>Tạo 1-Click</span>
@@ -278,6 +286,31 @@
                                 <button class="vn-btn vn-btn-tonal btn-sm flex items-center" id="btnDownloadOnly" type="button" title="Chỉ tải video về máy">
                                     <svg class="vn-icon"><use href="#icon-download"></use></svg>
                                 </button>
+                            </div>
+
+                            <!-- Trending Quick Chips & Random Auto Button -->
+                            <div class="trending-chips-container flex items-center gap-1 mb-2 flex-wrap" id="trendingChipsContainer">
+                                <span class="chip-label text-xs">Gợi ý tìm:</span>
+                                <button class="vn-chip" type="button" data-topic="Sự thật thú vị thế giới">💡 Sự thật lạ</button>
+                                <button class="vn-chip" type="button" data-topic="Khoa học kỳ thú thí nghiệm">🧪 Khoa học</button>
+                                <button class="vn-chip" type="button" data-topic="Oddly satisfying ASMR">✨ ASMR thoả mãn</button>
+                                <button class="vn-chip" type="button" data-topic="Động vật thông minh hài hước">🐾 Động vật</button>
+                                <button class="vn-chip" type="button" data-topic="Mẹo vặt cuộc sống cực đỉnh">🛠️ Mẹo hay</button>
+                                <button class="vn-chip" type="button" data-topic="Ẩm thực đường phố độc lạ">🍳 Món ngon</button>
+                                <button class="vn-chip chip-highlight" id="btnRandomAutoProduce" type="button" title="AI tự chọn 1 video ngẫu nhiên thịnh hành và tự động dựng trọn gói">🎲 Random 1-Click</button>
+                            </div>
+
+                            <!-- Discovered Videos Grid (Shown after search) -->
+                            <div class="discovered-videos-container hidden mb-2" id="discoveredVideosBox">
+                                <div class="discovered-header flex justify-between items-center mb-1">
+                                    <span class="text-xs font-semibold text-primary" id="discoveredHeaderTitle">🎬 Danh sách video tìm thấy:</span>
+                                    <button class="vn-icon-btn btn-xs" id="btnCloseDiscovered" type="button" title="Đóng danh sách">
+                                        <svg class="vn-icon"><use href="#icon-close"></use></svg>
+                                    </button>
+                                </div>
+                                <div class="discovered-grid" id="discoveredGrid">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
                             </div>
                             
                             <label class="section-label mt-1">

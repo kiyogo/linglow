@@ -590,6 +590,33 @@ namespace VideoNarrator.Tests
                 reports.Add(new TestReportItem { TestName = "20. Script Sanitizer & Clean Spoken Narration Output", Passed = false, Details = ex.Message });
             }
 
+            // TEST 21: Auto Video Discovery & Search Engine
+            try
+            {
+                var discovery = new VideoNarrator.Services.VideoDiscoveryService(new VideoNarrator.Services.FileService());
+                bool hasTrending = discovery.TrendingTopics != null && discovery.TrendingTopics.Count >= 8;
+
+                var searchResults = System.Threading.Tasks.Task.Run(async () => await discovery.SearchVideosAsync("oddly satisfying", 2)).GetAwaiter().GetResult();
+
+                bool searchWorked = searchResults != null && searchResults.Count > 0 &&
+                                    !string.IsNullOrEmpty(searchResults[0].Url) &&
+                                    !string.IsNullOrEmpty(searchResults[0].Title);
+
+                bool passed = hasTrending && searchWorked;
+                reports.Add(new TestReportItem
+                {
+                    TestName = "21. Auto Video Discovery & Online Short Video Search",
+                    Passed = passed,
+                    Details = passed
+                        ? $"Thành công: {discovery.TrendingTopics?.Count} chủ đề thịnh hành, tự tìm thấy {searchResults?.Count} video phù hợp (Best: \"{searchResults?[0].Title}\")."
+                        : $"Thất bại: hasTrending={hasTrending}, searchWorked={searchWorked}"
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "21. Auto Video Discovery & Online Short Video Search", Passed = false, Details = ex.Message });
+            }
+
             return reports;
         }
     }

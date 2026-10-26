@@ -37,6 +37,7 @@ namespace VideoNarrator.ViewModels
         private readonly IProjectService? _projectService;
         private readonly IVideoProbeService? _videoProbeService;
         private readonly IVideoDownloadService? _videoDownloadService;
+        private readonly IVideoDiscoveryService? _videoDiscoveryService;
         private readonly IMultiStageNarrationEngine? _multiStageNarrationEngine;
 
         private VideoProject? _currentProject;
@@ -627,6 +628,25 @@ namespace VideoNarrator.ViewModels
         public ICommand DownloadAndAutoProduceCommand { get; }
         public ICommand DownloadVideoOnlyCommand { get; }
 
+        public ObservableCollection<DiscoveredVideoItem> DiscoveredVideos { get; } = new();
+
+        private bool _isSearchingVideos;
+        public bool IsSearchingVideos
+        {
+            get => _isSearchingVideos;
+            set => SetProperty(ref _isSearchingVideos, value);
+        }
+
+        private bool _hasDiscoveredVideos;
+        public bool HasDiscoveredVideos
+        {
+            get => _hasDiscoveredVideos;
+            set => SetProperty(ref _hasDiscoveredVideos, value);
+        }
+
+        public ICommand SearchVideosCommand { get; }
+        public ICommand AutoDiscoverAndProduceCommand { get; }
+
         // ==================== PERSONA STUDIO PROPERTIES ====================
         public ObservableCollection<PersonaProfile> Personas { get; } = new();
 
@@ -1125,6 +1145,7 @@ namespace VideoNarrator.ViewModels
             IProjectService? projectService = null,
             IVideoProbeService? videoProbeService = null,
             IVideoDownloadService? videoDownloadService = null,
+            IVideoDiscoveryService? videoDiscoveryService = null,
             IMultiStageNarrationEngine? multiStageNarrationEngine = null)
         {
             _geminiService = geminiService;
@@ -1151,6 +1172,7 @@ namespace VideoNarrator.ViewModels
             _projectService = projectService;
             _videoProbeService = videoProbeService;
             _videoDownloadService = videoDownloadService;
+            _videoDiscoveryService = videoDiscoveryService;
             _multiStageNarrationEngine = multiStageNarrationEngine;
 
             // Initialize commands
@@ -1160,6 +1182,8 @@ namespace VideoNarrator.ViewModels
 
             DownloadAndAutoProduceCommand = new RelayCommand(async () => await DownloadAndAutoProduceAsync(), () => !IsBusy);
             DownloadVideoOnlyCommand = new RelayCommand(async () => await DownloadVideoOnlyAsync(), () => !IsBusy);
+            SearchVideosCommand = new RelayCommand(async () => await SearchVideosAsync(), () => !IsBusy && !IsSearchingVideos);
+            AutoDiscoverAndProduceCommand = new RelayCommand(async () => await AutoDiscoverAndProduceAsync(), () => !IsBusy);
 
             SelectVideoCommand = new RelayCommand(ExecuteSelectVideo, () => !IsBusy);
             SelectMusicCommand = new RelayCommand(ExecuteSelectMusic, () => !IsBusy);
@@ -2095,6 +2119,103 @@ namespace VideoNarrator.ViewModels
             }
 
             return string.Empty;
+        }
+
+        public async Task<List<DiscoveredVideoItem>> SearchVideosAsync(string? query = null)
+        {
+            if (_videoDiscoveryService == null)
+            {
+                SetError("Dịch vụ tìm kiếm video chưa được khởi tạo.");
+                return new List<DiscoveredVideoItem>();
+            }
+
+            string targetQuery = !string.IsNullOrWhiteSpace(query)
+                ? query.Trim()
+                : (!string.IsNullOrWhiteSpace(VideoUrlInput) && !VideoUrlInput.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    ? VideoUrlInput.Trim()
+                    : (!string.IsNullOrWhiteSpace(CustomTopic) ? CustomTopic.Trim() : string.Empty);
+
+            IsSearchingVideos = true;
+            StatusMessage = $"🔍 Đang tìm kiếm video trực tuyến về: {(string.IsNullOrWhiteSpace(targetQuery) ? "Thịnh hành" : targetQuery)}...";
+
+            try
+            {
+                var list = await _videoDiscoveryService.SearchVideosAsync(targetQuery, 8);
+                Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    DiscoveredVideos.Clear();
+                    foreach (var v in list) DiscoveredVideos.Add(v);
+                    HasDiscoveredVideos = DiscoveredVideos.Count > 0;
+                });
+
+                StatusMessage = list.Count > 0
+                    ? $"Đã tìm thấy {list.Count} video phù hợp."
+                    : "Không tìm thấy video nào phù hợp. Vui lòng thử từ khóa khác.";
+
+                return list;
+            }
+            catch (Exception ex)
+            {
+                _fileService.Log($"Lỗi tìm kiếm video: {ex.Message}", "WARN");
+                StatusMessage = "Tìm kiếm video gặp sự cố.";
+                return new List<DiscoveredVideoItem>();
+            }
+            finally
+            {
+                IsSearchingVideos = false;
+            }
+        }
+
+        public async Task<string> AutoDiscoverAndProduceAsync(string? topic = null)
+        {
+            if (_videoDiscoveryService == null)
+            {
+                SetError("Dịch vụ tìm kiếm video chưa được khởi tạo.");
+                return string.Empty;
+            }
+
+            string targetTopic = !string.IsNullOrWhiteSpace(topic)
+                ? topic.Trim()
+                : (!string.IsNullOrWhiteSpace(VideoUrlInput) && !VideoUrlInput.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    ? VideoUrlInput.Trim()
+                    : (!string.IsNullOrWhiteSpace(CustomTopic) ? CustomTopic.Trim() : string.Empty);
+
+            ClearError();
+            IsBusy = true;
+            ProgressPercentage = 5;
+            StatusMessage = $"⚡ [Tự Động Tìm & Dựng] Đang quét và tìm video hay nhất về {(string.IsNullOrWhiteSpace(targetTopic) ? "chủ đề thịnh hành" : targetTopic)}...";
+
+            try
+            {
+                var bestVideo = await _videoDiscoveryService.FindBestVideoForTopicAsync(targetTopic);
+                if (bestVideo == null || string.IsNullOrWhiteSpace(bestVideo.Url))
+                {
+                    throw new InvalidOperationException("Không tìm thấy video nào phù hợp để tự động tạo.");
+                }
+
+                _fileService.Log($"[Auto Discovery & Produce] Đã chọn video tối ưu: {bestVideo.Title} ({bestVideo.Duration:F0}s) - {bestVideo.Url}");
+                StatusMessage = $"⚡ [Tự Động Tìm & Dựng] Đã tìm thấy video: \"{bestVideo.Title}\". Đang tiến hành tải và dựng video...";
+
+                VideoUrlInput = bestVideo.Url;
+                if (string.IsNullOrWhiteSpace(CustomTopic))
+                {
+                    CustomTopic = bestVideo.Title;
+                }
+
+                IsBusy = false; // Nhường trạng thái cho DownloadAndAutoProduceAsync
+                return await DownloadAndAutoProduceAsync(bestVideo.Url);
+            }
+            catch (Exception ex)
+            {
+                SetError($"Lỗi khi tự động tìm và dựng video: {ex.Message}");
+                StatusMessage = "Tự động tìm & dựng video thất bại.";
+                _fileService.Log($"[Auto Discovery] Lỗi: {ex}", "ERROR");
+                return string.Empty;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         #endregion

@@ -62,6 +62,15 @@ namespace VideoNarrator.ViewModels
                         PostMessage(new { type = "videoUrlInput", url = _viewModel.VideoUrlInput });
                         break;
 
+                    case nameof(_viewModel.IsSearchingVideos):
+                        PostMessage(new { type = "isSearchingVideos", isSearching = _viewModel.IsSearchingVideos });
+                        break;
+
+                    case nameof(_viewModel.HasDiscoveredVideos):
+                    case nameof(_viewModel.DiscoveredVideos):
+                        PostMessage(new { type = "videosDiscovered", videos = _viewModel.DiscoveredVideos.ToList() });
+                        break;
+
                     case nameof(_viewModel.HasVideo):
                     case nameof(_viewModel.VideoInfo):
                         if (_viewModel.HasVideo && _viewModel.VideoInfo != null)
@@ -234,6 +243,36 @@ namespace VideoNarrator.ViewModels
             });
         }
 
+        public void SearchVideos(string query)
+        {
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _ = _viewModel.SearchVideosAsync(query);
+            });
+        }
+
+        public void AutoDiscoverAndProduce(string topic)
+        {
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _ = _viewModel.AutoDiscoverAndProduceAsync(topic);
+            });
+        }
+
+        public void SelectDiscoveredVideo(string url, string title)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _viewModel.VideoUrlInput = url;
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    _viewModel.CustomTopic = title;
+                }
+                _ = _viewModel.DownloadAndAutoProduceAsync(url);
+            });
+        }
+
         public void RenderFinalShort()
         {
             App.Current.Dispatcher.Invoke(() =>
@@ -304,6 +343,8 @@ namespace VideoNarrator.ViewModels
                 durationModes = _viewModel.DurationModes.ToList(),
                 selectedDurationMode = _viewModel.SelectedDurationMode,
                 videoUrlInput = _viewModel.VideoUrlInput,
+                isSearchingVideos = _viewModel.IsSearchingVideos,
+                discoveredVideos = _viewModel.DiscoveredVideos.ToList(),
                 customTopic = _viewModel.CustomTopic,
                 enableBackgroundMusic = _viewModel.EnableBackgroundMusic,
                 backgroundMusicVolume = _viewModel.BackgroundMusicVolume,
