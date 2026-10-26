@@ -191,37 +191,45 @@ const safeBridge = {
     async downloadVideoOnly(url) {
         const b = getBridge();
         if (b) {
-            try { await b.DownloadVideoOnly(url); return; } catch {}
-            try { await b.downloadVideoOnly(url); return; } catch {}
+            try { await b.DownloadVideoOnly(url); return; } catch (e) { console.error(e); }
+            try { await b.downloadVideoOnly(url); return; } catch (e) { console.error(e); }
+            showToast("Vui lòng khởi động lại ứng dụng VideoNarrator.exe phiên bản mới nhất.", "error");
+            return;
         }
-        showToast("Vui lòng khởi chạy ứng dụng để tải video.");
+        showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe để tải video.", "warn");
     },
 
     async searchVideos(query) {
         const b = getBridge();
         if (b) {
-            try { await b.SearchVideos(query || ""); return; } catch {}
-            try { await b.searchVideos(query || ""); return; } catch {}
+            try { await b.SearchVideos(query || ""); return; } catch (e) { console.error(e); }
+            try { await b.searchVideos(query || ""); return; } catch (e) { console.error(e); }
+            showToast("Vui lòng khởi động lại ứng dụng VideoNarrator.exe phiên bản mới nhất.", "error");
+            return;
         }
-        showToast("Vui lòng khởi chạy ứng dụng để tìm kiếm video.");
+        showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe để tìm video.", "warn");
     },
 
     async autoDiscoverAndProduce(topic) {
         const b = getBridge();
         if (b) {
-            try { await b.AutoDiscoverAndProduce(topic || ""); return; } catch {}
-            try { await b.autoDiscoverAndProduce(topic || ""); return; } catch {}
+            try { await b.AutoDiscoverAndProduce(topic || ""); return; } catch (e) { console.error(e); }
+            try { await b.autoDiscoverAndProduce(topic || ""); return; } catch (e) { console.error(e); }
+            showToast("Vui lòng khởi động lại ứng dụng VideoNarrator.exe phiên bản mới nhất.", "error");
+            return;
         }
-        showToast("Vui lòng khởi chạy ứng dụng để tự động tìm & dựng video.");
+        showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe để dựng video.", "warn");
     },
 
     async selectDiscoveredVideo(url, title) {
         const b = getBridge();
         if (b) {
-            try { await b.SelectDiscoveredVideo(url, title || ""); return; } catch {}
-            try { await b.selectDiscoveredVideo(url, title || ""); return; } catch {}
+            try { await b.SelectDiscoveredVideo(url, title || ""); return; } catch (e) { console.error(e); }
+            try { await b.selectDiscoveredVideo(url, title || ""); return; } catch (e) { console.error(e); }
+            showToast("Vui lòng khởi động lại ứng dụng VideoNarrator.exe phiên bản mới nhất.", "error");
+            return;
         }
-        showToast("Vui lòng khởi chạy ứng dụng.");
+        showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe.", "warn");
     },
 
     async cancelProcess() {
