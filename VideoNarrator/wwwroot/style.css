@@ -1991,3 +1991,41 @@ button:hover .vn-icon,
     padding: 3px 6px;
     flex: 1;
 }
+
+/* ==================== BACKGROUND MUSIC CARD STYLES ==================== */
+.music-card-box {
+    background: var(--vn-surface-container);
+    border: 1px solid var(--vn-outline-variant);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.music-display-badge {
+    flex: 1;
+    background: var(--vn-surface-high);
+    border: 1px solid var(--vn-outline-variant);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    color: var(--vn-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vn-btn-tag {
+    background: transparent;
+    border: 1px solid var(--vn-outline-variant);
+    color: var(--vn-on-surface-variant);
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vn-btn-tag:hover {
+    background: var(--vn-surface-highest);
+    color: var(--vn-on-surface);
+}

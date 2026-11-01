@@ -254,6 +254,39 @@ const safeBridge = {
         showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe.", "warn");
     },
 
+    async selectMusic() {
+        const b = getBridge();
+        if (b) {
+            try { await b.SelectMusicFile(); return; } catch (e) { console.error(e); }
+            try { await b.selectMusic(); return; } catch (e) { console.error(e); }
+        }
+        showToast("Vui lòng kết nối ứng dụng để chọn nhạc nền.");
+    },
+
+    async clearMusic() {
+        const b = getBridge();
+        if (b) {
+            try { await b.ClearMusic(); return; } catch (e) { console.error(e); }
+            try { await b.clearMusic(); return; } catch (e) { console.error(e); }
+        }
+    },
+
+    async resetDefaultMusic() {
+        const b = getBridge();
+        if (b) {
+            try { await b.ResetDefaultMusic(); return; } catch (e) { console.error(e); }
+            try { await b.resetDefaultMusic(); return; } catch (e) { console.error(e); }
+        }
+    },
+
+    async setMusicVolume(volume) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SetMusicVolume(volume); return; } catch (e) { console.error(e); }
+            try { await b.setMusicVolume(volume); return; } catch (e) { console.error(e); }
+        }
+    },
+
     async cancelProcess() {
         const b = getBridge();
         if (b) {
@@ -495,6 +528,42 @@ function updateAspectRatioUI(res) {
     }
 }
 
+// ==================== BACKGROUND MUSIC UI ====================
+
+function updateMusicUI(fileName, volume, enabled) {
+    const display = document.getElementById('musicFileNameDisplay');
+    const modalDisplay = document.getElementById('modalMusicFileNameDisplay');
+    const volSlider = document.getElementById('rangeMusicVolume');
+    const volDisplay = document.getElementById('valMusicVolume');
+
+    if (enabled === false || !fileName) {
+        if (display) {
+            display.textContent = '🔇 Đã tắt nhạc nền';
+            display.style.opacity = '0.6';
+        }
+        if (modalDisplay) modalDisplay.textContent = 'Đã tắt nhạc nền';
+    } else {
+        const cleanName = fileName.replace(/\\/g, '/').split('/').pop();
+        const isDefault = cleanName.toLowerCase().includes('viral_lofi_background');
+        const displayText = isDefault ? '🎵 Nhạc mặc định: Viral Lo-fi Beat' : `🎵 ${cleanName}`;
+        if (display) {
+            display.textContent = displayText;
+            display.style.opacity = '1.0';
+            display.title = fileName;
+        }
+        if (modalDisplay) {
+            modalDisplay.textContent = cleanName;
+            modalDisplay.title = fileName;
+        }
+    }
+
+    if (volume !== undefined && volume !== null) {
+        const v = parseFloat(volume);
+        if (volSlider) volSlider.value = v;
+        if (volDisplay) volDisplay.textContent = `${Math.round(v * 100)}%`;
+    }
+}
+
 // ==================== BRIDGE REAL-TIME MESSAGING ====================
 
 async function initBridgeConnection() {
@@ -568,6 +637,10 @@ async function initBridgeConnection() {
             }
             if (settings.customTopic) document.getElementById('topicInput').value = settings.customTopic;
 
+            if (settings.backgroundMusicName || settings.backgroundMusicPath) {
+                updateMusicUI(settings.backgroundMusicName || settings.backgroundMusicPath, settings.backgroundMusicVolume, settings.enableBackgroundMusic);
+            }
+
             if (settings.hasFinalVideo && settings.finalVideoUrl) {
                 handleFinalVideoReady({ mediaUrl: settings.finalVideoUrl });
             } else if (settings.hasVideo && settings.videoUrl) {
@@ -583,6 +656,10 @@ function handleBridgeMessage(msg) {
     if (!msg || !msg.type) return;
 
     switch (msg.type) {
+        case 'musicChanged':
+            updateMusicUI(msg.fileName || msg.path, msg.volume, msg.enabled);
+            break;
+
         case 'status':
             updateStatusText(msg.message);
             break;
@@ -966,6 +1043,22 @@ function initEventListeners() {
         resSelect.addEventListener('change', (e) => {
             updateAspectRatioUI(e.target.value);
             safeBridge.setResolution(e.target.value);
+        });
+    }
+
+    // Background Music Controls
+    document.getElementById('btnSelectMusic')?.addEventListener('click', () => safeBridge.selectMusic());
+    document.getElementById('btnModalSelectMusic')?.addEventListener('click', () => safeBridge.selectMusic());
+    document.getElementById('btnClearMusic')?.addEventListener('click', () => safeBridge.clearMusic());
+    document.getElementById('btnResetDefaultMusic')?.addEventListener('click', () => safeBridge.resetDefaultMusic());
+
+    const rangeMusicVol = document.getElementById('rangeMusicVolume');
+    if (rangeMusicVol) {
+        rangeMusicVol.addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            const valDisplay = document.getElementById('valMusicVolume');
+            if (valDisplay) valDisplay.textContent = `${Math.round(v * 100)}%`;
+            safeBridge.setMusicVolume(v);
         });
     }
 

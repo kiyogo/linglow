@@ -115,6 +115,19 @@ namespace VideoNarrator.ViewModels
                             });
                         }
                         break;
+
+                    case nameof(_viewModel.BackgroundMusicPath):
+                    case nameof(_viewModel.BackgroundMusicVolume):
+                    case nameof(_viewModel.EnableBackgroundMusic):
+                        PostMessage(new
+                        {
+                            type = "musicChanged",
+                            path = _viewModel.BackgroundMusicPath,
+                            fileName = string.IsNullOrEmpty(_viewModel.BackgroundMusicPath) ? "" : Path.GetFileName(_viewModel.BackgroundMusicPath),
+                            volume = _viewModel.BackgroundMusicVolume,
+                            enabled = _viewModel.EnableBackgroundMusic
+                        });
+                        break;
                 }
             };
         }
@@ -364,6 +377,8 @@ namespace VideoNarrator.ViewModels
                 customTopic = _viewModel.CustomTopic,
                 enableBackgroundMusic = _viewModel.EnableBackgroundMusic,
                 backgroundMusicVolume = _viewModel.BackgroundMusicVolume,
+                backgroundMusicPath = _viewModel.BackgroundMusicPath,
+                backgroundMusicName = string.IsNullOrEmpty(_viewModel.BackgroundMusicPath) ? "" : Path.GetFileName(_viewModel.BackgroundMusicPath),
                 hookText = _viewModel.HookText,
                 scriptText = _viewModel.ScriptText,
                 statusMessage = _viewModel.StatusMessage,
@@ -437,6 +452,81 @@ namespace VideoNarrator.ViewModels
             {
                 _viewModel.EnableBackgroundMusic = enabled;
                 _viewModel.BackgroundMusicVolume = Math.Clamp(volume, 0.0, 1.0);
+            });
+        }
+
+        public void SelectMusicFile()
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    var dialog = new Microsoft.Win32.OpenFileDialog
+                    {
+                        Title = "Chọn tệp Nhạc Nền (Background Music)",
+                        Filter = "Audio Files (*.mp3;*.wav;*.m4a;*.aac;*.ogg;*.flac)|*.mp3;*.wav;*.m4a;*.aac;*.ogg;*.flac|All Files (*.*)|*.*",
+                        CheckFileExists = true,
+                        Multiselect = false
+                    };
+
+                    var owner = Application.Current?.MainWindow;
+                    if (owner != null && owner.IsVisible)
+                    {
+                        owner.Activate();
+                    }
+
+                    bool? result = (owner != null && owner.IsVisible)
+                        ? dialog.ShowDialog(owner)
+                        : dialog.ShowDialog();
+
+                    if (result == true && !string.IsNullOrEmpty(dialog.FileName))
+                    {
+                        _viewModel.BackgroundMusicPath = dialog.FileName;
+                        _viewModel.EnableBackgroundMusic = true;
+                        _viewModel.StatusMessage = $"Đã chọn nhạc nền: {Path.GetFileName(dialog.FileName)}";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _viewModel.SetError($"Không thể mở hộp thoại chọn nhạc nền: {ex.Message}");
+                }
+            });
+        }
+
+        public void ClearMusic()
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                _viewModel.BackgroundMusicPath = string.Empty;
+                _viewModel.EnableBackgroundMusic = false;
+                _viewModel.StatusMessage = "Đã tắt nhạc nền.";
+            });
+        }
+
+        public void ResetDefaultMusic()
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                string def = _viewModel.ResolveDefaultMusicPath();
+                if (!string.IsNullOrEmpty(def) && File.Exists(def))
+                {
+                    _viewModel.BackgroundMusicPath = def;
+                    _viewModel.EnableBackgroundMusic = true;
+                    _viewModel.StatusMessage = "Đã phục hồi nhạc nền Lo-fi mặc định.";
+                }
+                else
+                {
+                    _viewModel.SetError("Không tìm thấy tệp nhạc nền mặc định trong thư mục Assets/audio/music.");
+                }
+            });
+        }
+
+        public void SetMusicVolume(double volume)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                _viewModel.BackgroundMusicVolume = Math.Clamp(volume, 0.0, 1.0);
+                _viewModel.EnableBackgroundMusic = true;
             });
         }
 
@@ -796,6 +886,10 @@ namespace VideoNarrator.ViewModels
         public void generateScript() => GenerateScriptOnly();
         public void batchAutoProduce(string topic, int count = 5) => BatchAutoProduce(topic, count);
         public void batchProduceAllDiscovered() => BatchProduceAllDiscovered();
+        public void selectMusic() => SelectMusicFile();
+        public void clearMusic() => ClearMusic();
+        public void resetDefaultMusic() => ResetDefaultMusic();
+        public void setMusicVolume(double volume) => SetMusicVolume(volume);
         public void generateVoice()
         {
             App.Current.Dispatcher.Invoke(() =>

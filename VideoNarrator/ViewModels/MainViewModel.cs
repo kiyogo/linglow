@@ -80,7 +80,7 @@ namespace VideoNarrator.ViewModels
         private VideoInfo? _videoInfo;
         private bool _hasVideo;
 
-        private bool _enableBackgroundMusic;
+        private bool _enableBackgroundMusic = true;
         private string _backgroundMusicPath = string.Empty;
         private double _backgroundMusicVolume = 0.10;
         private string _selectedAudioHandlingMode = "Thay thế âm thanh gốc";
@@ -1262,6 +1262,16 @@ namespace VideoNarrator.ViewModels
             _enableBackgroundMusic = s.EnableBackgroundMusic;
             _backgroundMusicPath = s.BackgroundMusicPath;
             _backgroundMusicVolume = s.BackgroundMusicVolume > 0 ? s.BackgroundMusicVolume : 0.10;
+
+            if (string.IsNullOrWhiteSpace(_backgroundMusicPath) || !File.Exists(_backgroundMusicPath))
+            {
+                string defMusic = ResolveDefaultMusicPath();
+                if (!string.IsNullOrEmpty(defMusic) && File.Exists(defMusic))
+                {
+                    _backgroundMusicPath = defMusic;
+                    _enableBackgroundMusic = true;
+                }
+            }
             _selectedAudioHandlingMode = string.IsNullOrWhiteSpace(s.AudioHandlingMode) ? "Thay thế âm thanh gốc" : s.AudioHandlingMode;
 
             _isAutoEditEnabled = s.IsAutoEditEnabled;
@@ -1451,18 +1461,51 @@ namespace VideoNarrator.ViewModels
             _fileService.Log("Đã xóa sạch kịch bản cũ và làm mới trạng thái dự án.");
         }
 
-        private void ExecuteSelectMusic()
+        public void ExecuteSelectMusic()
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Title = "Chọn tệp nhạc nền",
-                Filter = "Audio Files (*.mp3;*.wav;*.m4a;*.aac)|*.mp3;*.wav;*.m4a;*.aac|All Files (*.*)|*.*"
+                Title = "Chọn tệp Nhạc Nền (Background Music)",
+                Filter = "Audio Files (*.mp3;*.wav;*.m4a;*.aac;*.ogg;*.flac)|*.mp3;*.wav;*.m4a;*.aac;*.ogg;*.flac|All Files (*.*)|*.*",
+                CheckFileExists = true,
+                Multiselect = false
             };
 
-            if (dialog.ShowDialog() == true)
+            var owner = Application.Current?.MainWindow;
+            if (owner != null && owner.IsVisible)
+            {
+                owner.Activate();
+            }
+
+            bool? result = (owner != null && owner.IsVisible)
+                ? dialog.ShowDialog(owner)
+                : dialog.ShowDialog();
+
+            if (result == true && !string.IsNullOrEmpty(dialog.FileName))
             {
                 BackgroundMusicPath = dialog.FileName;
+                EnableBackgroundMusic = true;
+                StatusMessage = $"Đã chọn nhạc nền: {Path.GetFileName(dialog.FileName)}";
             }
+        }
+
+        public string ResolveDefaultMusicPath()
+        {
+            var candidates = new[]
+            {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "audio", "music", "viral_lofi_background.mp3"),
+                Path.Combine(AppContext.BaseDirectory, "Assets", "audio", "music", "viral_lofi_background.mp3"),
+                Path.Combine(Directory.GetCurrentDirectory(), "VideoNarrator", "Assets", "audio", "music", "viral_lofi_background.mp3"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets", "audio", "music", "viral_lofi_background.mp3"),
+                @"D:\code\tao video\VideoNarrator\Assets\audio\music\viral_lofi_background.mp3",
+                @"D:\code\tao video\Assets\audio\music\viral_lofi_background.mp3"
+            };
+
+            foreach (var path in candidates)
+            {
+                if (File.Exists(path)) return Path.GetFullPath(path);
+            }
+            return string.Empty;
         }
 
         private void ExecuteSelectBRollFolder()
@@ -2681,7 +2724,7 @@ namespace VideoNarrator.ViewModels
                     audioToMix,
                     EnableBackgroundMusic ? BackgroundMusicPath : null,
                     EnableSoundEffects ? plan.SoundEffects : null,
-                    plan.MusicVolume,
+                    BackgroundMusicVolume > 0 ? BackgroundMusicVolume : plan.MusicVolume,
                     EnableMusicDucking,
                     plan.DuckingVolume,
                     targetShortDuration,
@@ -2884,7 +2927,7 @@ namespace VideoNarrator.ViewModels
                     audioToMix,
                     EnableBackgroundMusic ? BackgroundMusicPath : null,
                     EnableSoundEffects ? CurrentEditingPlan.SoundEffects : null,
-                    CurrentEditingPlan.MusicVolume,
+                    BackgroundMusicVolume > 0 ? BackgroundMusicVolume : CurrentEditingPlan.MusicVolume,
                     EnableMusicDucking,
                     CurrentEditingPlan.DuckingVolume,
                     targetShortDuration,

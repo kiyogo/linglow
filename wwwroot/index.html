@@ -419,6 +419,38 @@
                             </div>
                         </div>
 
+                        <!-- NHẠC NỀN & ÂM LƯỢNG (BACKGROUND MUSIC) -->
+                        <div class="music-card-box mt-2 mb-2">
+                            <div class="flex-between items-center" style="margin-bottom: 6px;">
+                                <div class="flex items-center gap-1">
+                                    <svg class="vn-icon" style="color: var(--vn-primary); width: 16px; height: 16px;"><use href="#icon-music"></use></svg>
+                                    <span style="font-size: 12px; font-weight: 600;">Nhạc Nền (Background Music)</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button class="vn-btn-tag" id="btnResetDefaultMusic" type="button" title="Dùng lại nhạc nền Lo-fi mặc định">
+                                        Mặc định
+                                    </button>
+                                    <button class="vn-btn-tag text-danger" id="btnClearMusic" type="button" title="Tắt nhạc nền cho video này">
+                                        Tắt nhạc
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button class="vn-btn vn-btn-outlined btn-sm" id="btnSelectMusic" type="button" style="height: 32px; padding: 0 10px; font-size: 11.5px; border-radius: 8px;">
+                                    <svg class="vn-icon" style="width: 14px; height: 14px;"><use href="#icon-music"></use></svg>
+                                    <span>Đổi Nhạc</span>
+                                </button>
+                                <div class="music-display-badge" id="musicFileNameDisplay" title="Nhạc nền đang áp dụng">
+                                    🎵 viral_lofi_background.mp3 (Mặc định)
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span style="font-size: 11px; color: var(--vn-on-surface-variant); min-width: 58px;">Âm lượng:</span>
+                                <input type="range" class="vn-range" id="rangeMusicVolume" min="0.02" max="0.50" step="0.02" value="0.10" style="flex: 1; margin: 0;">
+                                <span class="badge-val" id="valMusicVolume" style="font-size: 11px; min-width: 35px; text-align: right;">10%</span>
+                            </div>
+                        </div>
+
                         <!-- 4. BIG PRIMARY CREATE BUTTON -->
                         <div class="generate-big-box mt-1">
                             <button class="vn-hero-btn w-full" id="btnBigCreateVideo" type="button">
@@ -759,6 +791,13 @@
                             <input type="checkbox" id="chkMusicDucking" checked>
                             <span class="switch-pill"></span>
                         </label>
+                        <div class="flex items-center gap-2 mt-1 mb-2" style="padding: 0 4px;">
+                            <button class="vn-btn vn-btn-outlined btn-sm" id="btnModalSelectMusic" type="button" style="height: 30px; font-size: 11px; padding: 0 10px;">
+                                <svg class="vn-icon" style="width: 13px; height: 13px;"><use href="#icon-music"></use></svg>
+                                <span>Chọn File Nhạc Khác</span>
+                            </button>
+                            <span class="text-xs text-muted truncate flex-1" id="modalMusicFileNameDisplay">viral_lofi_background.mp3</span>
+                        </div>
 
                         <label class="vn-switch-card">
                             <div class="switch-content">

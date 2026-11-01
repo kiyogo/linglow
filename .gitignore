@@ -12,6 +12,7 @@
 [Oo]bj/
 [Pp]ublish/
 [Pp]ublish_single/
+publish_out/
 dist_package/
 single_file/
 Output_Installer/
@@ -50,6 +51,8 @@ test_req*.json
 *.wav
 *.flac
 *.mp3
+!Assets/audio/music/*.mp3
+!VideoNarrator/Assets/audio/music/*.mp3
 *.mp4
 *.m4a
 *.aac
