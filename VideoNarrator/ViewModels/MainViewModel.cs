@@ -57,6 +57,7 @@ namespace VideoNarrator.ViewModels
         private readonly IStyleValidator _styleValidator;
 
         private CancellationTokenSource? _cts;
+        private bool _isBatchRunning = false;
 
         // Core UI Binding Properties
         private string _geminiApiUrl = "http://192.168.1.15:6660/api";
@@ -1745,11 +1746,14 @@ namespace VideoNarrator.ViewModels
             }
             finally
             {
-                IsBusy = false;
-                CanCancel = false;
+                if (!_isBatchRunning)
+                {
+                    IsBusy = false;
+                    CanCancel = false;
+                    _cts?.Dispose();
+                    _cts = null;
+                }
                 IsAnalyzing = false;
-                _cts?.Dispose();
-                _cts = null;
             }
         }
 
@@ -1845,11 +1849,14 @@ namespace VideoNarrator.ViewModels
             }
             finally
             {
-                IsBusy = false;
-                CanCancel = false;
+                if (!_isBatchRunning)
+                {
+                    IsBusy = false;
+                    CanCancel = false;
+                    _cts?.Dispose();
+                    _cts = null;
+                }
                 IsAnalyzing = false;
-                _cts?.Dispose();
-                _cts = null;
             }
         }
 
@@ -1875,9 +1882,12 @@ namespace VideoNarrator.ViewModels
                 return;
             }
 
-            _cts = new CancellationTokenSource();
-            IsBusy = true;
-            CanCancel = true;
+            if (!_isBatchRunning)
+            {
+                _cts = new CancellationTokenSource();
+                IsBusy = true;
+                CanCancel = true;
+            }
             IsGenerating = true;
             ProgressPercentage = 5;
             StatusMessage = "Đang khởi tạo quá trình tạo lồng tiếng...";
@@ -1995,11 +2005,14 @@ namespace VideoNarrator.ViewModels
             finally
             {
                 _fileService.DeleteTempDirectory(tempDir);
-                IsBusy = false;
-                CanCancel = false;
+                if (!_isBatchRunning)
+                {
+                    IsBusy = false;
+                    CanCancel = false;
+                    _cts?.Dispose();
+                    _cts = null;
+                }
                 IsGenerating = false;
-                _cts?.Dispose();
-                _cts = null;
             }
         }
 
@@ -2376,13 +2389,15 @@ namespace VideoNarrator.ViewModels
             ClearError();
             IsBusy = true;
             CanCancel = true;
-            _cts = new CancellationTokenSource();
+            _isBatchRunning = true;
+            using var batchCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _cts = batchCts;
 
             try
             {
                 for (int i = 0; i < total; i++)
                 {
-                    if (_cts.IsCancellationRequested) break;
+                    if (batchCts.IsCancellationRequested) break;
 
                     var v = videos[i];
                     int currentIdx = i + 1;
@@ -2392,6 +2407,9 @@ namespace VideoNarrator.ViewModels
 
                     try
                     {
+                        // Đảm bảo _cts luôn trỏ tới batchCts trong suốt vòng lặp
+                        _cts = batchCts;
+
                         // 1. Tải video
                         var dlResult = await _videoDownloadService.DownloadVideoAsync(
                             v.Url,
@@ -2403,7 +2421,7 @@ namespace VideoNarrator.ViewModels
                                     StatusMessage = $"🚀 [{currentIdx}/{total}] {msg}";
                                 });
                             },
-                            _cts.Token);
+                            batchCts.Token);
 
                         if (!dlResult.Success || string.IsNullOrEmpty(dlResult.FilePath) || !File.Exists(dlResult.FilePath))
                         {
@@ -2469,9 +2487,9 @@ namespace VideoNarrator.ViewModels
             }
             finally
             {
+                _isBatchRunning = false;
                 IsBusy = false;
                 CanCancel = false;
-                _cts?.Dispose();
                 _cts = null;
             }
 
@@ -2497,9 +2515,12 @@ namespace VideoNarrator.ViewModels
                 StatusMessage = "Chưa cấu hình Gemini API Key: Đang kích hoạt Smart Director tự động lên kế hoạch dựng 9:16...";
             }
 
-            _cts = new CancellationTokenSource();
-            IsBusy = true;
-            CanCancel = true;
+            if (!_isBatchRunning)
+            {
+                _cts = new CancellationTokenSource();
+                IsBusy = true;
+                CanCancel = true;
+            }
             IsAnalyzing = true;
             ProgressPercentage = 5;
             StatusMessage = "Khởi động AI Auto Video Editing Engine...";
@@ -2514,9 +2535,9 @@ namespace VideoNarrator.ViewModels
                 {
                     ProgressPercentage = 15;
                     StatusMessage = "Đang nhận diện các phân đoạn (Scene Detection)...";
-                    scenes = await _sceneDetectionService.DetectScenesAsync(SelectedVideoPath, VideoInfo.DurationSeconds, _cts.Token);
+                    scenes = await _sceneDetectionService.DetectScenesAsync(SelectedVideoPath, VideoInfo.DurationSeconds, _cts?.Token ?? CancellationToken.None);
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                    Application.Current?.Dispatcher?.Invoke(() =>
                     {
                         DetectedScenes.Clear();
                         foreach (var sc in scenes) DetectedScenes.Add(sc);
@@ -2575,7 +2596,7 @@ namespace VideoNarrator.ViewModels
                 }
 
                 // Cập nhật Subtitle list
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current?.Dispatcher?.Invoke(() =>
                 {
                     SubtitleList.Clear();
                     if (plan.Subtitles != null)
@@ -2766,11 +2787,14 @@ namespace VideoNarrator.ViewModels
             }
             finally
             {
-                IsBusy = false;
-                CanCancel = false;
+                if (!_isBatchRunning)
+                {
+                    IsBusy = false;
+                    CanCancel = false;
+                    _cts?.Dispose();
+                    _cts = null;
+                }
                 IsAnalyzing = false;
-                _cts?.Dispose();
-                _cts = null;
             }
         }
 
@@ -2784,9 +2808,12 @@ namespace VideoNarrator.ViewModels
                 return;
             }
 
-            _cts = new CancellationTokenSource();
-            IsBusy = true;
-            CanCancel = true;
+            if (!_isBatchRunning)
+            {
+                _cts = new CancellationTokenSource();
+                IsBusy = true;
+                CanCancel = true;
+            }
             IsGenerating = true;
             ProgressPercentage = 5;
             StatusMessage = "Bắt đầu render video chất lượng cao 9:16...";
@@ -2980,11 +3007,14 @@ namespace VideoNarrator.ViewModels
             finally
             {
                 _fileService.DeleteTempDirectory(tempDir);
-                IsBusy = false;
-                CanCancel = false;
+                if (!_isBatchRunning)
+                {
+                    IsBusy = false;
+                    CanCancel = false;
+                    _cts?.Dispose();
+                    _cts = null;
+                }
                 IsGenerating = false;
-                _cts?.Dispose();
-                _cts = null;
             }
         }
 

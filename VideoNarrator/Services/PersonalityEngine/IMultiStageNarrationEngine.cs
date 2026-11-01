@@ -545,14 +545,21 @@ namespace VideoNarrator.Services.PersonalityEngine
             string[] candidateModels;
             if (isCustomApi)
             {
-                candidateModels = new[] { !string.IsNullOrWhiteSpace(model) ? model : "gemini-3.1-flash-lite" };
+                candidateModels = new[] { !string.IsNullOrWhiteSpace(model) ? model : "gemini-3.1-flash-lite", "fbb127bbb056c959", "9d8ca3786ebdfbea" };
             }
             else
             {
-                // Danh sách model ưu tiên cho Google Gemini API chính thức
-                string preferred = !string.IsNullOrWhiteSpace(model) ? model : "gemini-3-flash-preview";
-                candidateModels = new[] { preferred, "gemini-3-flash-preview", "gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash" }
-                    .Distinct().ToArray();
+                // Danh sách model ưu tiên cho Google Gemini API chính thức (Gemini 3.1 & 3.5 & Flash Lite)
+                string preferred = !string.IsNullOrWhiteSpace(model) ? model : "gemini-3.1-flash-lite";
+                candidateModels = new[] {
+                    preferred,
+                    "gemini-3.1-flash-lite",
+                    "gemini-3.5-flash",
+                    "gemini-flash-lite-latest",
+                    "gemini-2.5-flash",
+                    "gemini-1.5-flash",
+                    "gemini-flash-latest"
+                }.Distinct().ToArray();
             }
 
             foreach (var targetModel in candidateModels)
@@ -570,10 +577,10 @@ namespace VideoNarrator.Services.PersonalityEngine
                 {
                     var partsList = new List<object>();
 
-                    // 1. Gửi trực tiếp các khung hình video (Multimodal Vision) nếu có
+                    // 1. Gửi trực tiếp các khung hình video (Multimodal Vision) nếu có (tối đa 4 ảnh để phản hồi nhanh)
                     if (keyframeBase64List != null && keyframeBase64List.Count > 0)
                     {
-                        foreach (var b64 in keyframeBase64List)
+                        foreach (var b64 in keyframeBase64List.Take(4))
                         {
                             partsList.Add(new
                             {
@@ -616,7 +623,7 @@ namespace VideoNarrator.Services.PersonalityEngine
                 try
                 {
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    int timeoutSeconds = (keyframeBase64List != null && keyframeBase64List.Count > 0) || !string.IsNullOrEmpty(fileUri) ? 45 : 30;
+                    int timeoutSeconds = (keyframeBase64List != null && keyframeBase64List.Count > 0) || !string.IsNullOrEmpty(fileUri) ? 55 : 35;
                     cts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
                     using var req = new HttpRequestMessage(HttpMethod.Post, url);
@@ -658,34 +665,76 @@ namespace VideoNarrator.Services.PersonalityEngine
             return null;
         }
 
+        public static string CleanAndTranslateSubject(string? rawTopic)
+        {
+            if (string.IsNullOrWhiteSpace(rawTopic))
+            {
+                return "khoảnh khắc độc đáo này";
+            }
+
+            string s = rawTopic.Trim();
+            // Xóa phần mở rộng tệp (.mp4, .mov,...)
+            s = Regex.Replace(s, @"\.(mp4|mov|avi|mkv|webm)$", "", RegexOptions.IgnoreCase).Trim();
+            // Xóa các hashtag phổ biến (#shorts, #viral, #tiktok, #foryou, #fyp,...)
+            s = Regex.Replace(s, @"#\w+", "").Trim();
+            // Xóa các ký tự phân cách rác ở cuối như |, -, _
+            s = Regex.Replace(s, @"[\s\|\-_]+$", "").Trim();
+
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return "khoảnh khắc độc đáo này";
+            }
+
+            // Nếu có chữ "chưa xác định" hoặc "chưa có"
+            if (s.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase) || s.Contains("chưa có", StringComparison.OrdinalIgnoreCase))
+            {
+                return "khoảnh khắc thú vị này";
+            }
+
+            // Kiểm tra xem chuỗi có chứa dấu tiếng Việt hay không
+            bool hasVietnameseDiacritics = Regex.IsMatch(s, @"[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]", RegexOptions.IgnoreCase);
+            if (hasVietnameseDiacritics)
+            {
+                return s;
+            }
+
+            // Nếu là tiếng Anh hoặc slug không dấu, chuyển ngữ thông minh dựa trên từ khóa nhận diện
+            string lower = s.ToLowerInvariant();
+            if (lower.Contains("moment") || lower.Contains("caught on camera") || lower.Contains("incredible"))
+                return "khoảnh khắc đáng kinh ngạc được camera ghi lại này";
+            if (lower.Contains("parkour") || lower.Contains("game"))
+                return "màn trình diễn kỹ năng đỉnh cao như trong game thực tế này";
+            if (lower.Contains("satisfying") || lower.Contains("oddly") || lower.Contains("crystal") || lower.Contains("fruit"))
+                return "màn cắt gọt cực kỳ thỏa mãn thị giác này";
+            if (lower.Contains("domino") || lower.Contains("brick") || lower.Contains("wall") || lower.Contains("paving"))
+                return "kỹ thuật xếp gạch hiệu ứng domino siêu chuẩn xác này";
+            if (lower.Contains("craft") || lower.Contains("diy") || lower.Contains("wood") || lower.Contains("handmade") || lower.Contains("build"))
+                return "quá trình chế tác thủ công tinh xảo này";
+            if (lower.Contains("magic") || lower.Contains("trick") || lower.Contains("illusion"))
+                return "mẹo ảo thuật và tài năng độc lạ này";
+            if (lower.Contains("science") || lower.Contains("experiment") || lower.Contains("physics"))
+                return "thí nghiệm khoa học đầy bất ngờ này";
+            if (lower.Contains("animal") || lower.Contains("cat") || lower.Contains("dog") || lower.Contains("pet"))
+                return "hành động siêu đáng yêu của loài động vật này";
+            if (lower.Contains("snaptik") || lower.Contains("tiktok") || lower.Length < 4)
+                return "tình huống đầy bất ngờ này";
+
+            return "cảnh tượng độc đáo này";
+        }
+
         private static string GenerateFallbackScript(VideoContentAnalysis analysis, NarrationPersonaConfig config)
         {
-            string subject = analysis.MainSubject;
-            if (string.IsNullOrWhiteSpace(subject) ||
-                subject.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase) ||
-                subject.Contains("chưa có", StringComparison.OrdinalIgnoreCase))
+            string vietnameseSubject = CleanAndTranslateSubject(analysis.MainSubject);
+            if (vietnameseSubject.Equals("khoảnh khắc độc đáo này", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(analysis.VideoTopic))
             {
-                subject = !string.IsNullOrWhiteSpace(analysis.VideoTopic) && !analysis.VideoTopic.Contains("chưa có", StringComparison.OrdinalIgnoreCase)
-                    ? analysis.VideoTopic
-                    : "khoảnh khắc độc đáo này";
-            }
-
-            string explanation = analysis.Explanation;
-            if (string.IsNullOrWhiteSpace(explanation) || explanation.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
-            {
-                explanation = "Từng diễn biến trong video mang lại trải nghiệm vô cùng chân thực và cuốn hút";
-            }
-
-            string payoff = analysis.Payoff;
-            if (string.IsNullOrWhiteSpace(payoff) || payoff.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
-            {
-                payoff = "một góc nhìn hoàn toàn mới lạ mà không phải ai cũng từng thấy";
+                vietnameseSubject = CleanAndTranslateSubject(analysis.VideoTopic);
             }
 
             var sb = new StringBuilder();
-            sb.Append($"Nhìn vào {subject.ToLowerInvariant()}, bạn sẽ thấy điều thú vị bắt đầu ngay từ những giây đầu tiên. ");
-            sb.Append($"{explanation}. ");
-            sb.Append($"Và kết quả đem lại {payoff.ToLowerInvariant()}. ");
+            sb.Append($"Nhìn vào {vietnameseSubject}, bạn sẽ thấy sự cuốn hút bắt đầu ngay từ những giây đầu tiên. ");
+            sb.Append("Từng thao tác được thực hiện một cách cực kỳ chuẩn xác và dứt khoát, khiến người xem khó có thể rời mắt. ");
+            sb.Append("Không chỉ đơn thuần là một khoảnh khắc ấn tượng, mà đằng sau đó là sự khéo léo và tính toán vô cùng tỉ mỉ. ");
+            sb.Append("Và kết quả cuối cùng chắc chắn sẽ khiến bạn phải trầm trồ vì độ mượt mà đến khó tin! ");
             sb.Append("Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!");
             return sb.ToString();
         }
