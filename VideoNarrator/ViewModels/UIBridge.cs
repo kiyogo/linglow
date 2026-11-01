@@ -890,6 +890,10 @@ namespace VideoNarrator.ViewModels
         public void clearMusic() => ClearMusic();
         public void resetDefaultMusic() => ResetDefaultMusic();
         public void setMusicVolume(double volume) => SetMusicVolume(volume);
+        public void setVoice(string voice) => SetTtsVoice(voice);
+        public void setTtsVoice(string voice) => SetTtsVoice(voice);
+        public void setSpeechRate(double rate) => SetSpeechRate(rate);
+        public void setSpeechPitch(double pitch) => SetSpeechPitch(pitch);
         public void generateVoice()
         {
             App.Current.Dispatcher.Invoke(() =>

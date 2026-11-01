@@ -141,6 +141,13 @@ namespace VideoNarrator.Services
             string apiUrl = !string.IsNullOrWhiteSpace(settings?.GeminiApiUrl) ? settings.GeminiApiUrl.Trim() : BaseApiUrl;
             bool isCustomApi = !apiUrl.Contains("googleapis.com", StringComparison.OrdinalIgnoreCase);
 
+            bool isEnglish = settings != null && (
+                settings.TtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true ||
+                settings.TtsProvider == "OpenAI" ||
+                settings.TtsProvider == "ElevenLabs" ||
+                string.Equals(settings.NarrationLanguage, "en", StringComparison.OrdinalIgnoreCase)
+            );
+
             if (!isCustomApi && string.IsNullOrWhiteSpace(apiKey))
             {
                 if (!string.IsNullOrWhiteSpace(customScript))
@@ -209,7 +216,11 @@ namespace VideoNarrator.Services
                 {
                     progressCallback?.Invoke("AI đang chạy Multi-Stage Narration Engine (Phân tích bối cảnh & Tạo lời thoại hấp dẫn)...", 30);
                     var persona = _personaManager?.GetPersonaById(stylePreset) ?? _personaManager?.GetPersonaById("curiosity") ?? new PersonaProfile();
-                    var personaConfig = new NarrationPersonaConfig { TargetDurationSeconds = videoDurationSeconds };
+                    var personaConfig = new NarrationPersonaConfig 
+                    { 
+                        TargetDurationSeconds = videoDurationSeconds,
+                        Language = isEnglish ? "en" : "vi"
+                    };
                     if (_styleEngine != null)
                     {
                         var (minW, maxW, _) = _styleEngine.CalculateDurationBudget(videoDurationSeconds, settings?.SpeechRate ?? 1.20);
@@ -474,17 +485,19 @@ namespace VideoNarrator.Services
                 plan.NarrationScript = customScript;
             }
 
-            // Normalize narration script, hook and subtitles for Vietnamese TTS
+            // Normalize narration script, hook and subtitles
             if (!string.IsNullOrWhiteSpace(plan.NarrationScript))
             {
-                plan.NarrationScript = TtsService.NormalizeTextForVietnameseTts(plan.NarrationScript);
+                plan.NarrationScript = isEnglish 
+                    ? TtsService.NormalizeTextForEnglishTts(plan.NarrationScript)
+                    : TtsService.NormalizeTextForVietnameseTts(plan.NarrationScript);
                 int currentWords = plan.NarrationScript.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
                 
                 double speechRate = settings.SpeechRate > 0 ? settings.SpeechRate : 1.20;
-                double wordsPerSec = 4.15 * speechRate;
+                double wordsPerSec = (isEnglish ? 2.8 : 4.15) * speechRate;
                 double speechTargetSec = Math.Max(12.0, (isKeepOriginalUncut ? videoDurationSeconds : Math.Min(45.0, videoDurationSeconds)) - 0.5);
-                int minRequiredWords = Math.Max(60, (int)Math.Round(speechTargetSec * (wordsPerSec * 0.98)));
-                int targetRequiredWords = Math.Max(70, (int)Math.Round(speechTargetSec * (wordsPerSec * 1.03)));
+                int minRequiredWords = Math.Max(40, (int)Math.Round(speechTargetSec * (wordsPerSec * 0.98)));
+                int targetRequiredWords = Math.Max(50, (int)Math.Round(speechTargetSec * (wordsPerSec * 1.03)));
 
                 _fileService.Log($"Kiểm tra độ dài kịch bản AI: {currentWords} từ (Tốc độ {speechRate:0.##}x ~{wordsPerSec:F1} từ/s; Yêu cầu: {minRequiredWords} - {targetRequiredWords} từ cho video {videoDurationSeconds:F1}s).");
 
@@ -500,7 +513,9 @@ namespace VideoNarrator.Services
                             apiUrl, apiKey, targetModel, plan.NarrationScript, currentWords, targetRequiredWords, minRequiredWords, videoDurationSeconds, speechRate, wordsPerSec, topic, cancellationToken);
                         if (!string.IsNullOrWhiteSpace(expandedScript))
                         {
-                            plan.NarrationScript = TtsService.NormalizeTextForVietnameseTts(expandedScript);
+                            plan.NarrationScript = isEnglish 
+                                ? TtsService.NormalizeTextForEnglishTts(expandedScript)
+                                : TtsService.NormalizeTextForVietnameseTts(expandedScript);
                             int newWords = plan.NarrationScript.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
                             _fileService.Log($"Mở rộng kịch bản thành công: {newWords} từ (Ước tính đọc: ~{newWords / wordsPerSec:F1}s).");
                         }
@@ -513,7 +528,9 @@ namespace VideoNarrator.Services
             }
             if (!string.IsNullOrWhiteSpace(plan.Hook))
             {
-                plan.Hook = TtsService.NormalizeTextForVietnameseTts(plan.Hook);
+                plan.Hook = isEnglish 
+                    ? TtsService.NormalizeTextForEnglishTts(plan.Hook)
+                    : TtsService.NormalizeTextForVietnameseTts(plan.Hook);
             }
 
             // Parse resolution from settings
@@ -623,7 +640,10 @@ namespace VideoNarrator.Services
                 foreach (var sub in plan.Subtitles)
                 {
                     if (string.IsNullOrWhiteSpace(sub.Text)) continue;
-                    sub.Text = TtsService.NormalizeTextForVietnameseTts(sub.Text);
+                    bool isEnglishSub = !Regex.IsMatch(sub.Text, @"[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]", RegexOptions.IgnoreCase);
+                    sub.Text = isEnglishSub
+                        ? TtsService.NormalizeTextForEnglishTts(sub.Text)
+                        : TtsService.NormalizeTextForVietnameseTts(sub.Text);
                     if (string.IsNullOrWhiteSpace(sub.Text)) continue;
                     double maxStart = Math.Max(0, sourceDurationSeconds - 0.2);
                     sub.Start = Math.Clamp(sub.Start, 0, maxStart);
@@ -1390,14 +1410,36 @@ namespace VideoNarrator.Services
   + Đặt ra câu hỏi mở kích thích trí tưởng tượng, dẫn dắt người xem khám phá từng diễn biến bất ngờ trên màn hình.";
             }
 
+            bool isEnglish = settings != null && (
+                settings.TtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true ||
+                settings.TtsProvider == "OpenAI" ||
+                settings.TtsProvider == "ElevenLabs" ||
+                string.Equals(settings.NarrationLanguage, "en", StringComparison.OrdinalIgnoreCase)
+            );
+
             var sb = new StringBuilder();
-            sb.AppendLine("BẠN LÀ BIÊN KỊCH SHORTS/TIKTOK TRIỆU VIEW CHUYÊN NGHIỆP HÀNG ĐẦU VIỆT NAM.");
-            sb.AppendLine("Nhiệm vụ của bạn là tạo một kịch bản thuyết minh tiếng Việt đỉnh cao, lôi cuốn người xem từ giây đầu tiên đến giây cuối cùng.");
-            sb.AppendLine();
-            sb.AppendLine($"THÔNG TIN VIDEO:");
-            sb.AppendLine($"- Thời lượng video gốc: {durStr} giây.");
-            sb.AppendLine($"- Phong cách biên tập: {stylePreset}.");
-            sb.AppendLine($"- Văn phong thuyết minh yêu cầu: {tone}.");
+            if (isEnglish)
+            {
+                sb.AppendLine("YOU ARE A WORLD-CLASS VIRAL SHORTS/TIKTOK SCRIPTWRITER & NARRATOR (STYLE OF ZACK D. FILMS & MRBEAST).");
+                sb.AppendLine("Your mission is to write an electrifying, ultra-engaging English voiceover script that hooks viewers in the first 2 seconds and holds their attention until the very last frame.");
+                sb.AppendLine();
+                sb.AppendLine($"VIDEO INFORMATION:");
+                sb.AppendLine($"- Target duration: {durStr} seconds.");
+                sb.AppendLine($"- Style preset: {stylePreset}.");
+                sb.AppendLine($"- Narration tone: {tone}.");
+                sb.AppendLine("- MANDATORY LANGUAGE: AMERICAN ENGLISH. Every single word of 'hook', 'narrationScript', and 'subtitles' MUST BE IN NATURAL, PUNCHY ENGLISH.");
+                sb.AppendLine("- MANDATORY ENDING: You MUST finish with an engaging subscribe Call-To-Action: 'Make sure to subscribe for more fascinating stories!' or 'Hit subscribe for more awesome videos!'.");
+            }
+            else
+            {
+                sb.AppendLine("BẠN LÀ BIÊN KỊCH SHORTS/TIKTOK TRIỆU VIEW CHUYÊN NGHIỆP HÀNG ĐẦU VIỆT NAM.");
+                sb.AppendLine("Nhiệm vụ của bạn là tạo một kịch bản thuyết minh tiếng Việt đỉnh cao, lôi cuốn người xem từ giây đầu tiên đến giây cuối cùng.");
+                sb.AppendLine();
+                sb.AppendLine($"THÔNG TIN VIDEO:");
+                sb.AppendLine($"- Thời lượng video gốc: {durStr} giây.");
+                sb.AppendLine($"- Phong cách biên tập: {stylePreset}.");
+                sb.AppendLine($"- Văn phong thuyết minh yêu cầu: {tone}.");
+            }
 
             if (probeResult != null && probeResult.Success)
             {

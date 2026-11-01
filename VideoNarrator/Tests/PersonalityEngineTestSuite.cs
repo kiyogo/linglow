@@ -624,6 +624,43 @@ namespace VideoNarrator.Tests
                 reports.Add(new TestReportItem { TestName = "21. Auto Video Discovery & Online Short Video Search", Passed = false, Details = ex.Message });
             }
 
+            // TEST 22: English Voiceover & Shorts Narration Support
+            try
+            {
+                var tts = new VideoNarrator.Services.TtsService(new System.Net.Http.HttpClient(), new VideoNarrator.Services.FileService());
+                var edgeVoices = tts.GetSupportedVoices("Edge-TTS");
+
+                bool hasGuy = edgeVoices.Any(v => v.Contains("en-US-GuyNeural"));
+                bool hasJenny = edgeVoices.Any(v => v.Contains("en-US-JennyNeural"));
+                bool hasChristopher = edgeVoices.Any(v => v.Contains("en-US-ChristopherNeural"));
+                bool hasAria = edgeVoices.Any(v => v.Contains("en-US-AriaNeural"));
+                bool hasEric = edgeVoices.Any(v => v.Contains("en-US-EricNeural"));
+
+                string rawEnglish = "Look at this! You won't believe what happens next, don't blink! #shorts (watch till the end)";
+                string normEnglish = VideoNarrator.Services.TtsService.NormalizeTextForEnglishTts(rawEnglish);
+                bool normWorked = normEnglish.Contains("won't") && normEnglish.Contains("don't") && !normEnglish.Contains("#") && !normEnglish.Contains("(");
+
+                string englishCta = VideoNarrator.Services.PersonalityEngine.MultiStageNarrationEngine.EnsureSubscribeCallToAction("This is an incredible moment.", isEnglish: true);
+                bool ctaWorked = englishCta.Contains("subscribe") && englishCta.Contains("Make sure to subscribe for more fascinating videos!");
+
+                var enPersona = new VideoNarrator.Models.NarrationPersonaConfig { Language = "en" };
+                bool isEnglishPersona = enPersona.IsEnglish;
+
+                bool passed = hasGuy && hasJenny && hasChristopher && hasAria && hasEric && normWorked && ctaWorked && isEnglishPersona;
+                reports.Add(new TestReportItem
+                {
+                    TestName = "22. English Voiceover & Viral Shorts Narration Pipeline",
+                    Passed = passed,
+                    Details = passed
+                        ? $"Thành công: 5 giọng US Neural (Guy, Jenny, Christopher, Aria, Eric), English text normalization giữ nguyên từ lóng/viết tắt ({normEnglish.Substring(0, Math.Min(35, normEnglish.Length))}...), và CTA chuẩn viral English."
+                        : $"Thất bại: hasGuy={hasGuy}, normWorked={normWorked}, ctaWorked={ctaWorked}, isEnglishPersona={isEnglishPersona}"
+                });
+            }
+            catch (Exception ex)
+            {
+                reports.Add(new TestReportItem { TestName = "22. English Voiceover & Viral Shorts Narration Pipeline", Passed = false, Details = ex.Message });
+            }
+
             return reports;
         }
     }

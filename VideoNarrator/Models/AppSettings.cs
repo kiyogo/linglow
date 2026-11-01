@@ -15,6 +15,7 @@ namespace VideoNarrator.Models
         public double SpeechRate { get; set; } = 1.25;
         public double SpeechPitch { get; set; } = 2.0; // Cao độ / Ngữ điệu (-20% đến +20%), mặc định +2%
         public string TtsEmotionStyle { get; set; } = "🤖 Nhấn nhá cảm xúc tự nhiên (Đề xuất)";
+        public string NarrationLanguage { get; set; } = "Auto"; // "Auto", "vi", "en"
         public string OutputDirectory { get; set; } = string.Empty;
         public bool EnableBackgroundMusic { get; set; } = true;
         public string BackgroundMusicPath { get; set; } = string.Empty;

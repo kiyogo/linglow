@@ -44,6 +44,12 @@ namespace VideoNarrator.Models
         [JsonPropertyName("maxWords")]
         public int MaxWords { get; set; } = 115;
 
+        [JsonPropertyName("language")]
+        public string Language { get; set; } = "vi"; // "vi" or "en"
+
+        [JsonIgnore]
+        public bool IsEnglish => string.Equals(Language, "en", StringComparison.OrdinalIgnoreCase);
+
         public NarrationPersonaConfig Clone()
         {
             return new NarrationPersonaConfig
@@ -59,7 +65,8 @@ namespace VideoNarrator.Models
                 AudienceLevel = this.AudienceLevel,
                 TargetDurationSeconds = this.TargetDurationSeconds,
                 MinWords = this.MinWords,
-                MaxWords = this.MaxWords
+                MaxWords = this.MaxWords,
+                Language = this.Language
             };
         }
     }

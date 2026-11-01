@@ -1634,11 +1634,17 @@ namespace VideoNarrator.ViewModels
             {
                 TtsTestStatus = "Đang tạo giọng đọc nhấn nhá...";
                 string tempAudio = Path.Combine(Path.GetTempPath(), $"tts_test_{Guid.NewGuid():N}.mp3");
+                bool isEnglishVoice = SelectedTtsVoice.StartsWith("en-", StringComparison.OrdinalIgnoreCase) ||
+                                     SelectedTtsProvider == "OpenAI" ||
+                                     SelectedTtsProvider == "ElevenLabs";
+                string defaultSample = isEnglishVoice
+                    ? "Hello! This is your viral AI narration voice for English Shorts!"
+                    : "Xin chào, đây là giọng đọc thuyết minh AI chuyên nghiệp của bạn.";
                 string testSampleText = !string.IsNullOrWhiteSpace(HookText)
                     ? HookText.Trim()
                     : (!string.IsNullOrWhiteSpace(ScriptText)
-                        ? (ScriptText.Split(new[] { '.', '!', '?', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim() ?? "Xin chào, đây là giọng đọc thuyết minh AI của bạn.")
-                        : "Xin chào, đây là giọng đọc thuyết minh AI của bạn.");
+                        ? (ScriptText.Split(new[] { '.', '!', '?', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim() ?? defaultSample)
+                        : defaultSample);
                 await _ttsService.GenerateSpeechAsync(testSampleText, settings, tempAudio);
 
                 if (File.Exists(tempAudio) && new FileInfo(tempAudio).Length > 0)

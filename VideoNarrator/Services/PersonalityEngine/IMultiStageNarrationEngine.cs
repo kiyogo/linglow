@@ -293,6 +293,17 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbPrompt.AppendLine("============================================================");
             sbPrompt.AppendLine();
 
+            if (personaConfig.IsEnglish)
+            {
+                sbPrompt.AppendLine("=== MANDATORY LANGUAGE REQUIREMENT: 100% FLUENT AMERICAN ENGLISH ===");
+                sbPrompt.AppendLine("You MUST write the entire voiceover script exclusively in punchy, highly engaging, conversational American English (style of Zack D. Films / MrBeast).");
+                sbPrompt.AppendLine("Hook viewers directly in the first 2 seconds ('Look closely at this...', 'This is why...', 'Here is what happens when...').");
+                sbPrompt.AppendLine("Use crisp, vivid, natural English words. NO cringe, NO cliché greetings ('Welcome back', 'In today's video').");
+                sbPrompt.AppendLine("MANDATORY ENDING: Conclude the script with an engaging subscribe Call-To-Action: 'Make sure to subscribe for more fascinating stories!' or 'Hit subscribe for more awesome videos!'.");
+                sbPrompt.AppendLine("=========================================================================");
+                sbPrompt.AppendLine();
+            }
+
             sbPrompt.AppendLine("=== TIÊU CHUẨN VĂN PHONG: NÓI THẬT, ĐỜI THƯỜNG, TUYỆT ĐỐI KHÔNG XÀM XÍ (ZERO CRINGE) ===");
             sbPrompt.AppendLine("1. ❌ CẤM TUYỆT ĐỐI TỪ NGỮ VĂN MẪU XÀM XÍ, PHÓNG ĐẠI TRẺ TRÂU:");
             sbPrompt.AppendLine("   - CẤM các từ giật gân rẻ tiền, khoa trương lố lăng: 'cú hack cực đỉnh', 'cú hack vật lý', 'như tay đua chuyên nghiệp', 'tốc độ xé gió', 'lột xác khó tin', 'não được chữa lành', 'bùng nổ khoang miệng', 'đỉnh chóp', 'ảo diệu', 'kỳ diệu', 'thánh đường', 'tâm hồn', 'che chở', 'thiên tài đại dương'.");
@@ -350,7 +361,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             }
 
             draft = CleanNarrationScript(draft);
-            draft = EnsureSubscribeCallToAction(draft);
+            draft = EnsureSubscribeCallToAction(draft, personaConfig.IsEnglish);
             _fileService.Log($"Hoàn tất Stage B: Lời thoại nháp gồm {CountWords(draft)} từ.");
             return draft;
         }
@@ -471,7 +482,7 @@ namespace VideoNarrator.Services.PersonalityEngine
                 }
             }
 
-            draftScript = EnsureSubscribeCallToAction(draftScript);
+            draftScript = EnsureSubscribeCallToAction(draftScript, personaConfig.IsEnglish);
             return (draftScript, evaluation);
         }
 
@@ -724,6 +735,21 @@ namespace VideoNarrator.Services.PersonalityEngine
 
         private static string GenerateFallbackScript(VideoContentAnalysis analysis, NarrationPersonaConfig config)
         {
+            if (config.IsEnglish)
+            {
+                string topicClean = !string.IsNullOrWhiteSpace(analysis.VideoTopic) ? analysis.VideoTopic.Trim() : "this scene";
+                topicClean = Regex.Replace(topicClean, @"#\w+", "").Trim();
+                if (string.IsNullOrWhiteSpace(topicClean)) topicClean = "this incredible moment";
+
+                var engSb = new StringBuilder();
+                engSb.Append($"Look closely at {topicClean.ToLowerInvariant()}, and you will see something truly extraordinary right from the start. ");
+                engSb.Append("Every single movement is executed with unbelievable precision and skill. ");
+                engSb.Append("What looks effortless on the surface actually requires immense practice and dedication. ");
+                engSb.Append("And the final outcome is just so satisfying to watch! ");
+                engSb.Append("Make sure to subscribe for more fascinating videos!");
+                return engSb.ToString();
+            }
+
             string vietnameseSubject = CleanAndTranslateSubject(analysis.MainSubject);
             if (vietnameseSubject.Equals("khoảnh khắc độc đáo này", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(analysis.VideoTopic))
             {
@@ -739,18 +765,20 @@ namespace VideoNarrator.Services.PersonalityEngine
             return sb.ToString();
         }
 
-        public static string EnsureSubscribeCallToAction(string script)
+        public static string EnsureSubscribeCallToAction(string script, bool isEnglish = false)
         {
             if (string.IsNullOrWhiteSpace(script))
             {
-                return "Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!";
+                return isEnglish
+                    ? "Make sure to subscribe for more fascinating videos!"
+                    : "Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!";
             }
 
             string clean = script.Trim();
             string lower = clean.ToLowerInvariant();
 
             // Nếu đã có lời kêu gọi đăng ký kênh hoặc follow thì giữ nguyên
-            if (lower.Contains("đăng ký") || lower.Contains("dang ky") || lower.Contains("follow") || lower.Contains("theo dõi"))
+            if (lower.Contains("đăng ký") || lower.Contains("dang ky") || lower.Contains("follow") || lower.Contains("theo dõi") || lower.Contains("subscribe"))
             {
                 return clean;
             }
@@ -761,7 +789,11 @@ namespace VideoNarrator.Services.PersonalityEngine
                 clean += ".";
             }
 
-            return $"{clean} Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!";
+            string cta = isEnglish
+                ? "Make sure to subscribe for more fascinating videos!"
+                : "Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!";
+
+            return $"{clean} {cta}";
         }
 
         private static ScriptQualityEvaluation EvaluateHeuristically(string script, NarrationPersonaConfig config)

@@ -62,7 +62,10 @@ namespace VideoNarrator.Services
             "vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)",
             "vi-VN-NamMinhNeural (Nam - Tiếng Việt)",
             "en-US-GuyNeural (Nam - Tiếng Anh)",
-            "en-US-JennyNeural (Nữ - Tiếng Anh)"
+            "en-US-JennyNeural (Nữ - Tiếng Anh)",
+            "en-US-ChristopherNeural (Nam Trầm Kể Chuyện - Tiếng Anh)",
+            "en-US-AriaNeural (Nữ Truyền Cảm - Tiếng Anh)",
+            "en-US-EricNeural (Nam Trẻ Trung - Tiếng Anh)"
         };
 
         public TtsService(HttpClient httpClient, IFileService fileService)
@@ -120,7 +123,18 @@ namespace VideoNarrator.Services
             }
 
             string cleanText = StripTimestampsAndFormatText(text);
-            cleanText = NormalizeTextForVietnameseTts(cleanText);
+            bool isEnglish = settings.Voice.StartsWith("en-", StringComparison.OrdinalIgnoreCase) ||
+                             settings.Provider == "OpenAI" ||
+                             settings.Provider == "ElevenLabs";
+
+            if (!isEnglish)
+            {
+                cleanText = NormalizeTextForVietnameseTts(cleanText);
+            }
+            else
+            {
+                cleanText = NormalizeTextForEnglishTts(cleanText);
+            }
             if (string.IsNullOrWhiteSpace(cleanText))
             {
                 throw new ArgumentException("Kịch bản sau khi lọc mốc thời gian không có nội dung chữ.");
@@ -246,6 +260,30 @@ namespace VideoNarrator.Services
 
             // 4. Nếu toàn bộ kịch bản bị viết HOA (ALL CAPS), chuyển về viết hoa đầu câu tự nhiên
             // để tránh Edge-TTS nhầm lẫn thành từ viết tắt tiếng Anh và đánh vần từng chữ cái:
+            if (IsMostlyUpperCase(result))
+            {
+                result = ConvertToSentenceCase(result);
+            }
+
+            return result;
+        }
+
+        public static string NormalizeTextForEnglishTts(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            string result = text;
+            // Dọn dẹp ký tự thừa nhưng giữ lại dấu nháy đơn ' cho từ viết tắt tiếng Anh (don't, it's, you'll)
+            result = Regex.Replace(result, @"[\(\)\[\]\{\}""“”„«»_~*^#/\\]", " ");
+            result = Regex.Replace(result, @"\s*,\s*", ", ");
+            result = Regex.Replace(result, @"\s*\.\s*", ". ");
+            result = Regex.Replace(result, @"\s*!\s*", "! ");
+            result = Regex.Replace(result, @"\s*\?\s*", "? ");
+            result = Regex.Replace(result, @"\s*;\s*", ", ");
+            result = Regex.Replace(result, @"\s*:\s*", ", ");
+            result = Regex.Replace(result, @"\s*-\s*", " ");
+            result = Regex.Replace(result, @"\s+", " ").Trim();
+
             if (IsMostlyUpperCase(result))
             {
                 result = ConvertToSentenceCase(result);

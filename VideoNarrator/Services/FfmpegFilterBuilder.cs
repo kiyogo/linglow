@@ -129,8 +129,8 @@ namespace VideoNarrator.Services
 
             string zoomPctStr = maxZoomPercent.ToString("0.000", CultureInfo.InvariantCulture);
 
-            // PTS-preserving zoom filter: uses crop & scale with eval=frame to prevent FFmpeg timestamp drift after 10s
-            return $"crop=w='in_w*(1-{zoomPctStr}*min(t,10)/10)':h='in_h*(1-{zoomPctStr}*min(t,10)/10)':x='(in_w-out_w)/2':y='(in_h-out_h)/2',scale={width}:{height}:flags=bicubic";
+            // PTS-preserving zoom filter: uses crop & scale with eval=frame to prevent FFmpeg timestamp drift after 10s (crop defaults x and y to center)
+            return $"crop=w='in_w*(1-{zoomPctStr}*min(t,10)/10)':h='in_h*(1-{zoomPctStr}*min(t,10)/10)',scale={width}:{height}:flags=bicubic";
         }
 
         public string BuildPanFilter(double startFocusX, double endFocusX, int inputWidth, int cropWidth)

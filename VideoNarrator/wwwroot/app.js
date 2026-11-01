@@ -380,6 +380,14 @@ const safeBridge = {
         }
     },
 
+    async setVoice(voice) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SetTtsVoice(voice); } catch {}
+            try { await b.setVoice(voice); } catch {}
+        }
+    },
+
     async setSpeechPitch(pitch) {
         const b = getBridge();
         if (b) {
@@ -1031,6 +1039,16 @@ function initEventListeners() {
         const rate = parseFloat(document.getElementById('rangeSpeechRate')?.value || "1.25");
         const pitch = parseFloat(document.getElementById('rangeSpeechPitch')?.value || "2.0");
         safeBridge.generateVoice(voice, rate, pitch);
+    });
+
+    document.getElementById('ttsVoiceSelect')?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        safeBridge.setVoice(val);
+        if (val.startsWith('en-US')) {
+            showToast("🇺🇸 Đã chọn giọng Tiếng Anh: AI sẽ tự động viết kịch bản, phụ đề và đọc bằng Tiếng Anh chuẩn Shorts!");
+        } else if (val.startsWith('vi-VN')) {
+            showToast("🇻🇳 Đã chọn giọng Tiếng Việt: AI sẽ tự động viết kịch bản và đọc bằng Tiếng Việt.");
+        }
     });
 
     document.getElementById('btnBackToStep2')?.addEventListener('click', () => goToStep(2));
