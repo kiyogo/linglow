@@ -209,8 +209,32 @@ namespace VideoNarrator.Services.PersonalityEngine
                 };
             }
 
-            _fileService.Log($"Hoàn tất Stage A: Chủ đề '{analysis.VideoTopic}', Subject: '{analysis.MainSubject}'");
-            return analysis;
+            // Chuẩn hóa triệt để: Tuyệt đối không để sót chuỗi rác placeholder "chưa xác định" trong bất kỳ trường nào
+            if (analysis != null)
+            {
+                if (string.IsNullOrWhiteSpace(analysis.Explanation) || analysis.Explanation.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
+                    analysis.Explanation = "Cơ chế hoạt động được thể hiện chi tiết qua từng chuyển động trên khung hình";
+
+                if (string.IsNullOrWhiteSpace(analysis.Payoff) || analysis.Payoff.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
+                    analysis.Payoff = "Kết quả thuyết phục và thỏa mãn sự tò mò của người xem";
+
+                if (string.IsNullOrWhiteSpace(analysis.CuriosityPoint) || analysis.CuriosityPoint.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
+                    analysis.CuriosityPoint = "Chi tiết đối lập hoặc diễn biến bất ngờ thu hút sự chú ý";
+
+                if (analysis.ObservedEvents != null)
+                {
+                    analysis.ObservedEvents = analysis.ObservedEvents
+                        .Where(e => !string.IsNullOrWhiteSpace(e) && !e.Contains("chưa xác định", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    if (analysis.ObservedEvents.Count == 0)
+                    {
+                        analysis.ObservedEvents.Add("Diễn biến hành động nối tiếp theo nhịp điệu hình ảnh");
+                    }
+                }
+            }
+
+            _fileService.Log($"Hoàn tất Stage A: Chủ đề '{analysis?.VideoTopic}', Subject: '{analysis?.MainSubject}'");
+            return analysis!;
         }
 
         public async Task<string> GenerateNarrativeAsync(
@@ -244,6 +268,15 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbPrompt.AppendLine("BẠN LÀ BẬC THẦY KỂ CHUYỆN (MASTER STORYTELLER) CHO VIDEO NGẮN TRIỆU VIEW.");
             sbPrompt.AppendLine("Nhiệm vụ: Viết lời kể chuyện tự nhiên như người thật đang hào hứng kể lại điều thú vị vừa phát hiện.");
             sbPrompt.AppendLine();
+
+            // 1. Tích hợp Few-Shot Learning các mẫu kịch bản vàng chuẩn triệu view
+            var relevantExamples = _fewShotManager.GetRelevantExamples(analysis.VideoTopic, personaConfig.PresetId, 2);
+            if (relevantExamples != null && relevantExamples.Count > 0)
+            {
+                sbPrompt.AppendLine(_fewShotManager.FormatFewShotPromptSection(relevantExamples));
+                sbPrompt.AppendLine();
+            }
+
             sbPrompt.AppendLine("=== DỮ LIỆU SỰ THẬT KHÁCH QUAN TỪ VIDEO (STAGE A ANALYSIS) ===");
             sbPrompt.AppendLine($"- Chủ đề: {analysis.VideoTopic}");
             sbPrompt.AppendLine($"- Chủ thể & Hành động: {analysis.MainSubject}");
@@ -258,6 +291,20 @@ namespace VideoNarrator.Services.PersonalityEngine
                 sbPrompt.AppendLine("  👉 Phải dùng cách nói phân biệt giữa điều nhìn thấy và giả thuyết hợp lý.");
             }
             sbPrompt.AppendLine("============================================================");
+            sbPrompt.AppendLine();
+
+            sbPrompt.AppendLine("=== TIÊU CHUẨN VĂN PHONG VIRAL & CHỐNG SẾN SÚA (ANTI-PREACHY / ZERO ESSAY) ===");
+            sbPrompt.AppendLine("1. ❌ CẤM TUYỆT ĐỐI VĂN PHONG TẬP LÀM VĂN / SÁCH GIÁO KHOA / ĐẠO ĐỨC / SẾN SÚA:");
+            sbPrompt.AppendLine("   - CẤM các từ ngữ giáo điều, triết lý viển vông: 'thánh đường', 'tâm hồn', 'biết yêu thương và bảo vệ đồng loại', 'cần chúng ta che chở và trân trọng', 'kỳ diệu', 'ảo diệu', 'bài học cuộc sống', 'thiên tài của đại dương', 'tạo hóa ban tặng', 'vô cùng tuyệt vời', 'đẳng cấp chuyên nghiệp'.");
+            sbPrompt.AppendLine("2. ❌ CẤM SPAM CÂU HỎI TU TỪ GIẢ TẠO:");
+            sbPrompt.AppendLine("   - Toàn bộ kịch bản tối đa 1 câu hỏi (hoặc không cần câu hỏi nào). CẤM dùng câu hỏi để mở đầu ('Nhìn kìa! Bạn có thấy... không?').");
+            sbPrompt.AppendLine("   - CẤM các câu hỏi chatbot rập khuôn: 'Nhưng đợi đã, tại sao...?', 'Bạn có bao giờ thắc mắc...?', 'Chỉ là để... thôi sao?'.");
+            sbPrompt.AppendLine("3. ✔️ VĂN PHONG ĐỜI THƯỜNG CỦA MỘT CREATOR TRIỆU VIEW (CONVERSATIONAL & PUNCHY):");
+            sbPrompt.AppendLine("   - Hook mở đầu bằng sự tương phản hoặc nghịch lý bất thường ngay giây đầu tiên.");
+            sbPrompt.AppendLine("   - Dùng từ ngữ so sánh bình dân, trực quan ('đua xe', 'cú hack năng lượng', 'đi nhờ xe miễn phí', 'bấm máy tính tiền như hack game', 'khít khao không một khe hở').");
+            sbPrompt.AppendLine("   - Bóc tách cơ chế nhân - quả cụ thể bằng các động từ mô tả hành động thực tế.");
+            sbPrompt.AppendLine("   - Nhịp dứt khoát, ngắt nghỉ dấu chấm (.) rõ ràng để giọng đọc AI TTS không bị đuối hơi.");
+            sbPrompt.AppendLine("===============================================================================");
             sbPrompt.AppendLine();
 
             sbPrompt.AppendLine(styleDirectives);
@@ -326,8 +373,8 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbEval.AppendLine("1. hookSpecificity: Hook có cụ thể, bám sát hình ảnh đầu và tránh văn mẫu không?");
             sbEval.AppendLine("2. logicalFlow: Các câu có nối tiếp mạch lạc nhân - quả không?");
             sbEval.AppendLine("3. informationDensity: Mỗi câu có mang lại dữ kiện mới không?");
-            sbEval.AppendLine("4. clicheFree: Sạch bóng từ ngữ sáo rỗng (điều bất ngờ, không thể tin nổi, ít ai biết, hãy like)?");
-            sbEval.AppendLine("5. spokenNaturalness: Đọc thành tiếng có thuận miệng, đúng ngữ điệu người thật không?");
+            sbEval.AppendLine("4. clicheFree: Sạch bóng từ ngữ sáo rỗng, triết lý giáo điều (thánh đường, tâm hồn, che chở, yêu thương, kỳ diệu, ảo diệu, điều bất ngờ, không thể tin nổi) và CẤM spam câu hỏi tu từ (Nhìn kìa, Nhưng đợi đã, Bạn có bao giờ thắc mắc)? Nếu có bất kỳ câu nào mang tính giáo điều/sến súa hoặc câu hỏi tu từ sáo rỗng, PHẢI chấm clicheFree < 6.0 và đưa câu lỗi vào weakSentences.");
+            sbEval.AppendLine("5. spokenNaturalness: Đọc thành tiếng có thuận miệng, đúng ngữ điệu người thật kể chuyện đời thường không? Hay giống bài tập làm văn / chatbot?");
             sbEval.AppendLine("6. visualAccuracy: Có trung thực với bối cảnh video và không bịa đặt không?");
             sbEval.AppendLine("7. payoffSatisfaction: Kết thúc có thỏa mãn sự tò mò không?");
             sbEval.AppendLine($"8. durationFit: Số từ ({CountWords(draftScript)} từ) có nằm trong khoảng [{personaConfig.MinWords} - {personaConfig.MaxWords}] từ không?");
@@ -402,11 +449,12 @@ namespace VideoNarrator.Services.PersonalityEngine
                 }
                 sbRevise.AppendLine();
                 sbRevise.AppendLine("=== QUY TẮC ĐẦU RA BẮT BUỘC (CRITICAL) ===");
-                sbRevise.AppendLine("1. Thay thế chính xác các câu lỗi bằng câu mới hay hơn, giữ nguyên các câu đạt chuẩn.");
-                sbRevise.AppendLine("2. TUYỆT ĐỐI KHÔNG CHÀO HỎI (Cấm: 'Chào bạn', 'Xin chào', 'Chào mừng').");
-                sbRevise.AppendLine("3. TUYỆT ĐỐI KHÔNG XƯNG DANH HAY NÓI LỜI MỞ ĐẦU (Cấm: 'với tư cách là...', 'tôi đã thay thế...', 'dưới đây là...').");
-                sbRevise.AppendLine("4. TUYỆT ĐỐI KHÔNG CÓ TIÊU ĐỀ ('KỊCH BẢN HOÀN CHỈNH:', 'Kịch bản:').");
-                sbRevise.AppendLine("5. Xuất ra duy nhất đối tượng JSON:");
+                sbRevise.AppendLine("1. Thay thế chính xác các câu lỗi bằng câu mới hay hơn: dùng động từ hành động cụ thể, bám sát thị giác, giọng điệu người thật, giữ nguyên các câu đạt chuẩn.");
+                sbRevise.AppendLine("2. TUYỆT ĐỐI CẤM văn mẫu triết lý, sến súa (thánh đường, tâm hồn, che chở, kỳ diệu) và CẤM câu hỏi tu từ sáo rỗng.");
+                sbRevise.AppendLine("3. TUYỆT ĐỐI KHÔNG CHÀO HỎI (Cấm: 'Chào bạn', 'Xin chào', 'Chào mừng').");
+                sbRevise.AppendLine("4. TUYỆT ĐỐI KHÔNG XƯNG DANH HAY NÓI LỜI MỞ ĐẦU (Cấm: 'với tư cách là...', 'tôi đã thay thế...', 'dưới đây là...').");
+                sbRevise.AppendLine("5. TUYỆT ĐỐI KHÔNG CÓ TIÊU ĐỀ ('KỊCH BẢN HOÀN CHỈNH:', 'Kịch bản:').");
+                sbRevise.AppendLine("6. Xuất ra duy nhất đối tượng JSON:");
                 sbRevise.AppendLine("{");
                 sbRevise.AppendLine("  \"revisedScript\": \"Toàn bộ kịch bản hoàn chỉnh sau khi sửa, chỉ chứa lời đọc thành tiếng, bắt đầu ngay lập tức bằng câu Hook\"");
                 sbRevise.AppendLine("}");
@@ -498,7 +546,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             {
                 // Danh sách model ưu tiên cho Google Gemini API chính thức
                 string preferred = !string.IsNullOrWhiteSpace(model) ? model : "gemini-3-flash-preview";
-                candidateModels = new[] { preferred, "gemini-3-flash-preview", "gemini-flash-latest", "gemini-3.8-flash" }
+                candidateModels = new[] { preferred, "gemini-3-flash-preview", "gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash" }
                     .Distinct().ToArray();
             }
 
@@ -563,7 +611,8 @@ namespace VideoNarrator.Services.PersonalityEngine
                 try
                 {
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    cts.CancelAfter(TimeSpan.FromSeconds(20));
+                    int timeoutSeconds = (keyframeBase64List != null && keyframeBase64List.Count > 0) || !string.IsNullOrEmpty(fileUri) ? 45 : 30;
+                    cts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
                     using var req = new HttpRequestMessage(HttpMethod.Post, url);
                     req.Content = new StringContent(JsonSerializer.Serialize(requestPayload), Encoding.UTF8, "application/json");
@@ -643,15 +692,17 @@ namespace VideoNarrator.Services.PersonalityEngine
             eval.DurationFit = (wordCount >= config.MinWords && wordCount <= config.MaxWords) ? 9.0 : 7.0;
 
             string lower = script.ToLowerInvariant();
-            bool hasCliche = lower.Contains("chào mừng") || lower.Contains("bạn sẽ không tin") || lower.Contains("hãy like");
-            eval.ClicheFree = hasCliche ? 6.0 : 9.0;
-            eval.HookSpecificity = (lower.StartsWith("đây là") || lower.StartsWith("tại sao") || lower.StartsWith("nhìn")) ? 9.5 : 8.0;
+            bool hasCliche = lower.Contains("chào mừng") || lower.Contains("bạn sẽ không tin") || lower.Contains("hãy like") ||
+                             lower.Contains("thánh đường") || lower.Contains("tâm hồn") || lower.Contains("che chở") ||
+                             lower.Contains("kỳ diệu") || lower.Contains("ảo diệu") || lower.Contains("thiên tài của");
+            eval.ClicheFree = hasCliche ? 5.5 : 9.0;
+            eval.HookSpecificity = (lower.StartsWith("đây là") || lower.StartsWith("tại sao") || lower.StartsWith("nhìn") || lower.StartsWith("không phải") || lower.StartsWith("vừa")) ? 9.5 : 8.0;
 
             eval.AverageScore = (eval.HookSpecificity + eval.LogicalFlow + eval.InformationDensity +
                                  eval.ClicheFree + eval.SpokenNaturalness + eval.VisualAccuracy +
                                  eval.PayoffSatisfaction + eval.DurationFit) / 8.0;
 
-            eval.Passed = eval.AverageScore >= 7.5;
+            eval.Passed = eval.AverageScore >= 7.5 && eval.ClicheFree >= 7.0;
             return eval;
         }
 

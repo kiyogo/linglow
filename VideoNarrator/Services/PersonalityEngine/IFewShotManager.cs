@@ -238,6 +238,42 @@ namespace VideoNarrator.Services.PersonalityEngine
             {
                 new()
                 {
+                    Id = "seed_benchmark_ticket_machine",
+                    PersonaId = "the_gioi_co_gi_hay",
+                    Topic = "Người bán vé tàu tự động / Phản xạ đỉnh cao / Cuộc sống đường phố / Ấn Độ",
+                    PositiveExample = "Không phải nhân viên nhà ga, nhưng người đàn ông này lại là nhân vật không thể thiếu tại đây. Hệ thống máy bán vé tự động có giao diện phức tạp khiến nhiều hành khách, nhất là người lớn tuổi, lúng túng không biết thao tác. Đứng túc trực ngay trước máy, anh thuộc lòng từng bước trên hệ thống để thao tác hộ. Khách chỉ cần đưa tiền mặt và báo điểm đến, chưa đầy vài giây sau chiếc vé đã được in ra chuẩn xác. Biến nút thích của tôi thành chiếc vé tàu.",
+                    NegativeExample = "Chào mừng các bạn đến với video ngày hôm nay. Ở Ấn Độ máy bán vé rất khó dùng nên một người đàn ông tốt bụng đứng đây giúp mọi người mua vé tàu. Hành động của anh ấy thật ấm áp và đáng khâm phục. Hãy cho anh ấy một like nhé.",
+                    Explanation = "Mẫu chuẩn triệu view theo benchmark: Hook tương phản trực diện (Không phải nhân viên nhưng không thể thiếu) -> Điểm nghẽn thực tế (giao diện máy phức tạp) -> Cơ chế & hành động vi mô (thuộc lòng từng bước, bấm hộ) -> Payoff định lượng (chưa đầy vài giây vé in ra chuẩn xác) -> CTA sáng tạo. Cấm tuyệt đối văn mẫu ca ngợi sáo rỗng, sến súa."
+                },
+                new()
+                {
+                    Id = "seed_benchmark_dolphins_surfing",
+                    PersonaId = "the_gioi_co_gi_hay",
+                    Topic = "Đàn cá heo lướt sóng mũi tàu / Động vật thông minh / Vật lý đại dương / Cá heo",
+                    PositiveExample = "Nhìn cách đàn cá heo này đua xe trước mũi tàu, bạn sẽ thấy chúng thực sự là những tay chơi vật lý đỉnh cao. Cả đàn lao đi với tốc độ xé gió, bơi sát sạt mạn thuyền nhưng tuyệt đối không bao giờ va chạm. Thực chất đây là một cú hack năng lượng cực khôn ngoan của tự nhiên. Con tàu khổng lồ khi rẽ nước sẽ tạo ra một luồng sóng đẩy vô hình phía trước. Cá heo chỉ cần áp sát thân mình vào luồng sóng đó để được đẩy đi miễn phí mà hầu như chẳng tốn một chút sức lực nào. Biến nút thích của tôi thành một cú nhảy của cá heo.",
+                    NegativeExample = "Nhìn kìa! Bạn có thấy hàng chục sinh vật đang chuyển động như một thực thể duy nhất không? Chúng ta đang chiêm ngưỡng những thiên tài của đại dương. Chúng không chỉ là những cỗ máy bơi lội mà còn là những sinh vật có tâm hồn, biết yêu thương và bảo vệ đồng loại. Đại dương xanh ngắt kia chính là thánh đường của chúng, một thế giới kỳ diệu đang cần chúng ta che chở và trân trọng mỗi ngày.",
+                    Explanation = "Mẫu chuẩn viral: Dẹp bỏ hoàn toàn văn mẫu triết lý đạo đức sến súa (thánh đường, tâm hồn, che chở), dùng ví von hành động đời thường sắc bén ('đua xe', 'cú hack năng lượng', 'đẩy đi miễn phí'), giải thích cơ chế vật lý đẩy của sóng tàu rõ ràng, súc tích."
+                },
+                new()
+                {
+                    Id = "seed_benchmark_street_food",
+                    PersonaId = "the_gioi_co_gi_hay",
+                    Topic = "Xiên que sốt Thái / Ẩm thực đường phố / Món ngon độc lạ / Nấu ăn",
+                    PositiveExample = "Vừa nhúng ngập cây xiên que vào chảo dầu sôi xèo xèo, lớp vỏ ngoài lập tức phồng rộp giòn rụm. Nhưng bí quyết khiến thực khách xếp hàng dài cả con phố lại nằm ở gáo nước sốt Thái độc quyền này. Vị chua cay mặn ngọt nồng đượm được rưới đẫm khi xiên que còn đang nóng hổi, ngấm sâu vào từng thớ thịt. Cắn một miếng là nước sốt bùng nổ ngay trong khoang miệng. Bạn có dám thử hết khay xiên cay xé lưỡi này không?",
+                    NegativeExample = "Chào các bạn hôm nay chúng ta cùng ăn xiên que sốt Thái nhé. Món ăn này vô cùng thơm ngon và hấp dẫn, màu sắc bắt mắt khiến ai nhìn cũng mê. Hãy nhấn thích để ủng hộ quán nhé.",
+                    Explanation = "Tập trung vào miêu tả xúc giác và vị giác (sôi xèo xèo, phồng rộp, chua cay mặn ngọt bùng nổ), bóc tách điểm nhấn của món ăn, dứt khoát không chào hỏi sáo rỗng."
+                },
+                new()
+                {
+                    Id = "seed_benchmark_satisfying_restoration",
+                    PersonaId = "Oddly Satisfying",
+                    Topic = "Phục hồi đồ cổ / Sửa chữa cơ khí / Oddly Satisfying / Làm sạch",
+                    PositiveExample = "Cục sắt gỉ sét đen sì nhìn như rác phế liệu này sắp có một màn lột xác khó tin. Sau khi ngâm dung dịch tẩy rỉ và dùng máy chà nhám thổi bay từng mảng bám, từng chi tiết kim loại bóng loáng dần lộ diện. Từng bánh răng khớp lại với nhau khít khao không một khe hở. Nhìn chiếc bật lửa cổ hoạt động trơn tru sau nửa thế kỷ ngủ vùi thực sự khiến não bạn được chữa lành. Biến nút thích của tôi thành ngọn lửa.",
+                    NegativeExample = "Trong video này người thợ sẽ phục chế đồ cũ. Đây là một công việc rất tỉ mỉ và đẳng cấp đòi hỏi sự khéo léo tuyệt vời.",
+                    Explanation = "Sự tương phản thị giác cực đại (từ gỉ sét thành bóng loáng), miêu tả chuyển động cơ khí mãn nhãn, tạo cảm giác thỏa mãn thị giác (oddly satisfying)."
+                },
+                new()
+                {
                     Id = "seed_the_gioi_co_gi_hay_golf_cheat",
                     PersonaId = "the_gioi_co_gi_hay",
                     Topic = "Gian lận trên sân golf / Mẹo độc lạ / Zack D. Films / Thế Giới Có Gì Hay",
