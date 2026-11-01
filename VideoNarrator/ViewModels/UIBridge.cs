@@ -259,6 +259,22 @@ namespace VideoNarrator.ViewModels
             });
         }
 
+        public void BatchAutoProduce(string topic, int count = 5)
+        {
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _ = _viewModel.BatchAutoDiscoverAndProduceAsync(topic, count > 0 ? count : 5);
+            });
+        }
+
+        public void BatchProduceAllDiscovered()
+        {
+            App.Current?.Dispatcher?.Invoke(() =>
+            {
+                _ = _viewModel.BatchProduceAllDiscoveredAsync();
+            });
+        }
+
         public void SelectDiscoveredVideo(string url, string title)
         {
             if (string.IsNullOrWhiteSpace(url)) return;
@@ -778,6 +794,8 @@ namespace VideoNarrator.ViewModels
         public void loadVideo(string filePath) => LoadVideoPath(filePath);
         public void analyzeVideo() => StartAutoEdit();
         public void generateScript() => GenerateScriptOnly();
+        public void batchAutoProduce(string topic, int count = 5) => BatchAutoProduce(topic, count);
+        public void batchProduceAllDiscovered() => BatchProduceAllDiscovered();
         public void generateVoice()
         {
             App.Current.Dispatcher.Invoke(() =>

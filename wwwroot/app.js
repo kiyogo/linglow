@@ -221,6 +221,28 @@ const safeBridge = {
         showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe để dựng video.", "warn");
     },
 
+    async batchAutoProduce(topic, count = 5) {
+        const b = getBridge();
+        if (b) {
+            try { await b.BatchAutoProduce(topic || "", count); return; } catch (e) { console.error(e); }
+            try { await b.batchAutoProduce(topic || "", count); return; } catch (e) { console.error(e); }
+            showToast("Vui lòng khởi động lại ứng dụng VideoNarrator.exe phiên bản mới nhất.", "error");
+            return;
+        }
+        showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe để tạo hàng loạt.", "warn");
+    },
+
+    async batchProduceAllDiscovered() {
+        const b = getBridge();
+        if (b) {
+            try { await b.BatchProduceAllDiscovered(); return; } catch (e) { console.error(e); }
+            try { await b.batchProduceAllDiscovered(); return; } catch (e) { console.error(e); }
+            showToast("Vui lòng khởi động lại ứng dụng VideoNarrator.exe phiên bản mới nhất.", "error");
+            return;
+        }
+        showToast("Bạn đang mở trên trình duyệt ngoài. Vui lòng mở file VideoNarrator.exe để tạo hàng loạt.", "warn");
+    },
+
     async selectDiscoveredVideo(url, title) {
         const b = getBridge();
         if (b) {
@@ -727,6 +749,25 @@ function initEventListeners() {
             e.preventDefault();
             showToast("🎲 AI đang tự tìm video thịnh hành ngẫu nhiên và tự động dựng trọn gói...");
             await safeBridge.autoDiscoverAndProduce("");
+        });
+    }
+
+    const btnBatchProduce = document.getElementById('btnBatchAutoProduce');
+    if (btnBatchProduce) {
+        btnBatchProduce.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const topic = inputUrl?.value?.trim() || "";
+            showToast("⚡ Đang tự động tìm kiếm và TẠO HÀNG LOẠT tất cả các video...");
+            await safeBridge.batchAutoProduce(topic, 5);
+        });
+    }
+
+    const btnBatchProduceDiscovered = document.getElementById('btnBatchProduceDiscovered');
+    if (btnBatchProduceDiscovered) {
+        btnBatchProduceDiscovered.addEventListener('click', async (e) => {
+            e.preventDefault();
+            showToast("🚀 Bắt đầu tự động dựng trọn gói TẤT CẢ video trong danh sách...");
+            await safeBridge.batchProduceAllDiscovered();
         });
     }
 

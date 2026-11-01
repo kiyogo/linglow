@@ -283,6 +283,10 @@
                                     <svg class="vn-icon"><use href="#icon-lightning"></use></svg>
                                     <span>Tạo 1-Click</span>
                                 </button>
+                                <button class="vn-btn btn-sm flex items-center gap-1" id="btnBatchAutoProduce" type="button" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border: none; font-weight: 600;" title="Tự động tìm kiếm, tự chọn và tự động dựng HÀNG LOẠT tất cả các video tìm được rồi xuất file">
+                                    <svg class="vn-icon"><use href="#icon-lightning"></use></svg>
+                                    <span>⚡ Tạo Hàng Loạt Tất Cả</span>
+                                </button>
                                 <button class="vn-btn vn-btn-tonal btn-sm flex items-center" id="btnDownloadOnly" type="button" title="Chỉ tải video về máy">
                                     <svg class="vn-icon"><use href="#icon-download"></use></svg>
                                 </button>
@@ -303,7 +307,12 @@
                             <!-- Discovered Videos Grid (Shown after search) -->
                             <div class="discovered-videos-container hidden mb-2" id="discoveredVideosBox">
                                 <div class="discovered-header flex justify-between items-center mb-1">
-                                    <span class="text-xs font-semibold text-primary" id="discoveredHeaderTitle">🎬 Danh sách video tìm thấy:</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold text-primary" id="discoveredHeaderTitle">🎬 Danh sách video tìm thấy:</span>
+                                        <button class="vn-btn btn-xs flex items-center gap-1" id="btnBatchProduceDiscovered" type="button" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 4px;" title="Tự động dựng toàn bộ danh sách video này">
+                                            <span>🚀 Dựng Tất Cả Video Này</span>
+                                        </button>
+                                    </div>
                                     <button class="vn-icon-btn btn-xs" id="btnCloseDiscovered" type="button" title="Đóng danh sách">
                                         <svg class="vn-icon"><use href="#icon-close"></use></svg>
                                     </button>

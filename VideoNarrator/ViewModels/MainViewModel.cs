@@ -646,6 +646,8 @@ namespace VideoNarrator.ViewModels
 
         public ICommand SearchVideosCommand { get; }
         public ICommand AutoDiscoverAndProduceCommand { get; }
+        public ICommand BatchAutoDiscoverAndProduceCommand { get; }
+        public ICommand BatchProduceAllDiscoveredCommand { get; }
 
         // ==================== PERSONA STUDIO PROPERTIES ====================
         public ObservableCollection<PersonaProfile> Personas { get; } = new();
@@ -1184,6 +1186,8 @@ namespace VideoNarrator.ViewModels
             DownloadVideoOnlyCommand = new RelayCommand(async () => await DownloadVideoOnlyAsync(), () => !IsBusy);
             SearchVideosCommand = new RelayCommand(async () => await SearchVideosAsync(), () => !IsBusy && !IsSearchingVideos);
             AutoDiscoverAndProduceCommand = new RelayCommand(async () => await AutoDiscoverAndProduceAsync(), () => !IsBusy);
+            BatchAutoDiscoverAndProduceCommand = new RelayCommand(async () => await BatchAutoDiscoverAndProduceAsync(), () => !IsBusy);
+            BatchProduceAllDiscoveredCommand = new RelayCommand(async () => await BatchProduceAllDiscoveredAsync(), () => !IsBusy && HasDiscoveredVideos);
 
             SelectVideoCommand = new RelayCommand(ExecuteSelectVideo, () => !IsBusy);
             SelectMusicCommand = new RelayCommand(ExecuteSelectMusic, () => !IsBusy);
@@ -2234,6 +2238,201 @@ namespace VideoNarrator.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        public async Task<List<string>> BatchProduceAllDiscoveredAsync()
+        {
+            var list = DiscoveredVideos.ToList();
+            if (list.Count == 0)
+            {
+                SetError("Chưa có danh sách video nào được tìm thấy. Vui lòng bấm 'Tự Tìm Video' trước.");
+                return new List<string>();
+            }
+
+            return await BatchAutoProduceVideosAsync(list);
+        }
+
+        public async Task<List<string>> BatchAutoDiscoverAndProduceAsync(string? topic = null, int maxVideos = 5)
+        {
+            if (_videoDiscoveryService == null)
+            {
+                SetError("Dịch vụ tìm kiếm video chưa được khởi tạo.");
+                return new List<string>();
+            }
+
+            string targetTopic = !string.IsNullOrWhiteSpace(topic)
+                ? topic.Trim()
+                : (!string.IsNullOrWhiteSpace(VideoUrlInput) && !VideoUrlInput.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    ? VideoUrlInput.Trim()
+                    : (!string.IsNullOrWhiteSpace(CustomTopic) ? CustomTopic.Trim() : string.Empty);
+
+            ClearError();
+            IsBusy = true;
+            ProgressPercentage = 5;
+            StatusMessage = $"⚡ [Tự Động Hàng Loạt] Đang quét và tìm danh sách video gốc hay nhất theo chủ đề: {(string.IsNullOrWhiteSpace(targetTopic) ? "thịnh hành" : targetTopic)}...";
+
+            try
+            {
+                var candidates = await _videoDiscoveryService.SearchVideosAsync(targetTopic, Math.Max(maxVideos * 2, 8));
+                if (candidates.Count == 0)
+                {
+                    string fallbackQuery = _videoDiscoveryService.TrendingTopics[new Random().Next(_videoDiscoveryService.TrendingTopics.Count)];
+                    candidates = await _videoDiscoveryService.SearchVideosAsync(fallbackQuery, 8);
+                }
+
+                var validShorts = candidates
+                    .Where(c => c.Duration >= 20 && c.Duration <= 62 && !VideoDiscoveryService.IsBlacklistedTitle(c.Title))
+                    .Take(maxVideos)
+                    .ToList();
+
+                if (validShorts.Count == 0)
+                {
+                    validShorts = candidates.Take(maxVideos).ToList();
+                }
+
+                if (validShorts.Count == 0)
+                {
+                    throw new InvalidOperationException("Không tìm thấy video nào phù hợp để dựng hàng loạt.");
+                }
+
+                Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    DiscoveredVideos.Clear();
+                    foreach (var v in validShorts) DiscoveredVideos.Add(v);
+                    HasDiscoveredVideos = DiscoveredVideos.Count > 0;
+                });
+
+                IsBusy = false; // Nhường trạng thái cho BatchAutoProduceVideosAsync
+                return await BatchAutoProduceVideosAsync(validShorts);
+            }
+            catch (Exception ex)
+            {
+                SetError($"Lỗi khi tự động tìm và dựng video hàng loạt: {ex.Message}");
+                StatusMessage = "Tự động tạo hàng loạt thất bại.";
+                _fileService.Log($"[Batch Auto Discovery] Lỗi: {ex}", "ERROR");
+                return new List<string>();
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public async Task<List<string>> BatchAutoProduceVideosAsync(List<DiscoveredVideoItem> videos, CancellationToken cancellationToken = default)
+        {
+            var results = new List<string>();
+            if (videos == null || videos.Count == 0)
+            {
+                SetError("Danh sách video trống.");
+                return results;
+            }
+
+            int total = videos.Count;
+            _fileService.Log($"[Batch Auto-Produce] Bắt đầu tự động dựng trọn gói hàng loạt {total} video...");
+
+            ClearError();
+            IsBusy = true;
+            CanCancel = true;
+            _cts = new CancellationTokenSource();
+
+            try
+            {
+                for (int i = 0; i < total; i++)
+                {
+                    if (_cts.IsCancellationRequested) break;
+
+                    var v = videos[i];
+                    int currentIdx = i + 1;
+                    _fileService.Log($"[Batch Auto-Produce] === Bắt đầu video {currentIdx}/{total}: {v.Title} ({v.Duration}s) ===");
+                    StatusMessage = $"🚀 [Tự Động Hàng Loạt ({currentIdx}/{total})] Đang xử lý: {v.Title}...";
+                    ProgressPercentage = ((double)i / total) * 100.0;
+
+                    try
+                    {
+                        // 1. Tải video
+                        var dlResult = await _videoDownloadService.DownloadVideoAsync(
+                            v.Url,
+                            null,
+                            (msg, pct) =>
+                            {
+                                Application.Current?.Dispatcher?.Invoke(() =>
+                                {
+                                    StatusMessage = $"🚀 [{currentIdx}/{total}] {msg}";
+                                });
+                            },
+                            _cts.Token);
+
+                        if (!dlResult.Success || string.IsNullOrEmpty(dlResult.FilePath) || !File.Exists(dlResult.FilePath))
+                        {
+                            _fileService.Log($"[Batch Auto-Produce] Bỏ qua video {currentIdx} do tải thất bại: {dlResult.ErrorMessage}", "WARN");
+                            continue;
+                        }
+
+                        // 2. Nạp video và cập nhật chủ đề
+                        await LoadVideoFileAsync(dlResult.FilePath);
+                        CustomTopic = !string.IsNullOrWhiteSpace(dlResult.Title) ? dlResult.Title : v.Title;
+
+                        // 3. Tự động viết kịch bản AI, giọng đọc, phụ đề
+                        StatusMessage = $"🚀 [{currentIdx}/{total}] AI đang phân tích bối cảnh & viết kịch bản ({v.Title})...";
+                        await ExecuteAutoEditPipelineAsync();
+
+                        // 4. Xuất video hoàn chỉnh 9:16
+                        if (HasEditingPlan)
+                        {
+                            StatusMessage = $"🚀 [{currentIdx}/{total}] Đang kết xuất video 9:16 hoàn chỉnh...";
+                            await ExecuteRenderFinalShortAsync();
+
+                            if (HasFinalVideo && !string.IsNullOrEmpty(FinalVideoPath) && File.Exists(FinalVideoPath))
+                            {
+                                results.Add(FinalVideoPath);
+                                _fileService.Log($"[Batch Auto-Produce] Đã xuất video ({currentIdx}/{total}) thành công: {FinalVideoPath}");
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _fileService.Log("[Batch Auto-Produce] Người dùng đã hủy tiến trình hàng loạt.", "WARN");
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _fileService.Log($"[Batch Auto-Produce] Lỗi xử lý video {currentIdx} ({v.Title}): {ex.Message}", "ERROR");
+                    }
+                }
+
+                if (results.Count > 0)
+                {
+                    StatusMessage = $"🎉 [HOÀN TẤT HÀNG LOẠT] Đã tạo thành công {results.Count}/{total} video! Thư mục video đã sẵn sàng.";
+                    ProgressPercentage = 100;
+                    _fileService.Log($"[Batch Auto-Produce] Đã hoàn thành toàn bộ hàng loạt: {results.Count}/{total} video sẵn sàng đăng.");
+
+                    // Tự động mở thư mục chứa toàn bộ video xuất ra
+                    string outDir = Path.GetDirectoryName(results[0]) ?? AppSettings.GetDefaultOutputDirectory();
+                    if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = outDir,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch { }
+                }
+                else
+                {
+                    StatusMessage = "Không có video nào được tạo thành công.";
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+                CanCancel = false;
+                _cts?.Dispose();
+                _cts = null;
+            }
+
+            return results;
         }
 
         #endregion
