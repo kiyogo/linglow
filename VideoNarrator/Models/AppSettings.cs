@@ -11,8 +11,8 @@ namespace VideoNarrator.Models
         public string GeminiModel { get; set; } = "gemini-3-flash-preview";
         public string TtsProvider { get; set; } = "Edge-TTS"; // "Edge-TTS", "OpenAI", "ElevenLabs"
         public string TtsApiKey { get; set; } = string.Empty;
-        public string TtsVoice { get; set; } = "vi-VN-NamMinhNeural (Nam - Tiếng Việt)";
-        public double SpeechRate { get; set; } = 1.20;
+        public string TtsVoice { get; set; } = "vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)";
+        public double SpeechRate { get; set; } = 1.25;
         public double SpeechPitch { get; set; } = 2.0; // Cao độ / Ngữ điệu (-20% đến +20%), mặc định +2%
         public string TtsEmotionStyle { get; set; } = "🤖 Nhấn nhá cảm xúc tự nhiên (Đề xuất)";
         public string OutputDirectory { get; set; } = string.Empty;

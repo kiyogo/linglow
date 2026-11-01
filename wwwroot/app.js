@@ -909,8 +909,8 @@ function initEventListeners() {
     });
 
     document.getElementById('btnPreviewVoice')?.addEventListener('click', () => {
-        const voice = document.getElementById('ttsVoiceSelect')?.value || "vi-VN-NamMinhNeural (Nam - Tiếng Việt)";
-        const rate = parseFloat(document.getElementById('rangeSpeechRate')?.value || "1.20");
+        const voice = document.getElementById('ttsVoiceSelect')?.value || "vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)";
+        const rate = parseFloat(document.getElementById('rangeSpeechRate')?.value || "1.25");
         const pitch = parseFloat(document.getElementById('rangeSpeechPitch')?.value || "2.0");
         safeBridge.generateVoice(voice, rate, pitch);
     });

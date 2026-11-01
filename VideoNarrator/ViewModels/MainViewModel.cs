@@ -69,8 +69,8 @@ namespace VideoNarrator.ViewModels
         private string _selectedTtsProvider = "Edge-TTS";
         private string _ttsApiKey = string.Empty;
         private bool _isTtsKeyVisible;
-        private string _selectedTtsVoice = "vi-VN-NamMinhNeural (Nam - Tiếng Việt)";
-        private double _speechRate = 1.20;
+        private string _selectedTtsVoice = "vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)";
+        private double _speechRate = 1.25;
         private double _speechPitch = 2.0;
         private string _selectedTtsEmotionStyle = "🤖 Nhấn nhá cảm xúc tự nhiên (Đề xuất)";
         private string _ttsTestStatus = "Chưa kiểm tra";
@@ -1250,8 +1250,8 @@ namespace VideoNarrator.ViewModels
             _selectedGeminiModel = (string.IsNullOrWhiteSpace(s.GeminiModel) || s.GeminiModel.StartsWith("gemini-1.") || s.GeminiModel.StartsWith("gemini-2.")) ? "gemini-3-flash-preview" : s.GeminiModel;
             _selectedTtsProvider = string.IsNullOrWhiteSpace(s.TtsProvider) ? "Edge-TTS" : s.TtsProvider;
             _ttsApiKey = s.TtsApiKey;
-            _selectedTtsVoice = string.IsNullOrWhiteSpace(s.TtsVoice) ? "vi-VN-NamMinhNeural (Nam - Tiếng Việt)" : s.TtsVoice;
-            _speechRate = s.SpeechRate > 0 ? s.SpeechRate : 1.20;
+            _selectedTtsVoice = string.IsNullOrWhiteSpace(s.TtsVoice) || s.TtsVoice.Contains("NamMinh") ? "vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)" : s.TtsVoice;
+            _speechRate = (s.SpeechRate <= 1.05) ? 1.25 : s.SpeechRate;
             _speechPitch = s.SpeechPitch;
             _selectedTtsEmotionStyle = string.IsNullOrWhiteSpace(s.TtsEmotionStyle) ? "🤖 Nhấn nhá cảm xúc tự nhiên (Đề xuất)" : s.TtsEmotionStyle;
             _outputDirectory = string.IsNullOrWhiteSpace(s.OutputDirectory) ? AppSettings.GetDefaultOutputDirectory() : s.OutputDirectory;

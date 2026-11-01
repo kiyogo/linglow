@@ -59,8 +59,8 @@ namespace VideoNarrator.Services
 
         private static readonly string[] EdgeTtsVoices =
         {
-            "vi-VN-NamMinhNeural (Nam - Tiếng Việt)",
             "vi-VN-HoaiMyNeural (Nữ - Tiếng Việt)",
+            "vi-VN-NamMinhNeural (Nam - Tiếng Việt)",
             "en-US-GuyNeural (Nam - Tiếng Anh)",
             "en-US-JennyNeural (Nữ - Tiếng Anh)"
         };
@@ -465,7 +465,7 @@ namespace VideoNarrator.Services
         {
             try
             {
-                string voice = ExtractVoiceCode(settings.Voice, "vi-VN-NamMinhNeural");
+                string voice = ExtractVoiceCode(settings.Voice, "vi-VN-HoaiMyNeural");
                 var chunks = SplitTextIntoOptimalChunks(text, 550);
 
                 if (chunks.Count == 0)
@@ -540,7 +540,7 @@ namespace VideoNarrator.Services
                 catch (Exception gex)
                 {
                     _fileService.Log($"Google Translate TTS cảnh báo: {gex.Message}. Kích hoạt Windows SAPI Fallback...", "WARN");
-                    string voice = ExtractVoiceCode(settings.Voice, "vi-VN-NamMinhNeural");
+                    string voice = ExtractVoiceCode(settings.Voice, "vi-VN-HoaiMyNeural");
                     return await GenerateSystemSpeechAsync(text, voice, outputPath, cancellationToken);
                 }
             }
