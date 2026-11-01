@@ -132,8 +132,16 @@ namespace VideoNarrator.Services
                     }
                     if (list.Count > 0)
                     {
-                        _fileService.Log($"[Video Discovery] Tìm thấy {list.Count} video trực tuyến phù hợp.");
-                        return list;
+                        // Lọc kép: Chỉ chấp nhận video ngắn (10s - 62s) và video gốc (loại trừ video tổng hợp/review)
+                        var filtered = list
+                            .Where(v => v.Duration >= 10 && v.Duration <= 62 && !IsBlacklistedTitle(v.Title))
+                            .ToList();
+
+                        if (filtered.Count > 0)
+                        {
+                            _fileService.Log($"[Video Discovery] Tìm thấy {filtered.Count} video ngắn gốc phù hợp.");
+                            return filtered;
+                        }
                     }
                 }
             }
@@ -144,6 +152,19 @@ namespace VideoNarrator.Services
 
             _fileService.Log($"[Video Discovery] Sử dụng video thịnh hành dự phòng cho chủ đề '{cleanQuery}'.");
             return GetCuratedFallbackVideos(cleanQuery, maxResults);
+        }
+
+        public static bool IsBlacklistedTitle(string? title)
+        {
+            if (string.IsNullOrWhiteSpace(title)) return false;
+            string lower = title.ToLowerInvariant();
+            string[] bad = {
+                "top 10", "top 5", "top 3", "top ", "tổng hợp", "những pha", "những khoảnh khắc",
+                "những loài", "bxh", "ranking", "compilation", "best of", "reaction", "review",
+                "thuyết minh", "lồng tiếng", "tóm tắt", "giải thích", "kể chuyện", "podcast",
+                "audiobook", "sách nói", "part ", "tập ", "phần ", "cho bé", "dạy bé"
+            };
+            return bad.Any(b => lower.Contains(b));
         }
 
         private static List<DiscoveredVideoItem> GetCuratedFallbackVideos(string query, int count)
@@ -185,13 +206,13 @@ namespace VideoNarrator.Services
                 },
                 new()
                 {
-                    Id = "S7ENUwUmWro",
-                    Title = "Thí nghiệm vật lý và hiện tượng khoa học kỳ thú",
-                    Url = "https://www.youtube.com/watch?v=S7ENUwUmWro",
-                    Duration = 60,
-                    Thumbnail = "https://i.ytimg.com/vi/S7ENUwUmWro/hqdefault.jpg",
-                    Uploader = "Science Explorer",
-                    ViewCount = 850000,
+                    Id = "52rAOoCcnPA",
+                    Title = "Khoảnh khắc thú vị bất ngờ ghi lại trên ống kính",
+                    Url = "https://www.youtube.com/shorts/52rAOoCcnPA",
+                    Duration = 16,
+                    Thumbnail = "https://i.ytimg.com/vi/52rAOoCcnPA/hqdefault.jpg",
+                    Uploader = "Viral Camera",
+                    ViewCount = 1850000,
                     Platform = "YouTube"
                 }
             };
@@ -217,13 +238,20 @@ namespace VideoNarrator.Services
 
             if (candidates.Count == 0) return null;
 
-            // Sort: Prioritize ideal short duration (20s - 65s) and higher views
-            var best = candidates
-                .OrderByDescending(c => (c.Duration >= 18 && c.Duration <= 65) ? 100 : 10)
+            // Sàng lọc nghiêm ngặt: Chỉ lấy video ngắn từ 10s đến 60s, không dính từ khóa cấm
+            var validShorts = candidates
+                .Where(c => c.Duration >= 10 && c.Duration <= 62 && !IsBlacklistedTitle(c.Title))
+                .ToList();
+
+            var pool = validShorts.Count > 0 ? validShorts : candidates;
+
+            // Ưu tiên độ dài lý tưởng cho Shorts (15s - 50s) và lượt xem cao
+            var best = pool
+                .OrderByDescending(c => (c.Duration >= 15 && c.Duration <= 50) ? 100 : 10)
                 .ThenByDescending(c => c.ViewCount)
                 .FirstOrDefault();
 
-            return best ?? candidates[0];
+            return best ?? pool[0];
         }
 
         private static string ResolveScriptPath()
