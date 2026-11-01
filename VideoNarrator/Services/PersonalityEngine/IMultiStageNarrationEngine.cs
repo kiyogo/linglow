@@ -317,7 +317,10 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbPrompt.AppendLine("2. Establish the Situation: Cung cấp vừa đủ bối cảnh/rào cản để hiểu tình huống.");
             sbPrompt.AppendLine("3. Build Progression: Mỗi câu tiếp theo đưa ra dữ kiện mới hoặc làm rõ diễn biến tiếp theo.");
             sbPrompt.AppendLine("4. Reveal the Mechanism: Giải thích cơ chế điều thực sự xảy ra bằng sự thật khách quan và quan hệ nhân - quả logic.");
-            sbPrompt.AppendLine("5. Payoff: Kết thúc gọn gàng, thỏa mãn sự tò mò. Tuyệt đối không xin like, không chèn câu thừa nhảm nhí.");
+            sbPrompt.AppendLine("5. Payoff & Subscribe Call-To-Action (BẮT BUỘC):");
+            sbPrompt.AppendLine("   - Kết thúc câu chuyện gọn gàng, giải đáp thỏa mãn sự tò mò.");
+            sbPrompt.AppendLine("   - BẮT BUỘC kết thúc kịch bản bằng 1 câu kêu gọi đăng ký kênh tự nhiên, văn minh (Ví dụ: 'Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!' hoặc 'Hãy bấm đăng ký kênh để không bỏ lỡ những điều bất ngờ tiếp theo!').");
+            sbPrompt.AppendLine("   ❌ CẤM các câu xin like nhảm nhí dạng 'Biến nút thích thành...'.");
             sbPrompt.AppendLine("============================================================");
             sbPrompt.AppendLine();
 
@@ -347,6 +350,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             }
 
             draft = CleanNarrationScript(draft);
+            draft = EnsureSubscribeCallToAction(draft);
             _fileService.Log($"Hoàn tất Stage B: Lời thoại nháp gồm {CountWords(draft)} từ.");
             return draft;
         }
@@ -467,6 +471,7 @@ namespace VideoNarrator.Services.PersonalityEngine
                 }
             }
 
+            draftScript = EnsureSubscribeCallToAction(draftScript);
             return (draftScript, evaluation);
         }
 
@@ -680,8 +685,34 @@ namespace VideoNarrator.Services.PersonalityEngine
             var sb = new StringBuilder();
             sb.Append($"Nhìn vào {subject.ToLowerInvariant()}, bạn sẽ thấy điều thú vị bắt đầu ngay từ những giây đầu tiên. ");
             sb.Append($"{explanation}. ");
-            sb.Append($"Và kết quả đem lại {payoff.ToLowerInvariant()}.");
+            sb.Append($"Và kết quả đem lại {payoff.ToLowerInvariant()}. ");
+            sb.Append("Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!");
             return sb.ToString();
+        }
+
+        public static string EnsureSubscribeCallToAction(string script)
+        {
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                return "Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!";
+            }
+
+            string clean = script.Trim();
+            string lower = clean.ToLowerInvariant();
+
+            // Nếu đã có lời kêu gọi đăng ký kênh hoặc follow thì giữ nguyên
+            if (lower.Contains("đăng ký") || lower.Contains("dang ky") || lower.Contains("follow") || lower.Contains("theo dõi"))
+            {
+                return clean;
+            }
+
+            // Đảm bảo dấu câu hợp lệ trước khi ghép câu CTA
+            if (!clean.EndsWith(".") && !clean.EndsWith("!") && !clean.EndsWith("?"))
+            {
+                clean += ".";
+            }
+
+            return $"{clean} Đừng quên bấm đăng ký kênh để đón xem những video thú vị tiếp theo nhé!";
         }
 
         private static ScriptQualityEvaluation EvaluateHeuristically(string script, NarrationPersonaConfig config)

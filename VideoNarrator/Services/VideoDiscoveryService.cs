@@ -132,14 +132,14 @@ namespace VideoNarrator.Services
                     }
                     if (list.Count > 0)
                     {
-                        // Lọc kép: Chỉ chấp nhận video ngắn (10s - 62s) và video gốc (loại trừ video tổng hợp/review)
+                        // Lọc kép: Chỉ chấp nhận video ngắn chuẩn (22s - 62s, loại bỏ video quá ngắn) và video gốc
                         var filtered = list
-                            .Where(v => v.Duration >= 10 && v.Duration <= 62 && !IsBlacklistedTitle(v.Title))
+                            .Where(v => v.Duration >= 22 && v.Duration <= 62 && !IsBlacklistedTitle(v.Title))
                             .ToList();
 
                         if (filtered.Count > 0)
                         {
-                            _fileService.Log($"[Video Discovery] Tìm thấy {filtered.Count} video ngắn gốc phù hợp.");
+                            _fileService.Log($"[Video Discovery] Tìm thấy {filtered.Count} video ngắn gốc phù hợp ({filtered.Min(v => v.Duration):F0}s - {filtered.Max(v => v.Duration):F0}s).");
                             return filtered;
                         }
                     }
@@ -173,24 +173,13 @@ namespace VideoNarrator.Services
             {
                 new()
                 {
-                    Id = "UivrsuLad_U",
-                    Title = "Người đàn ông bấm vé tàu siêu tốc tại ga Ấn Độ",
-                    Url = "https://www.youtube.com/shorts/UivrsuLad_U",
-                    Duration = 23,
-                    Thumbnail = "https://i.ytimg.com/vi/UivrsuLad_U/hqdefault.jpg",
-                    Uploader = "Linglow Trending",
-                    ViewCount = 1250000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "SLw74rF7uVU",
-                    Title = "Kỹ thuật pha màu Slime độc lạ cực kỳ thỏa mãn",
-                    Url = "https://www.youtube.com/shorts/SLw74rF7uVU",
-                    Duration = 29,
-                    Thumbnail = "https://i.ytimg.com/vi/SLw74rF7uVU/hqdefault.jpg",
-                    Uploader = "Satisfying Lab",
-                    ViewCount = 37800000,
+                    Id = "__VcPjEzeOI",
+                    Title = "Chú chó Husky thông minh xử lý tình huống trước camera",
+                    Url = "https://www.youtube.com/shorts/__VcPjEzeOI",
+                    Duration = 46,
+                    Thumbnail = "https://i.ytimg.com/vi/__VcPjEzeOI/hqdefault.jpg",
+                    Uploader = "Smart Pets",
+                    ViewCount = 3850000,
                     Platform = "YouTube"
                 },
                 new()
@@ -206,13 +195,24 @@ namespace VideoNarrator.Services
                 },
                 new()
                 {
-                    Id = "52rAOoCcnPA",
-                    Title = "Khoảnh khắc thú vị bất ngờ ghi lại trên ống kính",
-                    Url = "https://www.youtube.com/shorts/52rAOoCcnPA",
-                    Duration = 16,
-                    Thumbnail = "https://i.ytimg.com/vi/52rAOoCcnPA/hqdefault.jpg",
-                    Uploader = "Viral Camera",
-                    ViewCount = 1850000,
+                    Id = "woze7VTcawI",
+                    Title = "Cún cưng phản ứng đáng yêu khi nghe gọi qua chuông cửa",
+                    Url = "https://www.youtube.com/shorts/woze7VTcawI",
+                    Duration = 35,
+                    Thumbnail = "https://i.ytimg.com/vi/woze7VTcawI/hqdefault.jpg",
+                    Uploader = "RingTV",
+                    ViewCount = 4200000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "SLw74rF7uVU",
+                    Title = "Kỹ thuật pha màu Slime độc lạ cực kỳ thỏa mãn",
+                    Url = "https://www.youtube.com/shorts/SLw74rF7uVU",
+                    Duration = 29,
+                    Thumbnail = "https://i.ytimg.com/vi/SLw74rF7uVU/hqdefault.jpg",
+                    Uploader = "Satisfying Lab",
+                    ViewCount = 37800000,
                     Platform = "YouTube"
                 }
             };
@@ -238,16 +238,16 @@ namespace VideoNarrator.Services
 
             if (candidates.Count == 0) return null;
 
-            // Sàng lọc nghiêm ngặt: Chỉ lấy video ngắn từ 10s đến 60s, không dính từ khóa cấm
+            // Sàng lọc nghiêm ngặt: Chỉ lấy video ngắn chuẩn từ 22s đến 62s, không dính từ khóa cấm
             var validShorts = candidates
-                .Where(c => c.Duration >= 10 && c.Duration <= 62 && !IsBlacklistedTitle(c.Title))
+                .Where(c => c.Duration >= 22 && c.Duration <= 62 && !IsBlacklistedTitle(c.Title))
                 .ToList();
 
             var pool = validShorts.Count > 0 ? validShorts : candidates;
 
-            // Ưu tiên độ dài lý tưởng cho Shorts (15s - 50s) và lượt xem cao
+            // Ưu tiên độ dài lý tưởng cho Shorts giữ chân người xem (28s - 58s) và lượt xem cao
             var best = pool
-                .OrderByDescending(c => (c.Duration >= 15 && c.Duration <= 50) ? 100 : 10)
+                .OrderByDescending(c => (c.Duration >= 28 && c.Duration <= 58) ? 100 : 10)
                 .ThenByDescending(c => c.ViewCount)
                 .FirstOrDefault();
 

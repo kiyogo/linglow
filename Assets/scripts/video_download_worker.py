@@ -120,8 +120,8 @@ def search_videos(query, max_results=8):
                 continue
 
             dur = e.get('duration')
-            # TIÊU CHUẨN 1: CHỈ TÌM VIDEO NGẮN (Từ 10s đến tối đa 62s)
-            if not dur or dur < 10 or dur > 62:
+            # TIÊU CHUẨN 1: CHỈ TÌM VIDEO NGẮN CHUẨN (Từ 22s đến tối đa 62s, loại bỏ video quá ngắn dưới 22s)
+            if not dur or dur < 22 or dur > 62:
                 continue
 
             raw_title = (e.get("title") or "").strip()
