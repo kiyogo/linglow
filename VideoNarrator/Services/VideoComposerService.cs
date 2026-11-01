@@ -16,7 +16,7 @@ namespace VideoNarrator.Services
             string? subtitleAssPath,
             EditingPlan plan,
             string outputPath,
-            int crf = 18,
+            int crf = 16,
             string preset = "medium",
             Action<string, double>? progressCallback = null,
             CancellationToken cancellationToken = default);
@@ -40,7 +40,7 @@ namespace VideoNarrator.Services
             string? subtitleAssPath,
             EditingPlan plan,
             string outputPath,
-            int crf = 18,
+            int crf = 16,
             string preset = "medium",
             Action<string, double>? progressCallback = null,
             CancellationToken cancellationToken = default)
@@ -190,7 +190,7 @@ namespace VideoNarrator.Services
 
             // Enforce constant frame rate and pixel format for wide compatibility (TikTok, YouTube Shorts, Reels)
             string args = $"-y -i {qVideo} -i {qAudio} -filter_complex \"{filterComplex}\" -map \"{currentLabel}\" -map 1:a:0 " +
-                          $"-r {targetFps} -c:v libx264 -pix_fmt yuv420p -preset {preset} -crf {crf} " +
+                          $"-r {targetFps} -c:v libx264 -pix_fmt yuv420p -preset {preset} -crf {crf} -maxrate 16M -bufsize 32M " +
                           $"-c:a aac -ar 48000 -ac 2 -b:a 192k {durLimit}{qOut}";
 
             _fileService.Log($"Bắt đầu render video hoàn thiện: ffmpeg {args}");

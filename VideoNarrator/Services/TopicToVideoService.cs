@@ -341,8 +341,8 @@ QUY TẮC NỘI DUNG & GIỮ CHÂN NGƯỜI XEM (BẮT BUỘC):
             progressCallback?.Invoke("Đang tạo chuyển động Pan/Zoom trên từng cảnh...", 88);
             var sceneVideoClips = new List<string>();
 
-            int renderW = isDraftPreview ? (project.OutputWidth / 2) : project.OutputWidth;
-            int renderH = isDraftPreview ? (project.OutputHeight / 2) : project.OutputHeight;
+            int renderW = project.OutputWidth > 0 ? project.OutputWidth : 1080;
+            int renderH = project.OutputHeight > 0 ? project.OutputHeight : 1920;
             if (renderW % 2 != 0) renderW++;
             if (renderH % 2 != 0) renderH++;
 
@@ -381,8 +381,8 @@ QUY TẮC NỘI DUNG & GIỮ CHÂN NGƯỜI XEM (BẮT BUỘC):
             string subFilter = _filterBuilder.BuildSubtitleFilter(assPath);
 
             string filterComplex = string.IsNullOrEmpty(subFilter) ? "" : $"-vf \"{subFilter}\"";
-            string preset = isDraftPreview ? "ultrafast" : "medium";
-            int crf = isDraftPreview ? 28 : 19;
+            string preset = isDraftPreview ? "veryfast" : "medium";
+            int crf = isDraftPreview ? 20 : 16;
 
             string finalArgs = $"-y -i {qVideo} -i {qAudio} {filterComplex} -map 0:v:0 -map 1:a:0 -c:v libx264 -preset {preset} -crf {crf} -pix_fmt yuv420p -c:a aac -b:a 192k -t {totalAudioDuration.ToString("0.000", CultureInfo.InvariantCulture)} {qOut}";
 

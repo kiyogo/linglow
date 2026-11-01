@@ -33,11 +33,11 @@ namespace VideoNarrator.Services
             string fx = clampedFocusX.ToString("0.00", CultureInfo.InvariantCulture);
             string fy = clampedFocusY.ToString("0.00", CultureInfo.InvariantCulture);
 
-            // Dynamic universal scale & crop:
+            // Dynamic universal scale & crop with Lanczos high-fidelity scaling:
             // 1. setsar=1: Enforce square pixel aspect ratio.
-            // 2. scale with force_original_aspect_ratio=increase: Proportionally scales up/down so input video fully covers targetWidth x targetHeight without distortion or black bars.
+            // 2. scale with force_original_aspect_ratio=increase: Proportionally scales up/down using lanczos+accurate_rnd for razor-sharp edges without blur.
             // 3. crop to target dimensions: Centers or pans using focusX / focusY, safely aligned to even 2-pixel boundaries.
-            return $"setsar=1,scale={targetWidth}:{targetHeight}:force_original_aspect_ratio=increase:flags=bicubic," +
+            return $"setsar=1,scale={targetWidth}:{targetHeight}:force_original_aspect_ratio=increase:flags=lanczos+accurate_rnd," +
                    $"crop={targetWidth}:{targetHeight}:'trunc((in_w-{targetWidth})*{fx}/2)*2':'trunc((in_h-{targetHeight})*{fy}/2)*2'";
         }
 
@@ -59,7 +59,7 @@ namespace VideoNarrator.Services
             string fxStr = fx.ToString("0.00", CultureInfo.InvariantCulture);
             string fyStr = fy.ToString("0.00", CultureInfo.InvariantCulture);
 
-            string scaleCrop = $"setsar=1,scale={targetWidth}:{targetHeight}:force_original_aspect_ratio=increase:flags=bicubic," +
+            string scaleCrop = $"setsar=1,scale={targetWidth}:{targetHeight}:force_original_aspect_ratio=increase:flags=lanczos+accurate_rnd," +
                                $"crop={targetWidth}:{targetHeight}:'trunc((in_w-{targetWidth})*{fxStr}/2)*2':'trunc((in_h-{targetHeight})*{fyStr}/2)*2',tpad=stop_mode=clone:stop_duration=4";
 
             var validScenes = new List<VideoScene>();
@@ -115,7 +115,7 @@ namespace VideoNarrator.Services
 
         public string BuildScaleFilter(int targetWidth, int targetHeight)
         {
-            return $"scale={targetWidth}:{targetHeight}:flags=bicubic";
+            return $"scale={targetWidth}:{targetHeight}:flags=lanczos+accurate_rnd";
         }
 
         public string BuildZoomFilter(List<ZoomEffect>? zoomEffects, int width, int height, int fps = 30)
@@ -130,7 +130,7 @@ namespace VideoNarrator.Services
             string zoomPctStr = maxZoomPercent.ToString("0.000", CultureInfo.InvariantCulture);
 
             // PTS-preserving zoom filter: uses crop & scale with eval=frame to prevent FFmpeg timestamp drift after 10s (crop defaults x and y to center)
-            return $"crop=w='in_w*(1-{zoomPctStr}*min(t,10)/10)':h='in_h*(1-{zoomPctStr}*min(t,10)/10)',scale={width}:{height}:flags=bicubic";
+            return $"crop=w='in_w*(1-{zoomPctStr}*min(t,10)/10)':h='in_h*(1-{zoomPctStr}*min(t,10)/10)',scale={width}:{height}:flags=lanczos+accurate_rnd";
         }
 
         public string BuildPanFilter(double startFocusX, double endFocusX, int inputWidth, int cropWidth)

@@ -2760,9 +2760,9 @@ namespace VideoNarrator.ViewModels
 
                 _cachedMixedAudioPath = mixedAudioPath;
 
-                // BƯỚC 6: Render Proxy Preview tốc độ cao (540x960)
+                // BƯỚC 6: Render High-Definition Preview 1080x1920 sắc nét
                 ProgressPercentage = 90;
-                StatusMessage = "Đang xuất bản video xem trước 9:16 (Proxy Preview)...";
+                StatusMessage = "Đang xuất bản video xem trước HD sắc nét...";
 
                 string proxyOutPath = Path.Combine(tempDir, "preview_proxy.mp4");
                 await _proxyVideoService.GenerateProxyPreviewAsync(
@@ -2774,8 +2774,8 @@ namespace VideoNarrator.ViewModels
                     _cts.Token);
 
                 ProgressPercentage = 100;
-                StatusMessage = "Đã dựng xong bản xem trước 9:16! Bạn có thể xem ngay và bấm 'Render Video 9:16' để xuất bản.";
-                _fileService.Log("Hoàn thành tự dựng video AI (Proxy Preview).");
+                StatusMessage = "Đã dựng xong bản xem trước HD sắc nét! Bạn có thể xem ngay và bấm 'Render Video 9:16' để xuất bản.";
+                _fileService.Log("Hoàn thành tự dựng video AI (HD Preview).");
 
                 // Nạp video preview vào player
                 RequestLoadVideoPreview?.Invoke(proxyOutPath);
@@ -2976,7 +2976,7 @@ namespace VideoNarrator.ViewModels
                     assPath,
                     CurrentEditingPlan,
                     finalOutputPath,
-                    crf: 18,
+                    crf: 16,
                     preset: "medium",
                     (st, p) =>
                     {

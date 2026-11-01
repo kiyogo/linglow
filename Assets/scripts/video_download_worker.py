@@ -263,16 +263,12 @@ def download_video(url, output_dir):
 
         ydl_opts = {
             'outtmpl': out_tmpl,
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'format': 'bestvideo[height<=2160]+bestaudio/bestvideo+bestaudio/best',
             'merge_output_format': 'mp4',
             'quiet': True,
             'no_warnings': True,
             'noplaylist': True,
             'overwrites': True,
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }]
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

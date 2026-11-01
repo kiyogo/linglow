@@ -44,18 +44,13 @@ namespace VideoNarrator.Services
                 throw new FileNotFoundException("Tệp video gốc không tồn tại.", sourceVideoPath);
             }
 
-            // Proxy resolution: calculated proportionally (max dimension <= 960, ultrafast for snappy preview)
+            // High-definition preview: maintain full crisp resolution (1080x1920 or native target size)
             int targetW = plan.OutputWidth > 0 ? plan.OutputWidth : 1080;
             int targetH = plan.OutputHeight > 0 ? plan.OutputHeight : 1920;
-            int proxyW = targetW / 2;
-            int proxyH = targetH / 2;
-            while (proxyW > 960 || proxyH > 960)
-            {
-                proxyW /= 2;
-                proxyH /= 2;
-            }
-            proxyW = Math.Max(2, (proxyW / 2) * 2);
-            proxyH = Math.Max(2, (proxyH / 2) * 2);
+            if (targetW % 2 != 0) targetW++;
+            if (targetH % 2 != 0) targetH++;
+            int proxyW = targetW;
+            int proxyH = targetH;
 
             string qVideo = ProcessHelper.QuoteArgument(sourceVideoPath);
             string qAudio = ProcessHelper.QuoteArgument(mixedAudioPath);
@@ -177,7 +172,7 @@ namespace VideoNarrator.Services
                 : "";
 
             string args = $"-y -i {qVideo} -i {qAudio} -filter_complex \"{filterComplex}\" -map \"{currentLabel}\" -map 1:a:0 " +
-                          $"-c:v libx264 -preset ultrafast -pix_fmt yuv420p -crf 28 -c:a aac -b:a 128k {durLimit}{qOut}";
+                          $"-c:v libx264 -preset veryfast -pix_fmt yuv420p -crf 20 -c:a aac -b:a 192k {durLimit}{qOut}";
 
             _fileService.Log($"Tạo proxy preview: ffmpeg {args}");
             var res = await ProcessHelper.RunProcessAsync(_ffmpegService.FfmpegPath, args, cancellationToken);
