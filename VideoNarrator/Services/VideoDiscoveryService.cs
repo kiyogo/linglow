@@ -132,10 +132,23 @@ namespace VideoNarrator.Services
                     }
                     if (list.Count > 0)
                     {
-                        // Lọc kép: Chỉ chấp nhận video ngắn chuẩn (22s - 62s, loại bỏ video quá ngắn) và video gốc
+                        // Lọc kép: Chỉ chấp nhận video ngắn chuẩn Shorts (12s - 65s) và video gốc hấp dẫn
                         var filtered = list
-                            .Where(v => v.Duration >= 22 && v.Duration <= 62 && !IsBlacklistedTitle(v.Title))
+                            .Where(v => v.Duration >= 12 && v.Duration <= 65 && !IsBlacklistedTitle(v.Title))
                             .ToList();
+
+                        // Nếu tìm kiếm trực tuyến còn thiếu so với số lượng yêu cầu (maxResults), tự động bù đắp từ kho video triệu view chọn lọc
+                        if (filtered.Count < maxResults)
+                        {
+                            var fallbacks = GetCuratedFallbackVideos(cleanQuery, maxResults);
+                            foreach (var fb in fallbacks)
+                            {
+                                if (filtered.All(v => v.Id != fb.Id) && filtered.Count < maxResults)
+                                {
+                                    filtered.Add(fb);
+                                }
+                            }
+                        }
 
                         if (filtered.Count > 0)
                         {
@@ -162,35 +175,103 @@ namespace VideoNarrator.Services
                 "top 10", "top 5", "top 3", "top ", "tổng hợp", "những pha", "những khoảnh khắc",
                 "những loài", "bxh", "ranking", "compilation", "best of", "reaction", "review",
                 "thuyết minh", "lồng tiếng", "tóm tắt", "giải thích", "kể chuyện", "podcast",
-                "audiobook", "sách nói", "part ", "tập ", "phần ", "cho bé", "dạy bé"
+                "audiobook", "sách nói", "part ", "tập ", "phần ", "cho bé", "dạy bé",
+                "security cam", "cctv", "dashcam", "surveillance", "alien", "ufo", "ghost",
+                "paranormal", "unexplained", "caught on tape", "camera footage"
             };
             return bad.Any(b => lower.Contains(b));
         }
 
         private static List<DiscoveredVideoItem> GetCuratedFallbackVideos(string query, int count)
         {
-            var fallbackPool = new List<DiscoveredVideoItem>
+            var allCurated = new List<DiscoveredVideoItem>
             {
                 new()
                 {
-                    Id = "__VcPjEzeOI",
-                    Title = "Chú chó Husky thông minh xử lý tình huống trước camera",
-                    Url = "https://www.youtube.com/shorts/__VcPjEzeOI",
-                    Duration = 46,
-                    Thumbnail = "https://i.ytimg.com/vi/__VcPjEzeOI/hqdefault.jpg",
-                    Uploader = "Smart Pets",
-                    ViewCount = 3850000,
+                    Id = "pm2NhM30TtA",
+                    Title = "Incredible Moments Caught on Camera",
+                    Url = "https://www.youtube.com/shorts/pm2NhM30TtA",
+                    Duration = 25,
+                    Thumbnail = "https://i.ytimg.com/vi/pm2NhM30TtA/hqdefault.jpg",
+                    Uploader = "Break Time",
+                    ViewCount = 5400000,
                     Platform = "YouTube"
                 },
                 new()
                 {
-                    Id = "8ap9kR5M8Kg",
-                    Title = "Nghệ thuật cắt xà phòng Soap Cutting ASMR",
-                    Url = "https://www.youtube.com/shorts/8ap9kR5M8Kg",
+                    Id = "iuIT5wc-7AQ",
+                    Title = "A 3D rug that fools the dogs - Ảo giác thị giác 3D độc lạ",
+                    Url = "https://www.youtube.com/shorts/iuIT5wc-7AQ",
+                    Duration = 38,
+                    Thumbnail = "https://i.ytimg.com/vi/iuIT5wc-7AQ/hqdefault.jpg",
+                    Uploader = "Visual Wonders",
+                    ViewCount = 8200000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "4sC5FgiGvjY",
+                    Title = "Spiral Illusion Hypnotic Visual - Ảo giác xoắn ốc kỳ thú",
+                    Url = "https://www.youtube.com/shorts/4sC5FgiGvjY",
+                    Duration = 50,
+                    Thumbnail = "https://i.ytimg.com/vi/4sC5FgiGvjY/hqdefault.jpg",
+                    Uploader = "Illusion World",
+                    ViewCount = 6100000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "C9XH7R0It8w",
+                    Title = "Squaring the circle - Hiện tượng hình học kỳ diệu",
+                    Url = "https://www.youtube.com/shorts/C9XH7R0It8w",
+                    Duration = 30,
+                    Thumbnail = "https://i.ytimg.com/vi/C9XH7R0It8w/hqdefault.jpg",
+                    Uploader = "Math Curiosities",
+                    ViewCount = 2900000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "7x2oL3Kzoog",
+                    Title = "Thí nghiệm vật lý độc lạ và cực kỳ mãn nhãn",
+                    Url = "https://www.youtube.com/shorts/7x2oL3Kzoog",
                     Duration = 46,
-                    Thumbnail = "https://i.ytimg.com/vi/8ap9kR5M8Kg/hqdefault.jpg",
-                    Uploader = "Ameerah ASMR",
-                    ViewCount = 6790000,
+                    Thumbnail = "https://i.ytimg.com/vi/7x2oL3Kzoog/hqdefault.jpg",
+                    Uploader = "Science Lab",
+                    ViewCount = 3200000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "Oqm7YrV9Qcc",
+                    Title = "Fun With Physics - Khoa học kỳ thú chuyển động",
+                    Url = "https://www.youtube.com/shorts/Oqm7YrV9Qcc",
+                    Duration = 39,
+                    Thumbnail = "https://i.ytimg.com/vi/Oqm7YrV9Qcc/hqdefault.jpg",
+                    Uploader = "Physics Master",
+                    ViewCount = 1850000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "RUmWVSGkDe0",
+                    Title = "Nghệ thuật cắt xà phòng Soap Cut ASMR cực kỳ thỏa mãn",
+                    Url = "https://www.youtube.com/shorts/RUmWVSGkDe0",
+                    Duration = 21,
+                    Thumbnail = "https://i.ytimg.com/vi/RUmWVSGkDe0/hqdefault.jpg",
+                    Uploader = "Satisfying ASMR",
+                    ViewCount = 9200000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "qwc4filNNBI",
+                    Title = "Cắt cát động lực học Kinetic Sand ASMR thư giãn",
+                    Url = "https://www.youtube.com/shorts/qwc4filNNBI",
+                    Duration = 59,
+                    Thumbnail = "https://i.ytimg.com/vi/qwc4filNNBI/hqdefault.jpg",
+                    Uploader = "Sand Master",
+                    ViewCount = 5900000,
                     Platform = "YouTube"
                 },
                 new()
@@ -206,18 +287,103 @@ namespace VideoNarrator.Services
                 },
                 new()
                 {
-                    Id = "SLw74rF7uVU",
-                    Title = "Kỹ thuật pha màu Slime độc lạ cực kỳ thỏa mãn",
-                    Url = "https://www.youtube.com/shorts/SLw74rF7uVU",
-                    Duration = 29,
-                    Thumbnail = "https://i.ytimg.com/vi/SLw74rF7uVU/hqdefault.jpg",
-                    Uploader = "Satisfying Lab",
-                    ViewCount = 37800000,
+                    Id = "__VcPjEzeOI",
+                    Title = "Chú chó Husky thông minh xử lý tình huống trước camera",
+                    Url = "https://www.youtube.com/shorts/__VcPjEzeOI",
+                    Duration = 46,
+                    Thumbnail = "https://i.ytimg.com/vi/__VcPjEzeOI/hqdefault.jpg",
+                    Uploader = "Smart Pets",
+                    ViewCount = 3850000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "HVGOCJ8IhZM",
+                    Title = "Trò đùa thông minh bất ngờ của cún cưng",
+                    Url = "https://www.youtube.com/shorts/HVGOCJ8IhZM",
+                    Duration = 20,
+                    Thumbnail = "https://i.ytimg.com/vi/HVGOCJ8IhZM/hqdefault.jpg",
+                    Uploader = "Clever Animals",
+                    ViewCount = 2700000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "SqhQGMfw3Vg",
+                    Title = "Chú chó thông minh chọn cốc có nhiều thức ăn hơn",
+                    Url = "https://www.youtube.com/shorts/SqhQGMfw3Vg",
+                    Duration = 20,
+                    Thumbnail = "https://i.ytimg.com/vi/SqhQGMfw3Vg/hqdefault.jpg",
+                    Uploader = "Smart Dog Tricks",
+                    ViewCount = 4900000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "IgRtbJybJms",
+                    Title = "Mẹo vặt chế tạo và công cụ thông minh cực đỉnh",
+                    Url = "https://www.youtube.com/shorts/IgRtbJybJms",
+                    Duration = 30,
+                    Thumbnail = "https://i.ytimg.com/vi/IgRtbJybJms/hqdefault.jpg",
+                    Uploader = "Genius Hacks",
+                    ViewCount = 3400000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "F4eJwJvZRYg",
+                    Title = "Kỹ năng gọt hoa quả dưa hấu khổng lồ siêu mãn nhãn",
+                    Url = "https://www.youtube.com/shorts/F4eJwJvZRYg",
+                    Duration = 62,
+                    Thumbnail = "https://i.ytimg.com/vi/F4eJwJvZRYg/hqdefault.jpg",
+                    Uploader = "Street Food Art",
+                    ViewCount = 12500000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "U3a1-omUuWY",
+                    Title = "Phục chế thanh kim loại rỉ sét sáng bóng như mới",
+                    Url = "https://www.youtube.com/shorts/U3a1-omUuWY",
+                    Duration = 37,
+                    Thumbnail = "https://i.ytimg.com/vi/U3a1-omUuWY/hqdefault.jpg",
+                    Uploader = "Restoration ASMR",
+                    ViewCount = 7500000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "e4AZWrpJ4ww",
+                    Title = "Kỹ thuật tiện cơ khí chính xác lathe machining đỉnh cao",
+                    Url = "https://www.youtube.com/shorts/e4AZWrpJ4ww",
+                    Duration = 30,
+                    Thumbnail = "https://i.ytimg.com/vi/e4AZWrpJ4ww/hqdefault.jpg",
+                    Uploader = "Machining Tech",
+                    ViewCount = 3100000,
                     Platform = "YouTube"
                 }
             };
 
-            return fallbackPool.Take(Math.Max(1, count)).ToList();
+            string lower = (query ?? string.Empty).ToLowerInvariant();
+            var matched = allCurated.Where(v =>
+            {
+                if (lower.Contains("asmr") || lower.Contains("thoả mãn") || lower.Contains("thoa man"))
+                    return v.Id is "RUmWVSGkDe0" or "qwc4filNNBI" or "iuIT5wc-7AQ";
+                if (lower.Contains("khoa học") || lower.Contains("khoa hoc") || lower.Contains("thí nghiệm") || lower.Contains("thi nghiem"))
+                    return v.Id is "7x2oL3Kzoog" or "Oqm7YrV9Qcc" or "C9XH7R0It8w";
+                if (lower.Contains("động vật") || lower.Contains("dong vat") || lower.Contains("thú cưng") || lower.Contains("thu cung") || lower.Contains("chó") || lower.Contains("cho"))
+                    return v.Id is "woze7VTcawI" or "__VcPjEzeOI" or "HVGOCJ8IhZM" or "SqhQGMfw3Vg";
+                if (lower.Contains("mẹo") || lower.Contains("meo"))
+                    return v.Id is "IgRtbJybJms" or "U3a1-omUuWY";
+                if (lower.Contains("món") || lower.Contains("mon") || lower.Contains("ăn") || lower.Contains("ẩm thực"))
+                    return v.Id is "F4eJwJvZRYg";
+                if (lower.Contains("cơ khí") || lower.Contains("chế tác") || lower.Contains("phục chế"))
+                    return v.Id is "U3a1-omUuWY" or "e4AZWrpJ4ww";
+                return true;
+            }).ToList();
+
+            var pool = matched.Count >= count ? matched : allCurated;
+            return pool.Take(Math.Max(1, count)).ToList();
         }
 
         public async Task<DiscoveredVideoItem?> FindBestVideoForTopicAsync(
@@ -238,16 +404,16 @@ namespace VideoNarrator.Services
 
             if (candidates.Count == 0) return null;
 
-            // Sàng lọc nghiêm ngặt: Chỉ lấy video ngắn chuẩn từ 22s đến 62s, không dính từ khóa cấm
+            // Sàng lọc nghiêm ngặt: Chỉ lấy video ngắn chuẩn từ 12s đến 65s, không dính từ khóa cấm
             var validShorts = candidates
-                .Where(c => c.Duration >= 22 && c.Duration <= 62 && !IsBlacklistedTitle(c.Title))
+                .Where(c => c.Duration >= 12 && c.Duration <= 65 && !IsBlacklistedTitle(c.Title))
                 .ToList();
 
             var pool = validShorts.Count > 0 ? validShorts : candidates;
 
-            // Ưu tiên độ dài lý tưởng cho Shorts giữ chân người xem (28s - 58s) và lượt xem cao
+            // Ưu tiên độ dài lý tưởng cho Shorts giữ chân người xem (20s - 50s) và lượt xem cao
             var best = pool
-                .OrderByDescending(c => (c.Duration >= 28 && c.Duration <= 58) ? 100 : 10)
+                .OrderByDescending(c => (c.Duration >= 20 && c.Duration <= 50) ? 100 : 10)
                 .ThenByDescending(c => c.ViewCount)
                 .FirstOrDefault();
 
