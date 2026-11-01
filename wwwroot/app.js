@@ -400,6 +400,13 @@ const safeBridge = {
         if (b) {
             try { await b.SetResolution(resolution); } catch {}
         }
+    },
+
+    async setDurationMode(mode) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SetDurationMode(mode); } catch {}
+        }
     }
 };
 
@@ -627,6 +634,29 @@ async function initBridgeConnection() {
                         }
                     }
                     updateAspectRatioUI(resSelect.value);
+                }
+            }
+
+            if (settings.selectedDurationMode) {
+                const quickDur = document.getElementById('quickDurationModeSelect');
+                const modalDur = document.getElementById('durationModeSelect');
+                if (quickDur) {
+                    for (let i = 0; i < quickDur.options.length; i++) {
+                        if (quickDur.options[i].value === settings.selectedDurationMode ||
+                            settings.selectedDurationMode.includes(quickDur.options[i].value.substring(0, 10))) {
+                            quickDur.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (modalDur) {
+                    for (let i = 0; i < modalDur.options.length; i++) {
+                        if (modalDur.options[i].value === settings.selectedDurationMode ||
+                            settings.selectedDurationMode.includes(modalDur.options[i].value.substring(0, 10))) {
+                            modalDur.selectedIndex = i;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -1064,6 +1094,24 @@ function initEventListeners() {
         });
     }
 
+    const quickDurSelect = document.getElementById('quickDurationModeSelect');
+    const modalDurSelect = document.getElementById('durationModeSelect');
+    if (quickDurSelect) {
+        quickDurSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (modalDurSelect) modalDurSelect.value = val;
+            safeBridge.setDurationMode(val);
+            showToast(val.includes('Highlight') ? '✂️ Đã bật: Cắt ngắn Highlight (15s - 25s)' : '🎬 Đã bật: Giữ toàn bộ video gốc');
+        });
+    }
+    if (modalDurSelect) {
+        modalDurSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (quickDurSelect) quickDurSelect.value = val;
+            safeBridge.setDurationMode(val);
+        });
+    }
+
     // Background Music Controls
     document.getElementById('btnSelectMusic')?.addEventListener('click', () => safeBridge.selectMusic());
     document.getElementById('btnModalSelectMusic')?.addEventListener('click', () => safeBridge.selectMusic());
@@ -1176,7 +1224,7 @@ function triggerVideoCreation() {
         topic: document.getElementById('topicInput').value.trim(),
         personaId: document.getElementById('personaSelect').value,
         stylePreset: document.getElementById('stylePresetSelect').value,
-        durationMode: document.getElementById('durationModeSelect').value,
+        durationMode: (document.getElementById('quickDurationModeSelect') ? document.getElementById('quickDurationModeSelect').value : document.getElementById('durationModeSelect').value),
         resolution: document.getElementById('resolutionSelect') ? document.getElementById('resolutionSelect').value : "1080x1920 (9:16 Dọc TikTok/Shorts)",
         hook: hookToSend,
         script: scriptToSend,

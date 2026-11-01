@@ -208,9 +208,9 @@ namespace VideoNarrator.ViewModels
 
         public ObservableCollection<string> DurationModes { get; } = new()
         {
-            "🤖 Tự Động Thông Minh (Thuật toán tự quyết định)",
+            "⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)",
             "🎬 Giữ nguyên toàn bộ video gốc (Không cắt)",
-            "⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)"
+            "🤖 Tự Động Thông Minh (Thuật toán tự quyết định)"
         };
 
         public ObservableCollection<VideoScene> DetectedScenes { get; } = new();
@@ -1285,9 +1285,9 @@ namespace VideoNarrator.ViewModels
                 : "TikTok (Từng từ hiện lên - Đẹp nhất)";
             _selectedDurationMode = (s.DurationMode != null && s.DurationMode.Contains("Không cắt"))
                 ? "🎬 Giữ nguyên toàn bộ video gốc (Không cắt)"
-                : ((s.DurationMode != null && s.DurationMode.Contains("Highlight"))
-                    ? "⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)"
-                    : "🤖 Tự Động Thông Minh (Thuật toán tự quyết định)");
+                : ((s.DurationMode != null && s.DurationMode.Contains("Thông Minh"))
+                    ? "🤖 Tự Động Thông Minh (Thuật toán tự quyết định)"
+                    : "⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)");
             _selectedNarrationTone = (s.NarrationTone != null && NarrationTones.Any(t => t.Contains(s.NarrationTone) || s.NarrationTone.Contains(t.Split(' ')[1])))
                 ? NarrationTones.First(t => t.Contains(s.NarrationTone) || s.NarrationTone.Contains(t.Split(' ')[1]))
                 : "🤖 Tự Động Phân Tích (Theo nội dung video)";

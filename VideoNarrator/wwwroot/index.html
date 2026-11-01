@@ -380,8 +380,8 @@
                             </div>
                         </div>
 
-                        <!-- 3. QUICK CONFIG ROW -->
-                        <div class="form-row-3">
+                        <!-- 3. QUICK CONFIG CONTROLS -->
+                        <div class="form-row-2 mb-2">
                             <div class="form-group">
                                 <label class="form-label" style="font-size: 11.5px;">Khung hình:</label>
                                 <div class="vn-select-wrap">
@@ -397,6 +397,20 @@
                                 <span class="hidden" id="resolutionHint"></span>
                             </div>
 
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 11.5px;">Chiến lược cắt dựng:</label>
+                                <div class="vn-select-wrap">
+                                    <select id="quickDurationModeSelect" class="vn-select">
+                                        <option value="⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)" selected>⚡ Cắt ngắn Highlight (15s - 25s)</option>
+                                        <option value="🎬 Giữ nguyên toàn bộ video gốc (Không cắt)">🎬 Giữ toàn bộ video gốc</option>
+                                        <option value="🤖 Tự Động Thông Minh (Thuật toán tự quyết định)">🤖 Tự Động Thông Minh</option>
+                                    </select>
+                                    <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2 mb-2">
                             <div class="form-group">
                                 <label class="form-label" style="font-size: 11.5px;">Giọng đọc:</label>
                                 <div class="vn-select-wrap">
@@ -419,7 +433,7 @@
 
                             <div class="form-group">
                                 <div class="flex-between">
-                                    <label class="form-label" style="font-size: 11.5px;">Tốc độ:</label>
+                                    <label class="form-label" style="font-size: 11.5px;">Tốc độ đọc:</label>
                                     <span class="badge-val" id="valSpeechRate" style="font-size: 11px;">1.25x</span>
                                 </div>
                                 <input type="range" class="vn-range" id="rangeSpeechRate" min="0.80" max="1.80" step="0.05" value="1.25" style="margin-top: 6px;">
@@ -668,9 +682,9 @@
                         <label class="form-label" style="font-size: 11.5px;">Chiến lược thời lượng:</label>
                         <div class="vn-select-wrap">
                             <select id="durationModeSelect" class="vn-select">
-                                <option value="Tự Động Thông Minh (Thuật toán tự quyết định)" selected>Tự động khớp video & giọng nói (Đề xuất)</option>
-                                <option value="Giữ nguyên toàn bộ video gốc (Không cắt)">Giữ nguyên toàn bộ video gốc</option>
-                                <option value="Cắt ghép Highlight (Khớp 100% giọng đọc)">Cắt ghép Highlight theo câu nói</option>
+                                <option value="⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)" selected>⚡ Cắt ghép Highlight theo câu nói (Ngắn gọn 15s-25s)</option>
+                                <option value="🎬 Giữ nguyên toàn bộ video gốc (Không cắt)">🎬 Giữ nguyên toàn bộ video gốc</option>
+                                <option value="🤖 Tự Động Thông Minh (Thuật toán tự quyết định)">🤖 Tự Động Thông Minh (Thuật toán tự quyết định)</option>
                             </select>
                             <svg class="vn-icon select-caret"><use href="#icon-caret-down"></use></svg>
                         </div>

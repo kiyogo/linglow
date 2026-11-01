@@ -1033,7 +1033,9 @@ namespace VideoNarrator.Services
 
             // 4. Tạo các phân cảnh video cắt ghép khớp chính xác với từng câu nói
             double prevClipEnd = 0.0;
-            bool isContinuousTimeline = sourceVideoDuration <= Math.Max(75.0, ttsResult.DurationSeconds + outroPadding + 8.0);
+            // Trong chế độ cắt ghép highlight: nếu video gốc dài hơn thời lượng giọng đọc,
+            // chủ động cắt nhảy cóc tới các phân cảnh điểm nhấn (anchors) thay vì phát liên tục từ đầu.
+            bool isContinuousTimeline = sourceVideoDuration <= (ttsResult.DurationSeconds + outroPadding + 2.0);
 
             for (int i = 0; i < N; i++)
             {
@@ -1286,9 +1288,9 @@ namespace VideoNarrator.Services
 
         public static bool IsKeepOriginalUncutMode(string? durationMode, double durationSeconds)
         {
-            if (string.IsNullOrWhiteSpace(durationMode)) return durationSeconds <= 90.0;
+            if (string.IsNullOrWhiteSpace(durationMode)) return false;
             if (durationMode.Contains("Toàn bộ") || durationMode.Contains("Không cắt")) return true;
-            if (durationMode.Contains("Highlight") || durationMode.Contains("Cắt ghép")) return false;
+            if (durationMode.Contains("Highlight") || durationMode.Contains("Cắt ghép") || durationMode.Contains("Ngắn gọn")) return false;
             return durationSeconds <= 90.0;
         }
 
@@ -1309,12 +1311,12 @@ namespace VideoNarrator.Services
             double wordsPerSec = 4.15 * speechRate;
 
             // Target words calibrated densely based on speech rate to fill timeline completely and avoid trailing dead silence.
-            double effectiveTargetDuration = isKeepOriginalUncut ? durationSeconds : Math.Min(45.0, durationSeconds);
-            double speechTargetSeconds = Math.Max(12.0, effectiveTargetDuration - 0.5);
-            int minWords = Math.Max(60, (int)Math.Round(speechTargetSeconds * (wordsPerSec * 0.98)));
-            int targetWords = Math.Max(70, (int)Math.Round(speechTargetSeconds * (wordsPerSec * 1.03)));
-            int maxWords = (int)Math.Round(speechTargetSeconds * (wordsPerSec * 1.08));
-            int targetSentences = Math.Max(4, (int)Math.Round(speechTargetSeconds / 3.0));
+            double effectiveTargetDuration = isKeepOriginalUncut ? durationSeconds : Math.Min(22.0, Math.Max(13.0, durationSeconds * 0.60));
+            double speechTargetSeconds = Math.Max(11.0, effectiveTargetDuration - 0.8);
+            int minWords = isHighlightMode ? 50 : Math.Max(60, (int)Math.Round(speechTargetSeconds * (wordsPerSec * 0.98)));
+            int targetWords = isHighlightMode ? 65 : Math.Max(70, (int)Math.Round(speechTargetSeconds * (wordsPerSec * 1.03)));
+            int maxWords = isHighlightMode ? 80 : (int)Math.Round(speechTargetSeconds * (wordsPerSec * 1.08));
+            int targetSentences = isHighlightMode ? Math.Max(3, (int)Math.Round(speechTargetSeconds / 4.5)) : Math.Max(4, (int)Math.Round(speechTargetSeconds / 3.0));
 
             // Lấy thông tin Persona nếu Personality Engine được kích hoạt
             string personaDirectives = "";

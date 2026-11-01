@@ -27,7 +27,7 @@ namespace VideoNarrator.Models
         public string AutoEditStylePreset { get; set; } = "TikTok Shorts"; // "Documentary", "News", "Educational", "Military/Technology", "TikTok Shorts"
         public string OutputResolution { get; set; } = "1080x1920 (9:16 Dọc TikTok/Shorts)";
         public string SubtitleStylePreset { get; set; } = "TikTok"; // "Clean", "Documentary", "News", "Educational", "Military", "TikTok"
-        public string DurationMode { get; set; } = "🤖 Tự Động Thông Minh (Thuật toán tự quyết định)";
+        public string DurationMode { get; set; } = "⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)";
         public string NarrationTone { get; set; } = "🤖 Tự Động Phân Tích (Theo nội dung video)";
         public string AiTrainingInstruction { get; set; } = "🔥 Phong cách Video Nhét Chữ: Lối kể chuyện cực kỳ cuốn hút, giữ chân người xem từ giây đầu đến cuối, dùng từ đắt giá tự nhiên không giới hạn, không dùng từ xàm ít người dùng, nội dung kịch tính lôi cuốn.";
         
