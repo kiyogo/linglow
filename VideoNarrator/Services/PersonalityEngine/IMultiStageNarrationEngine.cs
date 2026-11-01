@@ -293,31 +293,31 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbPrompt.AppendLine("============================================================");
             sbPrompt.AppendLine();
 
-            sbPrompt.AppendLine("=== TIÊU CHUẨN VĂN PHONG VIRAL & CHỐNG SẾN SÚA (ANTI-PREACHY / ZERO ESSAY) ===");
-            sbPrompt.AppendLine("1. ❌ CẤM TUYỆT ĐỐI VĂN PHONG TẬP LÀM VĂN / SÁCH GIÁO KHOA / ĐẠO ĐỨC / SẾN SÚA:");
-            sbPrompt.AppendLine("   - CẤM các từ ngữ giáo điều, triết lý viển vông: 'thánh đường', 'tâm hồn', 'biết yêu thương và bảo vệ đồng loại', 'cần chúng ta che chở và trân trọng', 'kỳ diệu', 'ảo diệu', 'bài học cuộc sống', 'thiên tài của đại dương', 'tạo hóa ban tặng', 'vô cùng tuyệt vời', 'đẳng cấp chuyên nghiệp'.");
+            sbPrompt.AppendLine("=== TIÊU CHUẨN VĂN PHONG: NÓI THẬT, ĐỜI THƯỜNG, TUYỆT ĐỐI KHÔNG XÀM XÍ (ZERO CRINGE) ===");
+            sbPrompt.AppendLine("1. ❌ CẤM TUYỆT ĐỐI TỪ NGỮ VĂN MẪU XÀM XÍ, PHÓNG ĐẠI TRẺ TRÂU:");
+            sbPrompt.AppendLine("   - CẤM các từ giật gân rẻ tiền, khoa trương lố lăng: 'cú hack cực đỉnh', 'cú hack vật lý', 'như tay đua chuyên nghiệp', 'tốc độ xé gió', 'lột xác khó tin', 'não được chữa lành', 'bùng nổ khoang miệng', 'đỉnh chóp', 'ảo diệu', 'kỳ diệu', 'thánh đường', 'tâm hồn', 'che chở', 'thiên tài đại dương'.");
+            sbPrompt.AppendLine("   - CẤM TUYỆT ĐỐI MỌI CÂU XIN LIKE NHẢM NHÍ: 'Biến nút thích thành...', 'Bấm like để...', 'Thả tim nếu...'.");
             sbPrompt.AppendLine("2. ❌ CẤM SPAM CÂU HỎI TU TỪ GIẢ TẠO:");
-            sbPrompt.AppendLine("   - Toàn bộ kịch bản tối đa 1 câu hỏi (hoặc không cần câu hỏi nào). CẤM dùng câu hỏi để mở đầu ('Nhìn kìa! Bạn có thấy... không?').");
+            sbPrompt.AppendLine("   - CẤM dùng câu hỏi để mở đầu: 'Nhìn kìa!', 'Bạn có thấy... không?'.");
             sbPrompt.AppendLine("   - CẤM các câu hỏi chatbot rập khuôn: 'Nhưng đợi đã, tại sao...?', 'Bạn có bao giờ thắc mắc...?', 'Chỉ là để... thôi sao?'.");
-            sbPrompt.AppendLine("3. ✔️ VĂN PHONG ĐỜI THƯỜNG CỦA MỘT CREATOR TRIỆU VIEW (CONVERSATIONAL & PUNCHY):");
-            sbPrompt.AppendLine("   - Hook mở đầu bằng sự tương phản hoặc nghịch lý bất thường ngay giây đầu tiên.");
-            sbPrompt.AppendLine("   - Dùng từ ngữ so sánh bình dân, trực quan ('đua xe', 'cú hack năng lượng', 'đi nhờ xe miễn phí', 'bấm máy tính tiền như hack game', 'khít khao không một khe hở').");
-            sbPrompt.AppendLine("   - Bóc tách cơ chế nhân - quả cụ thể bằng các động từ mô tả hành động thực tế.");
-            sbPrompt.AppendLine("   - Nhịp dứt khoát, ngắt nghỉ dấu chấm (.) rõ ràng để giọng đọc AI TTS không bị đuối hơi.");
-            sbPrompt.AppendLine("===============================================================================");
+            sbPrompt.AppendLine("3. ✔️ NÓI CHUYỆN NHƯ MỘT NGƯỜI ĐÀNG HOÀNG, AM HIỂU, ĐỜI THƯỜNG (CONVERSATIONAL & AUTHENTIC):");
+            sbPrompt.AppendLine("   - Giọng điệu điềm đạm, gãy gọn, khách quan, tự nhiên như lời thuyết minh phóng sự ngắn hoặc một người bạn hiểu chuyện kể lại.");
+            sbPrompt.AppendLine("   - Đi thẳng vào tình huống thực tế hoặc sự đối lập ngay giây đầu tiên.");
+            sbPrompt.AppendLine("   - Dùng từ ngữ tiếng Việt giản dị, chính xác, giàu hình ảnh thực tế (như 'nương theo luồng nước', 'đứng trên thang cuốn', 'thuộc lòng giao diện', 'đợi cả nửa tiếng').");
+            sbPrompt.AppendLine("   - Bóc tách nguyên nhân - cơ chế mạch lạc, kết thúc gọn gàng ngay khi câu chuyện ngã ngũ.");
+            sbPrompt.AppendLine("==========================================================================================");
             sbPrompt.AppendLine();
 
             sbPrompt.AppendLine(styleDirectives);
             sbPrompt.AppendLine();
 
-            sbPrompt.AppendLine("=== KHUNG KỂ CHUYỆN LINH HOẠT 6 PHẦN (NARRATIVE FRAMEWORK) ===");
-            sbPrompt.AppendLine("1. Opening Hook: Mở đầu ngay lập tức bằng một chi tiết bất thường, hành động khó hiểu hoặc sự đối lập thú vị.");
-            sbPrompt.AppendLine("   ❌ CẤM TUYỆT ĐỐI: 'Xin chào mọi người', 'Trong video hôm nay', 'Bạn có biết rằng', 'Hôm nay chúng ta sẽ tìm hiểu'.");
-            sbPrompt.AppendLine("2. Establish the Situation: Cung cấp vừa đủ bối cảnh/luật lệ/rào cản để hiểu tình huống.");
-            sbPrompt.AppendLine("3. Build Curiosity: Mỗi câu tiếp theo phải thêm thông tin mới hoặc làm rõ sự tương phản giữa dự đoán và thực tế.");
-            sbPrompt.AppendLine("4. Reveal the Mechanism: Giải thích cơ chế điều thực sự xảy ra bằng động từ giàu hình ảnh và nhân - quả logic.");
-            sbPrompt.AppendLine("5. Payoff: Đưa người xem tới kết quả thỏa mãn sự tò mò. Kết thúc tròn trịa.");
-            sbPrompt.AppendLine("6. Optional CTA: Chỉ thêm nếu thực sự ăn khớp tự nhiên với vật thể trong video ('Biến nút thích thành...'). Tuyệt đối không xin like ăn xin.");
+            sbPrompt.AppendLine("=== KHUNG KỂ CHUYỆN LINH HOẠT (NARRATIVE FRAMEWORK) ===");
+            sbPrompt.AppendLine("1. Opening Hook: Mở đầu ngay lập tức bằng một chi tiết bất thường, hành động khó hiểu hoặc sự đối lập thực tế.");
+            sbPrompt.AppendLine("   ❌ CẤM TUYỆT ĐỐI: 'Xin chào mọi người', 'Trong video hôm nay', 'Bạn có biết rằng', 'Nhìn kìa', 'Chào mừng'.");
+            sbPrompt.AppendLine("2. Establish the Situation: Cung cấp vừa đủ bối cảnh/rào cản để hiểu tình huống.");
+            sbPrompt.AppendLine("3. Build Progression: Mỗi câu tiếp theo đưa ra dữ kiện mới hoặc làm rõ diễn biến tiếp theo.");
+            sbPrompt.AppendLine("4. Reveal the Mechanism: Giải thích cơ chế điều thực sự xảy ra bằng sự thật khách quan và quan hệ nhân - quả logic.");
+            sbPrompt.AppendLine("5. Payoff: Kết thúc gọn gàng, thỏa mãn sự tò mò. Tuyệt đối không xin like, không chèn câu thừa nhảm nhí.");
             sbPrompt.AppendLine("============================================================");
             sbPrompt.AppendLine();
 

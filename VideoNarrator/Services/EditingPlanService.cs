@@ -1349,7 +1349,7 @@ namespace VideoNarrator.Services
   + BƯỚC 1: Hook trực diện đập thẳng vào mắt và tai (0-2s): 'Đây là cách...', 'Tại sao...', 'Điều gì sẽ xảy ra nếu...'. Cấm chào hỏi, cấm triết lý đạo lý.
   + BƯỚC 2: Nêu ngắn gọn luật lệ, hoàn cảnh hoặc áp lực thực tế (2-5s) như thời gian, quy định, rào cản vật lý.
   + BƯỚC 3: Giải mã cơ chế, mánh khóe, từng chuyển động vi mô trên màn hình (5-12s). Dùng từ ngữ đắt giá, giàu hình ảnh thị giác và cơ chế thực tế.
-  + BƯỚC 4: Kết thúc bằng CTA sáng tạo: 'Biến nút thích của tôi thành [đồ vật]' hoặc câu hỏi thăm dò quan điểm.";
+  + BƯỚC 4: Kết thúc gọn gàng ở kết quả thực tế hoặc câu hỏi thăm dò trải nghiệm người xem. TUYỆT ĐỐI CẤM các câu like nhảm nhí như 'Biến nút thích thành...'.";
             }
             else if (tone.Contains("Tự Động") || tone.Contains("Tự động") || string.IsNullOrWhiteSpace(tone))
             {
@@ -1464,16 +1464,16 @@ namespace VideoNarrator.Services
             sb.AppendLine();
             sb.AppendLine("3. CÁC MẪU KỂ CHUYỆN ĐỈNH CAO TRIỆU VIEW (HỌC HỎI CẤU TRÚC, TUYỆT ĐỐI KHÔNG CHÉP NGUYÊN VĂN):");
             sb.AppendLine("   - [Chuẩn phong cách Thế Giới Có Gì Hay / Zack D. Films / Mẹo & Sự Thật Độc Lạ]:");
-            sb.AppendLine("     \"Đây là cách một số người gian lận trên sân golf. Sau khi đánh bóng thì bạn chỉ có khoảng 3 phút để tìm bóng. Nếu không tìm thấy, bóng sẽ chính thức được tính là bị mất. Vì vậy, một số người chơi sử dụng một thiết bị nhỏ được giấu ở chân để chứa thêm một quả bóng. Chỉ với một động tác đơn giản, họ bí mật thả quả bóng ra khiến mọi người tưởng rằng họ vừa tìm thấy quả bóng ban đầu. Biến nút thích của tôi thành bóng golf.\"");
+            sb.AppendLine("     \"Đây là cách một số người gian lận trên sân golf. Sau khi đánh bóng thì bạn chỉ có khoảng 3 phút để tìm bóng. Nếu không tìm thấy, bóng sẽ chính thức được tính là bị mất. Vì vậy, một số người chơi sử dụng một thiết bị nhỏ được giấu ở chân để chứa thêm một quả bóng. Chỉ với một động tác đơn giản, họ bí mật thả quả bóng ra khiến mọi người tưởng rằng họ vừa tìm thấy quả bóng ban đầu.\"");
             sb.AppendLine("   - [Chuẩn phong cách Giải mã cơ chế / Khoa học & Đời sống]:");
-            sb.AppendLine("     \"Tại sao thành phố này lại đổ 96 triệu quả bóng nhựa màu đen xuống hồ chứa nước? Thoạt nhìn ai cũng tưởng đây là sự lãng phí khủng khiếp. Nhưng thực tế, ánh nắng mặt trời kết hợp Clo sẽ tạo ra chất gây ung thư nguy hiểm. Những quả bóng này đóng vai trò như một tấm khiên khổng lồ, ngăn chặn hoàn toàn tia cực tím và giảm thiểu tối đa sự bốc hơi nước. Biến nút thích của tôi thành màu đen của quả bóng.\"");
+            sb.AppendLine("     \"Tại sao thành phố này lại đổ 96 triệu quả bóng nhựa màu đen xuống hồ chứa nước? Thoạt nhìn ai cũng tưởng đây là sự lãng phí khủng khiếp. Nhưng thực tế, ánh nắng mặt trời kết hợp Clo sẽ tạo ra chất gây ung thư nguy hiểm. Những quả bóng này đóng vai trò như một tấm khiên khổng lồ, ngăn chặn hoàn toàn tia cực tím và giảm thiểu tối đa sự bốc hơi nước.\"");
             sb.AppendLine("   - [Chuẩn phong cách Đời sống / Tình huống troll hóm hỉnh]:");
             sb.AppendLine("     \"Đừng bao giờ để bạn thân trông hộ đồ nếu không muốn nhận cái kết đắng ngắt. Vừa quay lưng đi hai phút, thanh niên ở lại đã nhanh tay uống sạch nửa cốc rồi đổ thêm nước lọc kèm mấy viên sỏi vào đáy ly. Nhìn quả mặt ngơ ngác khi hút trúng viên sỏi mà cười ra nước mắt!\"");
             sb.AppendLine();
             sb.AppendLine("🚨 NGUYÊN TẮC CỐT TỬ - TUYỆT ĐỐI CẤM CÁC VĂN MẪU AI SAU ĐÂY (NGƯỜI XEM SẼ THẤY RẤT NHẠT VÀ LƯỚT QUA):");
             sb.AppendLine("   - ❌ TUYỆT ĐỐI CẤM: 'Mới nhìn cứ ngỡ cảnh tượng bình thường, nhưng nếu để ý kỹ...', 'Bạn sẽ không tin vào mắt mình...', 'Chào mừng các bạn đến với video...'.");
             sb.AppendLine("   - ❌ CẤM các tính từ sáo rỗng vô hồn: 'đẳng cấp của sự chuyên nghiệp', 'tính toán tỉ mỉ đến từng milimét', 'thao tác dứt khoát', 'vô cùng tuyệt vời', 'khoảnh khắc kỳ diệu'.");
-            sb.AppendLine("   - ❌ CẤM câu like ăn xin sáo rỗng: 'hãy like và đăng ký kênh'. Hãy dùng CTA tương tác sáng tạo: 'Biến nút thích của tôi thành [đồ vật trong video]' hoặc câu hỏi mở tò mò.");
+            sb.AppendLine("   - ❌ CẤM các câu like nhảm nhí: 'Biến nút thích thành...', 'hãy like và đăng ký kênh'. Kết thúc tự nhiên ở kết quả thực tế.");
             sb.AppendLine("   - Nội dung video có gì thì miêu tả đúng sự thật, dí dỏm, hóm hỉnh hoặc kịch tính đúng bối cảnh đó!");
             sb.AppendLine();
             sb.AppendLine("4. NHỊP ĐIỆU CÂU TƯƠNG PHẢN & PHÁT ÂM AI CHUẨN XÁC:");
@@ -1807,7 +1807,7 @@ YÊU CẦU CHO VIDEO NHÉT CHỮ TRIỆU VIEW:
 1. BẢO LƯU câu Hook mở đầu và câu chốt kết thúc của kịch bản trên.
 2. VIẾT THÊM các chi tiết lôi cuốn, giải mã cơ chế, hành động vi mô chân thực vào thân bài để giữ chân người xem đến giây cuối cùng. Không giới hạn ngôn từ biểu cảm, dùng từ ngữ tự nhiên, đắt giá, cuốn hút.
 3. ❌ TUYỆT ĐỐI KHÔNG DÙNG TỪ XÀM, TỪ DỊ, TỪ ÍT NGƯỜI DÙNG: Cấm từ ngữ ngớ ngẩn, dịch máy ngô nghê, hoặc từ cổ quái mà ngoài đời không ai nói!
-4. BẢO LƯU câu chốt hạ đắt giá và câu CTA tương tác sáng tạo (ví dụ: 'Biến nút thích của tôi thành [đồ vật]') hoặc câu hỏi mở tò mò ở cuối kịch bản. TUYỆT ĐỐI CẤM câu xin like ăn xin nhàm chán ('nhớ like và follow kênh').
+4. BẢO LƯU câu chốt hạ đắt giá hoặc câu hỏi mở tò mò ở cuối kịch bản. TUYỆT ĐỐI CẤM các câu like nhảm nhí như 'Biến nút thích thành...' hoặc xin like ăn xin nhàm chán ('nhớ like và follow kênh').
 5. ĐẢM BẢO TỔNG ĐỘ DÀI TOÀN BỘ BÀI THUYẾT MINH MỚI ĐẠT TỪ {minWords} ĐẾN {targetWords + 10} TỪ.
 6. CHỈ TRẢ VỀ DUY NHẤT TOÀN BỘ NỘI DUNG BÀI THUYẾT MINH MỚI (bằng tiếng Việt tự nhiên), không thêm markdown giải thích, không thêm tiêu đề.";
 

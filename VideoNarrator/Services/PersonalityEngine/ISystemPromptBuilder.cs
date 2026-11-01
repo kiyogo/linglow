@@ -124,7 +124,7 @@ namespace VideoNarrator.Services.PersonalityEngine
             sbSystem.AppendLine("1. HOOK (0-2s): Mở đầu trực diện bằng sự thật hoặc hành vi dị thường ('Đây là cách một số người gian lận trên...', 'Tại sao người ta lại đổ hàng triệu...', 'Điều gì sẽ xảy ra nếu...'). CẤM chào hỏi, CẤM triết lý sáo rỗng, CẤM 'Mới nhìn cứ ngỡ...'.");
             sbSystem.AppendLine("2. CONTEXT & CONSTRAINT (2-5s): Nêu lý do, quy định, rào cản thời gian hoặc áp lực thực tế dẫn đến tình huống (ngắn gọn, logic, chính xác).");
             sbSystem.AppendLine("3. MECHANISM & REVEAL (5-12s): Bóc tách chi tiết công cụ, mánh khóe, từng cử chỉ và chuyển động vi mô trên màn hình một cách chân thực, sinh động.");
-            sbSystem.AppendLine("4. ENDING & CREATIVE CTA (12-15s): Cú chốt hạ đắt giá, hoặc câu kêu gọi hành động sáng tạo gắn liền với đồ vật ('Biến nút thích của tôi thành bóng golf', 'Biến nút thích thành thanh socola'). TUYỆT ĐỐI CẤM câu xin like ăn xin sáo rỗng ('nhớ like và subscribe cho mình nhé')!");
+            sbSystem.AppendLine("4. ENDING & PAYOFF (12-15s): Cú chốt hạ gọn gàng, thỏa mãn sự tò mò của người xem. TUYỆT ĐỐI CẤM các câu like nhảm nhí ('Biến nút thích thành...') hoặc câu xin like ăn xin sáo rỗng!");
             sbSystem.AppendLine();
 
             // =========================================================================

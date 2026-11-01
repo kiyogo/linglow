@@ -241,54 +241,54 @@ namespace VideoNarrator.Services.PersonalityEngine
                     Id = "seed_benchmark_ticket_machine",
                     PersonaId = "the_gioi_co_gi_hay",
                     Topic = "Người bán vé tàu tự động / Phản xạ đỉnh cao / Cuộc sống đường phố / Ấn Độ",
-                    PositiveExample = "Không phải nhân viên nhà ga, nhưng người đàn ông này lại là nhân vật không thể thiếu tại đây. Hệ thống máy bán vé tự động có giao diện phức tạp khiến nhiều hành khách, nhất là người lớn tuổi, lúng túng không biết thao tác. Đứng túc trực ngay trước máy, anh thuộc lòng từng bước trên hệ thống để thao tác hộ. Khách chỉ cần đưa tiền mặt và báo điểm đến, chưa đầy vài giây sau chiếc vé đã được in ra chuẩn xác. Biến nút thích của tôi thành chiếc vé tàu.",
-                    NegativeExample = "Chào mừng các bạn đến với video ngày hôm nay. Ở Ấn Độ máy bán vé rất khó dùng nên một người đàn ông tốt bụng đứng đây giúp mọi người mua vé tàu. Hành động của anh ấy thật ấm áp và đáng khâm phục. Hãy cho anh ấy một like nhé.",
-                    Explanation = "Mẫu chuẩn triệu view theo benchmark: Hook tương phản trực diện (Không phải nhân viên nhưng không thể thiếu) -> Điểm nghẽn thực tế (giao diện máy phức tạp) -> Cơ chế & hành động vi mô (thuộc lòng từng bước, bấm hộ) -> Payoff định lượng (chưa đầy vài giây vé in ra chuẩn xác) -> CTA sáng tạo. Cấm tuyệt đối văn mẫu ca ngợi sáo rỗng, sến súa."
+                    PositiveExample = "Người đàn ông này không phải nhân viên nhà ga, nhưng ai muốn mua vé tàu nhanh đều phải tìm đến anh. Ở các ga tàu đông đúc tại Ấn Độ, hệ thống máy bán vé tự động có giao diện rất phức tạp khiến nhiều hành khách, nhất là người lớn tuổi, lúng túng không biết thao tác. Đứng túc trực ngay trước máy, anh thuộc lòng từng bước trên hệ thống để thao tác hộ. Khách chỉ cần đưa tiền mặt và báo ga đến, chưa đầy vài giây sau chiếc vé đã được in ra chuẩn xác.",
+                    NegativeExample = "Chào mừng các bạn đến với video ngày hôm nay. Ở Ấn Độ máy bán vé rất khó dùng nên một người đàn ông tốt bụng đứng đây giúp mọi người mua vé tàu. Hành động của anh ấy thật ấm áp và đáng khâm phục. Biến nút thích của tôi thành chiếc vé tàu nhé.",
+                    Explanation = "Mẫu chuẩn triệu view: Hook tương phản trực diện (Không phải nhân viên nhưng ai cũng cần) -> Điểm nghẽn thực tế (máy phức tạp, khách lúng túng) -> Thao tác cụ thể (thuộc lòng giao diện, bấm hộ) -> Payoff định lượng (chưa đầy vài giây vé in ra). Kết thúc gọn gàng, tuyệt đối không xin like hay dùng câu sáo rỗng."
                 },
                 new()
                 {
                     Id = "seed_benchmark_dolphins_surfing",
                     PersonaId = "the_gioi_co_gi_hay",
                     Topic = "Đàn cá heo lướt sóng mũi tàu / Động vật thông minh / Vật lý đại dương / Cá heo",
-                    PositiveExample = "Nhìn cách đàn cá heo này đua xe trước mũi tàu, bạn sẽ thấy chúng thực sự là những tay chơi vật lý đỉnh cao. Cả đàn lao đi với tốc độ xé gió, bơi sát sạt mạn thuyền nhưng tuyệt đối không bao giờ va chạm. Thực chất đây là một cú hack năng lượng cực khôn ngoan của tự nhiên. Con tàu khổng lồ khi rẽ nước sẽ tạo ra một luồng sóng đẩy vô hình phía trước. Cá heo chỉ cần áp sát thân mình vào luồng sóng đó để được đẩy đi miễn phí mà hầu như chẳng tốn một chút sức lực nào. Biến nút thích của tôi thành một cú nhảy của cá heo.",
-                    NegativeExample = "Nhìn kìa! Bạn có thấy hàng chục sinh vật đang chuyển động như một thực thể duy nhất không? Chúng ta đang chiêm ngưỡng những thiên tài của đại dương. Chúng không chỉ là những cỗ máy bơi lội mà còn là những sinh vật có tâm hồn, biết yêu thương và bảo vệ đồng loại. Đại dương xanh ngắt kia chính là thánh đường của chúng, một thế giới kỳ diệu đang cần chúng ta che chở và trân trọng mỗi ngày.",
-                    Explanation = "Mẫu chuẩn viral: Dẹp bỏ hoàn toàn văn mẫu triết lý đạo đức sến súa (thánh đường, tâm hồn, che chở), dùng ví von hành động đời thường sắc bén ('đua xe', 'cú hack năng lượng', 'đẩy đi miễn phí'), giải thích cơ chế vật lý đẩy của sóng tàu rõ ràng, súc tích."
+                    PositiveExample = "Nhiều người đi tàu biển chắc chắn từng thấy cảnh đàn cá heo cứ thích bơi sát ngay trước mũi thuyền. Nhìn thì tưởng chúng đang đùa giỡn hoặc muốn đua tốc độ, nhưng thực ra đây là cách để chúng tiết kiệm sức. Mũi tàu khổng lồ khi rẽ nước sẽ tạo ra một luồng sóng đẩy cực mạnh về phía trước. Cá heo chỉ việc áp sát thân mình vào luồng nước này để lao đi mà hầu như không cần quẫy đuôi, giống hệt như chúng ta đứng trên một chiếc thang cuốn vậy.",
+                    NegativeExample = "Nhìn kìa! Bạn có thấy hàng chục sinh vật đang chuyển động như một thực thể duy nhất không? Chúng ta đang chiêm ngưỡng những thiên tài của đại dương. Chúng là sinh vật có tâm hồn, biết yêu thương. Đại dương chính là thánh đường cần che chở. Biến nút thích của tôi thành cú nhảy cá heo.",
+                    Explanation = "Mẫu chuẩn viral: Dẹp bỏ hoàn toàn văn mẫu triết lý đạo đức sến súa (thánh đường, tâm hồn, che chở) và từ ngữ khoa trương lố lăng ('cú hack cực đỉnh', 'tay đua chuyên nghiệp'). Giải thích cơ chế vật lý đẩy của sóng tàu rõ ràng bằng hình ảnh so sánh đời thường (chiếc thang cuốn)."
                 },
                 new()
                 {
                     Id = "seed_benchmark_street_food",
                     PersonaId = "the_gioi_co_gi_hay",
                     Topic = "Xiên que sốt Thái / Ẩm thực đường phố / Món ngon độc lạ / Nấu ăn",
-                    PositiveExample = "Vừa nhúng ngập cây xiên que vào chảo dầu sôi xèo xèo, lớp vỏ ngoài lập tức phồng rộp giòn rụm. Nhưng bí quyết khiến thực khách xếp hàng dài cả con phố lại nằm ở gáo nước sốt Thái độc quyền này. Vị chua cay mặn ngọt nồng đượm được rưới đẫm khi xiên que còn đang nóng hổi, ngấm sâu vào từng thớ thịt. Cắn một miếng là nước sốt bùng nổ ngay trong khoang miệng. Bạn có dám thử hết khay xiên cay xé lưỡi này không?",
-                    NegativeExample = "Chào các bạn hôm nay chúng ta cùng ăn xiên que sốt Thái nhé. Món ăn này vô cùng thơm ngon và hấp dẫn, màu sắc bắt mắt khiến ai nhìn cũng mê. Hãy nhấn thích để ủng hộ quán nhé.",
-                    Explanation = "Tập trung vào miêu tả xúc giác và vị giác (sôi xèo xèo, phồng rộp, chua cay mặn ngọt bùng nổ), bóc tách điểm nhấn của món ăn, dứt khoát không chào hỏi sáo rỗng."
+                    PositiveExample = "Xe xiên que này ở chợ Hồ Thị Kỷ lúc nào cũng đông nghịt khách, nhiều khi phải đợi cả nửa tiếng mới tới lượt. Xiên que sau khi chiên vàng giòn sẽ được vớt ra để ráo, rồi rưới đẫm thứ nước sốt Thái chua ngọt sánh kẹo. Nước sốt cay nồng mùi ớt rim và sả phi, quyện vào lớp vỏ ngoài giòn rụm ăn cực kỳ cuốn. Ai ăn cay kém thì vừa ăn vừa hít hà, nhưng đã ăn một que là khó mà dừng lại được.",
+                    NegativeExample = "Chào các bạn hôm nay chúng ta cùng ăn xiên que sốt Thái nhé. Món ăn này vô cùng thơm ngon và hấp dẫn, bùng nổ khoang miệng. Hãy biến nút thích thành xiên que để ủng hộ quán nhé.",
+                    Explanation = "Tập trung vào miêu tả xúc giác và vị giác chân thực đời thường (chiên vàng giòn, sốt sánh kẹo, cay nồng ớt rim, vừa ăn vừa hít hà), bóc tách điểm nhấn của món ăn, dứt khoát không chào hỏi sáo rỗng hay xin like xàm xí."
                 },
                 new()
                 {
                     Id = "seed_benchmark_satisfying_restoration",
                     PersonaId = "Oddly Satisfying",
                     Topic = "Phục hồi đồ cổ / Sửa chữa cơ khí / Oddly Satisfying / Làm sạch",
-                    PositiveExample = "Cục sắt gỉ sét đen sì nhìn như rác phế liệu này sắp có một màn lột xác khó tin. Sau khi ngâm dung dịch tẩy rỉ và dùng máy chà nhám thổi bay từng mảng bám, từng chi tiết kim loại bóng loáng dần lộ diện. Từng bánh răng khớp lại với nhau khít khao không một khe hở. Nhìn chiếc bật lửa cổ hoạt động trơn tru sau nửa thế kỷ ngủ vùi thực sự khiến não bạn được chữa lành. Biến nút thích của tôi thành ngọn lửa.",
-                    NegativeExample = "Trong video này người thợ sẽ phục chế đồ cũ. Đây là một công việc rất tỉ mỉ và đẳng cấp đòi hỏi sự khéo léo tuyệt vời.",
-                    Explanation = "Sự tương phản thị giác cực đại (từ gỉ sét thành bóng loáng), miêu tả chuyển động cơ khí mãn nhãn, tạo cảm giác thỏa mãn thị giác (oddly satisfying)."
+                    PositiveExample = "Thoạt nhìn chỉ là một cục sắt gỉ sét đen sì tưởng như vứt đi, nhưng bên trong lại là một chiếc bật lửa cổ từ nửa thế kỷ trước. Người thợ ngâm từng chi tiết vào dung dịch tẩy rỉ, rồi dùng máy đánh bóng tỉ mỉ để thổi bay lớp oxy hóa bám chặt suốt hàng chục năm. Khi lắp ráp lại, từng bánh răng cơ khí khớp vào nhau trơn tru không một tiếng kêu, và ngọn lửa lại bùng lên như vừa xuất xưởng.",
+                    NegativeExample = "Trong video này người thợ sẽ phục chế đồ cũ. Đây là màn lột xác khó tin khiến não bạn được chữa lành. Biến nút thích của tôi thành ngọn lửa.",
+                    Explanation = "Sự tương phản thị giác rõ ràng (từ gỉ sét thành bóng loáng), miêu tả chuyển động cơ khí tỉ mỉ, kết thúc đẹp mắt, sạch bóng từ ngữ xàm xí."
                 },
                 new()
                 {
                     Id = "seed_the_gioi_co_gi_hay_golf_cheat",
                     PersonaId = "the_gioi_co_gi_hay",
                     Topic = "Gian lận trên sân golf / Mẹo độc lạ / Zack D. Films / Thế Giới Có Gì Hay",
-                    PositiveExample = "Đây là cách một số người gian lận trên sân golf. Sau khi đánh bóng thì bạn chỉ có khoảng 3 phút để tìm bóng. Nếu không tìm thấy, bóng sẽ chính thức được tính là bị mất. Vì vậy, một số người chơi sử dụng một thiết bị nhỏ được giấu ở chân để chứa thêm một quả bóng. Chỉ với một động tác đơn giản, họ bí mật thả quả bóng ra khiến mọi người tưởng rằng họ vừa tìm thấy quả bóng ban đầu. Biến nút thích của tôi thành bóng golf.",
-                    NegativeExample = "Chào mừng các bạn đến với video ngày hôm nay. Đánh golf là một bộ môn thể thao vô cùng đẳng cấp và chuyên nghiệp đòi hỏi sự tính toán tỉ mỉ đến từng milimét. Mới nhìn cứ ngỡ cảnh tượng bình thường nhưng nếu để ý kỹ bạn sẽ thấy điều kỳ diệu. Hãy nhớ bấm like và subscribe kênh của mình nhé!",
-                    Explanation = "Mẫu chuẩn triệu view của kênh 'Thế Giới Có Gì Hay': Hook mở đầu trực diện bằng sự thật gây tò mò ('Đây là cách...'), nêu ngắn gọn luật chơi thực tế (3 phút tìm bóng), chỉ rõ thiết bị/công cụ độc lạ trên màn hình (thiết bị giấu ở chân), kết thúc bằng hành động bất ngờ và CTA sáng tạo gắn với đồ vật ('Biến nút thích của tôi thành bóng golf'). Cấm tuyệt đối văn mẫu ca ngợi sáo rỗng và xin like ăn xin."
+                    PositiveExample = "Đây là cách một số người gian lận trên sân golf mà đối thủ rất khó phát hiện. Theo luật, người chơi chỉ có khoảng 3 phút để tìm bóng, nếu không tìm thấy sẽ bị tính là mất bóng và phạt gậy. Lợi dụng điều đó, họ giấu một thiết bị nhỏ chứa quả bóng phụ ở cổ chân. Giả vờ cúi xuống tìm kiếm trong bụi cỏ, họ chỉ cần khẽ gạt chốt để quả bóng rơi ra, khiến mọi người tin rằng họ vừa tìm thấy bóng thật.",
+                    NegativeExample = "Chào mừng các bạn đến với video ngày hôm nay. Đánh golf là một bộ môn thể thao vô cùng đẳng cấp và chuyên nghiệp đòi hỏi sự tính toán tỉ mỉ đến từng milimét. Mới nhìn cứ ngỡ cảnh tượng bình thường nhưng nếu để ý kỹ bạn sẽ thấy điều kỳ diệu. Biến nút thích của tôi thành bóng golf.",
+                    Explanation = "Hook mở đầu trực diện bằng sự thật gây tò mò ('Đây là cách...'), nêu ngắn gọn luật chơi thực tế (3 phút tìm bóng), chỉ rõ thiết bị/công cụ độc lạ trên màn hình (thiết bị giấu ở chân), kết thúc tròn trịa ở mánh khóe thực tế."
                 },
                 new()
                 {
                     Id = "seed_the_gioi_co_gi_hay_shade_balls",
                     PersonaId = "the_gioi_co_gi_hay",
                     Topic = "Khoa học kỳ thú / Cơ chế hoạt động / 96 triệu quả bóng đen / Thế Giới Có Gì Hay",
-                    PositiveExample = "Tại sao thành phố này lại đổ 96 triệu quả bóng nhựa màu đen xuống hồ chứa nước? Thoạt nhìn ai cũng tưởng đây là một sự lãng phí khủng khiếp. Nhưng thực tế, ánh nắng mặt trời khi chiếu vào nước chứa Bromide và Clo sẽ tạo ra chất gây ung thư nguy hiểm. Những quả bóng này đóng vai trò như một tấm khiên khổng lồ, ngăn chặn hoàn toàn tia cực tím và giảm thiểu tối đa sự bốc hơi nước. Biến nút thích của tôi thành màu đen của quả bóng.",
-                    NegativeExample = "Trong video này chúng ta sẽ cùng khám phá một hiện tượng vô cùng thú vị và độc đáo. Các công nhân đang đổ những quả bóng xuống hồ nước. Đây là một phát minh tuyệt vời và đỉnh cao của công nghệ hiện đại. Các bạn hãy theo dõi đến cuối nhé!",
-                    Explanation = "Hook đặt câu hỏi nghịch lý gây sốc ('Tại sao...'), giải thích bản chất hóa học/vật lý ngắn gọn, giải mã cơ chế hoạt động thực tế như tấm khiên khổng lồ, CTA tương tác thông minh."
+                    PositiveExample = "Tại sao thành phố này lại đổ tới 96 triệu quả bóng nhựa màu đen xuống hồ chứa nước? Thoạt nhìn ai cũng tưởng đây là một sự lãng phí kỳ lạ. Nhưng thực tế, ánh nắng mặt trời khi chiếu trực tiếp vào nước chứa hợp chất Clo sẽ sinh ra chất gây ung thư. Những quả bóng đen này đóng vai trò như một mái che khổng lồ, vừa chặn hoàn toàn tia cực tím, vừa giữ cho hàng triệu lít nước không bị bốc hơi dưới cái nắng sa mạc.",
+                    NegativeExample = "Trong video này chúng ta sẽ cùng khám phá một hiện tượng vô cùng thú vị và độc đáo. Các công nhân đang đổ những quả bóng xuống hồ nước. Đây là một phát minh tuyệt vời đỉnh cao công nghệ. Biến nút thích của tôi thành màu đen của quả bóng.",
+                    Explanation = "Hook đặt câu hỏi nghịch lý gây chú ý ('Tại sao...'), giải thích bản chất hóa học/vật lý ngắn gọn, giải mã cơ chế hoạt động thực tế như mái che khổng lồ."
                 },
                 new()
                 {

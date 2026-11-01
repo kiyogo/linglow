@@ -181,7 +181,7 @@ QUY TẮC NỘI DUNG & GIỮ CHÂN NGƯỜI XEM (BẮT BUỘC):
    - Hook trực diện (0-2s): Đập thẳng vào vấn đề hoặc hiện tượng bất thường ('Đây là cách...', 'Tại sao...'). TUYỆT ĐỐI CẤM mở đầu bằng 'Mới nhìn cứ ngỡ...', 'Trong video này...'.
    - Bối cảnh & Quy luật thực tế (2-5s): Đưa ra luật lệ, hoàn cảnh hoặc áp lực thực tế có số liệu cụ thể.
    - Bóc tách cơ chế & Hành vi vi mô: Miêu tả chi tiết công cụ, mánh khóe, từng cử chỉ chuyển động sống động.
-   - Kết thúc & CTA sáng tạo: Cú chốt bất ngờ hoặc CTA liên tưởng ('Biến nút thích của tôi thành [đồ vật]'). CẤM câu like ăn xin sáo rỗng.
+   - Kết thúc & Payoff: Cú chốt gọn gàng thỏa mãn sự tò mò. TUYỆT ĐỐI CẤM câu like ăn xin sáo rỗng hoặc các câu nhảm nhí như 'Biến nút thích thành...'.
 2. Tự do dùng từ: Thoải mái dùng từ ngữ phong phú, biểu cảm mạnh, không giới hạn khuôn mẫu; ngôn từ phải tự nhiên, đắt giá, hợp bối cảnh đời thực.
 3. TUYỆT ĐỐI KHÔNG dùng từ ngữ xàm, từ ngữ sáo rỗng ('đẳng cấp chuyên nghiệp', 'tính toán tỉ mỉ'), từ hiếm gặp ít người dùng hoặc câu cú dịch thô vụng về.
 4. Chia thành đúng {sceneCount} phân cảnh (Scenes).

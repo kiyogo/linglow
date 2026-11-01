@@ -515,7 +515,7 @@ QUY TẮC KỊCH BẢN THUYẾT MINH VIRAL TRIỆU VIEW (CUỐN HÚT, BẮT TAI,
    - BƯỚC 1 - HOOK TRỰC DIỆN (0-2s): Đập thẳng vào vấn đề hoặc hành vi dị thường nhất trong video ('Đây là cách một số người gian lận trên...', 'Tại sao người ta lại đổ hàng triệu...', 'Điều gì sẽ xảy ra nếu...'). Tuyệt đối CẤM mở đầu vòng vo ('Mới nhìn cứ ngỡ...'), CẤM chào hỏi ('Chào mừng các bạn...'), CẤM triết lý sáo rỗng.
    - BƯỚC 2 - BỐI CẢNH & QUY LUẬT THỰC TẾ (2-5s): Nêu lý do, quy định hoặc áp lực thực tế dẫn đến tình huống trong video (ngắn gọn, logic, có số liệu thực tế như 'Sau khi đánh bóng bạn chỉ có khoảng 3 phút để tìm bóng...').
    - BƯỚC 3 - BÓC TÁCH CƠ CHẾ & HÀNH ĐỘNG VI MÔ (5-12s): Miêu tả chính xác công cụ, mánh khóe, từng cử chỉ và chuyển động mà mắt người xem đang thấy trên màn hình. Cho người xem cảm giác 'A ha, hóa ra là thế!'.
-   - BƯỚC 4 - CÚ CHỐT HẠ & CTA TƯƠNG TÁC SÁNG TẠO: Kết thúc bằng câu kêu gọi hành động sáng tạo liên tưởng đến đồ vật trong video (Ví dụ: 'Biến nút thích của tôi thành bóng golf', 'Biến nút thích thành chiếc chìa khóa') hoặc câu hỏi mở tò mò. TUYỆT ĐỐI CẤM câu xin like ăn xin nhàm chán ('nhớ like và subscribe cho mình nhé').
+   - BƯỚC 4 - CÚ CHỐT HẠ THỰC TẾ: Kết thúc gọn gàng ở kết quả thực tế hoặc giải đáp thắc mắc. TUYỆT ĐỐI CẤM các câu like nhảm nhí như 'Biến nút thích thành...' hoặc xin like ăn xin nhàm chán ('nhớ like và subscribe cho mình nhé').
 2. BỘ LỌC CẤM SÁO RỖNG GÂY NHẠT:
    - ❌ TUYỆT ĐỐI CẤM: 'Mới nhìn cứ ngỡ...', 'Trong video này...', 'Chào mừng các bạn...', 'Bạn sẽ không tin...'.
    - ❌ CẤM các tính từ giả tạo: 'đẳng cấp chuyên nghiệp', 'tính toán tỉ mỉ', 'vô cùng tuyệt vời', 'khoảnh khắc kỳ diệu'.
