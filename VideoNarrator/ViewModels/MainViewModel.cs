@@ -2343,13 +2343,16 @@ namespace VideoNarrator.ViewModels
                 }
 
                 var validShorts = candidates
-                    .Where(c => c.Duration >= 20 && c.Duration <= 62 && !VideoDiscoveryService.IsBlacklistedTitle(c.Title))
+                    .Where(c => c != null && !string.IsNullOrWhiteSpace(c.Url) && c.Duration >= 15 && c.Duration <= 65 && !VideoDiscoveryService.IsBlacklistedTitle(c.Title))
                     .Take(maxVideos)
                     .ToList();
 
                 if (validShorts.Count == 0)
                 {
-                    validShorts = candidates.Take(maxVideos).ToList();
+                    validShorts = candidates
+                        .Where(c => c != null && !string.IsNullOrWhiteSpace(c.Url))
+                        .Take(maxVideos)
+                        .ToList();
                 }
 
                 if (validShorts.Count == 0)
@@ -2389,7 +2392,21 @@ namespace VideoNarrator.ViewModels
                 return results;
             }
 
-            int total = videos.Count;
+            if (_videoDownloadService == null)
+            {
+                SetError("Dịch vụ tải video chưa được khởi tạo.");
+                return results;
+            }
+
+            // Lọc các item hợp lệ
+            var cleanVideos = videos.Where(v => v != null && !string.IsNullOrWhiteSpace(v.Url)).ToList();
+            if (cleanVideos.Count == 0)
+            {
+                SetError("Không có video hợp lệ trong danh sách.");
+                return results;
+            }
+
+            int total = cleanVideos.Count;
             _fileService.Log($"[Batch Auto-Produce] Bắt đầu tự động dựng trọn gói hàng loạt {total} video...");
 
             ClearError();
@@ -2405,14 +2422,15 @@ namespace VideoNarrator.ViewModels
                 {
                     if (batchCts.IsCancellationRequested) break;
 
-                    var v = videos[i];
-                    int currentIdx = i + 1;
-                    _fileService.Log($"[Batch Auto-Produce] === Bắt đầu video {currentIdx}/{total}: {v.Title} ({v.Duration}s) ===");
-                    StatusMessage = $"🚀 [Tự Động Hàng Loạt ({currentIdx}/{total})] Đang xử lý: {v.Title}...";
-                    ProgressPercentage = ((double)i / total) * 100.0;
-
                     try
                     {
+                        var v = cleanVideos[i];
+                        int currentIdx = i + 1;
+                        string displayTitle = !string.IsNullOrWhiteSpace(v.Title) ? v.Title : $"Video {currentIdx}";
+                        _fileService.Log($"[Batch Auto-Produce] === Bắt đầu video {currentIdx}/{total}: {displayTitle} ({v.Duration}s) ===");
+                        StatusMessage = $"🚀 [Tự Động Hàng Loạt ({currentIdx}/{total})] Đang xử lý: {displayTitle}...";
+                        ProgressPercentage = ((double)i / total) * 100.0;
+
                         // Đảm bảo _cts luôn trỏ tới batchCts trong suốt vòng lặp
                         _cts = batchCts;
 
@@ -2437,10 +2455,10 @@ namespace VideoNarrator.ViewModels
 
                         // 2. Nạp video và cập nhật chủ đề
                         await LoadVideoFileAsync(dlResult.FilePath);
-                        CustomTopic = !string.IsNullOrWhiteSpace(dlResult.Title) ? dlResult.Title : v.Title;
+                        CustomTopic = !string.IsNullOrWhiteSpace(dlResult.Title) ? dlResult.Title : displayTitle;
 
                         // 3. Tự động viết kịch bản AI, giọng đọc, phụ đề
-                        StatusMessage = $"🚀 [{currentIdx}/{total}] AI đang phân tích bối cảnh & viết kịch bản ({v.Title})...";
+                        StatusMessage = $"🚀 [{currentIdx}/{total}] AI đang phân tích bối cảnh & viết kịch bản ({displayTitle})...";
                         await ExecuteAutoEditPipelineAsync();
 
                         // 4. Xuất video hoàn chỉnh 9:16
@@ -2463,7 +2481,7 @@ namespace VideoNarrator.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        _fileService.Log($"[Batch Auto-Produce] Lỗi xử lý video {currentIdx} ({v.Title}): {ex.Message}", "ERROR");
+                        _fileService.Log($"[Batch Auto-Produce] Lỗi xử lý video {i + 1}: {ex.Message}", "ERROR", ex);
                     }
                 }
 
@@ -2474,17 +2492,20 @@ namespace VideoNarrator.ViewModels
                     _fileService.Log($"[Batch Auto-Produce] Đã hoàn thành toàn bộ hàng loạt: {results.Count}/{total} video sẵn sàng đăng.");
 
                     // Tự động mở thư mục chứa toàn bộ video xuất ra
-                    string outDir = Path.GetDirectoryName(results[0]) ?? AppSettings.GetDefaultOutputDirectory();
-                    if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
-                    try
+                    if (!string.IsNullOrEmpty(results[0]))
                     {
-                        Process.Start(new ProcessStartInfo
+                        string outDir = Path.GetDirectoryName(results[0]) ?? AppSettings.GetDefaultOutputDirectory();
+                        if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+                        try
                         {
-                            FileName = outDir,
-                            UseShellExecute = true
-                        });
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = outDir,
+                                UseShellExecute = true
+                            });
+                        }
+                        catch { }
                     }
-                    catch { }
                 }
                 else
                 {
@@ -2631,8 +2652,11 @@ namespace VideoNarrator.ViewModels
                 if (SelectedDurationMode.Contains("Highlight") || SelectedDurationMode.Contains("Cắt ghép"))
                 {
                     // Cắt ghép highlight ăn khớp 100% từng câu thuyết minh với phân cảnh hành động
-                    plan.Scenes = EditingPlanService.AlignScenesToSpeech(plan, ttsResult, VideoInfo.DurationSeconds, scenes, outroPadding);
-                    targetShortDuration = Math.Max(plan.Scenes.Sum(s => Math.Max(0, s.End - s.Start)), speechAndOutro);
+                    var aligned = EditingPlanService.AlignScenesToSpeech(plan, ttsResult, VideoInfo.DurationSeconds, scenes, outroPadding);
+                    plan.Scenes = aligned ?? new List<VideoScene>();
+                    targetShortDuration = plan.Scenes.Count > 0 
+                        ? Math.Max(plan.Scenes.Sum(s => Math.Max(0, s.End - s.Start)), speechAndOutro)
+                        : speechAndOutro;
                     _fileService.Log($"Đồng bộ {plan.Scenes.Count} cảnh Highlight khớp từng câu giọng đọc ({actualAudioDuration:F1}s + {outroPadding:F1}s outro = {targetShortDuration:F1}s).");
                 }
                 else if (SelectedDurationMode.Contains("Toàn bộ") || SelectedDurationMode.Contains("Không cắt"))

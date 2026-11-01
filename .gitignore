@@ -13,6 +13,7 @@
 [Pp]ublish/
 [Pp]ublish_single/
 publish_out/
+publish_build/
 dist_package/
 single_file/
 Output_Installer/

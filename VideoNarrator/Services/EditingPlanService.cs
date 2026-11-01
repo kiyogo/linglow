@@ -1020,13 +1020,14 @@ namespace VideoNarrator.Services
             }
 
             // 3. Xác định mốc thời gian cảnh nguồn (source video anchor) khớp hành động cho từng câu
-            var candidateScenes = (plan.Scenes != null && plan.Scenes.Count > 1) 
-                ? plan.Scenes 
-                : ((detectedScenes != null && detectedScenes.Count > 1) ? detectedScenes : plan.Scenes);
+            var candidateScenes = (plan?.Scenes != null && plan.Scenes.Count > 1) 
+                ? plan.Scenes.Where(s => s != null).ToList() 
+                : ((detectedScenes != null && detectedScenes.Count > 1) ? detectedScenes.Where(s => s != null).ToList() : (plan?.Scenes ?? new List<VideoScene>()).Where(s => s != null).ToList());
 
             if (candidateScenes == null || candidateScenes.Count <= 1)
             {
-                candidateScenes = SelectHighlightScenes(sourceVideoDuration, Math.Min(42.0, sourceVideoDuration), detectedScenes, plan.Hook);
+                candidateScenes = SelectHighlightScenes(sourceVideoDuration, Math.Min(42.0, sourceVideoDuration), detectedScenes, plan?.Hook)
+                    .Where(s => s != null).ToList();
             }
 
             var sourceAnchors = MatchSentencesToSourceScenes(rawSentences, candidateScenes, sourceVideoDuration);
@@ -1093,10 +1094,11 @@ namespace VideoNarrator.Services
 
                 // Lấy focusX, focusY từ phân cảnh gần mốc thời gian này nhất
                 var matchedCandidate = candidateScenes?
+                    .Where(s => s != null)
                     .OrderBy(s => Math.Abs(s.Start - clipStart))
                     .FirstOrDefault();
-                double focusX = matchedCandidate != null && matchedCandidate.FocusX > 0 ? matchedCandidate.FocusX : plan.FocusX;
-                double focusY = matchedCandidate != null && matchedCandidate.FocusY > 0 ? matchedCandidate.FocusY : plan.FocusY;
+                double focusX = matchedCandidate != null && matchedCandidate.FocusX > 0 ? matchedCandidate.FocusX : (plan?.FocusX ?? 0.5);
+                double focusY = matchedCandidate != null && matchedCandidate.FocusY > 0 ? matchedCandidate.FocusY : (plan?.FocusY ?? 0.5);
 
                 result.Add(new VideoScene
                 {

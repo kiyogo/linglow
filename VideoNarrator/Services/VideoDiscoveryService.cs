@@ -37,11 +37,12 @@ namespace VideoNarrator.Services
             "Khoa học kỳ thú và thí nghiệm độc lạ",
             "Oddly satisfying soap cutting",
             "Mẹo vặt cuộc sống thông minh",
-            "Động vật đáng yêu và thông minh",
+            "Động vật hoang dã tự nhiên kỳ thú",
             "Chế tác cơ khí chính xác đỉnh cao",
             "Món ăn đường phố độc lạ thế giới",
-            "Bí ẩn và hiện tượng khó tin",
-            "Kỹ năng thủ công mỹ nghệ đỉnh chóp"
+            "Hiện tượng thiên nhiên kỳ thú",
+            "Kỹ năng thủ công mỹ nghệ đỉnh chóp",
+            "Ảo giác thị giác 3D độc lạ"
         };
 
         public VideoDiscoveryService(IFileService fileService)
@@ -199,13 +200,68 @@ namespace VideoNarrator.Services
                 },
                 new()
                 {
-                    Id = "iuIT5wc-7AQ",
-                    Title = "A 3D rug that fools the dogs - Ảo giác thị giác 3D độc lạ",
-                    Url = "https://www.youtube.com/shorts/iuIT5wc-7AQ",
-                    Duration = 38,
-                    Thumbnail = "https://i.ytimg.com/vi/iuIT5wc-7AQ/hqdefault.jpg",
-                    Uploader = "Visual Wonders",
-                    ViewCount = 8200000,
+                    Id = "RUmWVSGkDe0",
+                    Title = "Nghệ thuật cắt xà phòng Soap Cut ASMR cực kỳ thỏa mãn",
+                    Url = "https://www.youtube.com/shorts/RUmWVSGkDe0",
+                    Duration = 21,
+                    Thumbnail = "https://i.ytimg.com/vi/RUmWVSGkDe0/hqdefault.jpg",
+                    Uploader = "Satisfying ASMR",
+                    ViewCount = 9200000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "e4AZWrpJ4ww",
+                    Title = "Kỹ thuật tiện cơ khí chính xác lathe machining đỉnh cao",
+                    Url = "https://www.youtube.com/shorts/e4AZWrpJ4ww",
+                    Duration = 30,
+                    Thumbnail = "https://i.ytimg.com/vi/e4AZWrpJ4ww/hqdefault.jpg",
+                    Uploader = "Machining Tech",
+                    ViewCount = 6800000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "Oqm7YrV9Qcc",
+                    Title = "Fun With Physics - Khoa học kỳ thú chuyển động",
+                    Url = "https://www.youtube.com/shorts/Oqm7YrV9Qcc",
+                    Duration = 39,
+                    Thumbnail = "https://i.ytimg.com/vi/Oqm7YrV9Qcc/hqdefault.jpg",
+                    Uploader = "Physics Master",
+                    ViewCount = 4500000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "IgRtbJybJms",
+                    Title = "Mẹo vặt chế tạo và công cụ thông minh cực đỉnh",
+                    Url = "https://www.youtube.com/shorts/IgRtbJybJms",
+                    Duration = 30,
+                    Thumbnail = "https://i.ytimg.com/vi/IgRtbJybJms/hqdefault.jpg",
+                    Uploader = "Genius Hacks",
+                    ViewCount = 7100000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "F4eJwJvZRYg",
+                    Title = "Kỹ năng gọt hoa quả dưa hấu khổng lồ siêu mãn nhãn",
+                    Url = "https://www.youtube.com/shorts/F4eJwJvZRYg",
+                    Duration = 62,
+                    Thumbnail = "https://i.ytimg.com/vi/F4eJwJvZRYg/hqdefault.jpg",
+                    Uploader = "Street Food Art",
+                    ViewCount = 8300000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "qwc4filNNBI",
+                    Title = "Cắt cát động lực học Kinetic Sand ASMR thư giãn",
+                    Url = "https://www.youtube.com/shorts/qwc4filNNBI",
+                    Duration = 59,
+                    Thumbnail = "https://i.ytimg.com/vi/qwc4filNNBI/hqdefault.jpg",
+                    Uploader = "Sand Master",
+                    ViewCount = 11000000,
                     Platform = "YouTube"
                 },
                 new()
@@ -243,105 +299,6 @@ namespace VideoNarrator.Services
                 },
                 new()
                 {
-                    Id = "Oqm7YrV9Qcc",
-                    Title = "Fun With Physics - Khoa học kỳ thú chuyển động",
-                    Url = "https://www.youtube.com/shorts/Oqm7YrV9Qcc",
-                    Duration = 39,
-                    Thumbnail = "https://i.ytimg.com/vi/Oqm7YrV9Qcc/hqdefault.jpg",
-                    Uploader = "Physics Master",
-                    ViewCount = 1850000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "RUmWVSGkDe0",
-                    Title = "Nghệ thuật cắt xà phòng Soap Cut ASMR cực kỳ thỏa mãn",
-                    Url = "https://www.youtube.com/shorts/RUmWVSGkDe0",
-                    Duration = 21,
-                    Thumbnail = "https://i.ytimg.com/vi/RUmWVSGkDe0/hqdefault.jpg",
-                    Uploader = "Satisfying ASMR",
-                    ViewCount = 9200000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "qwc4filNNBI",
-                    Title = "Cắt cát động lực học Kinetic Sand ASMR thư giãn",
-                    Url = "https://www.youtube.com/shorts/qwc4filNNBI",
-                    Duration = 59,
-                    Thumbnail = "https://i.ytimg.com/vi/qwc4filNNBI/hqdefault.jpg",
-                    Uploader = "Sand Master",
-                    ViewCount = 5900000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "woze7VTcawI",
-                    Title = "Cún cưng phản ứng đáng yêu khi nghe gọi qua chuông cửa",
-                    Url = "https://www.youtube.com/shorts/woze7VTcawI",
-                    Duration = 35,
-                    Thumbnail = "https://i.ytimg.com/vi/woze7VTcawI/hqdefault.jpg",
-                    Uploader = "RingTV",
-                    ViewCount = 4200000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "__VcPjEzeOI",
-                    Title = "Chú chó Husky thông minh xử lý tình huống trước camera",
-                    Url = "https://www.youtube.com/shorts/__VcPjEzeOI",
-                    Duration = 46,
-                    Thumbnail = "https://i.ytimg.com/vi/__VcPjEzeOI/hqdefault.jpg",
-                    Uploader = "Smart Pets",
-                    ViewCount = 3850000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "HVGOCJ8IhZM",
-                    Title = "Trò đùa thông minh bất ngờ của cún cưng",
-                    Url = "https://www.youtube.com/shorts/HVGOCJ8IhZM",
-                    Duration = 20,
-                    Thumbnail = "https://i.ytimg.com/vi/HVGOCJ8IhZM/hqdefault.jpg",
-                    Uploader = "Clever Animals",
-                    ViewCount = 2700000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "SqhQGMfw3Vg",
-                    Title = "Chú chó thông minh chọn cốc có nhiều thức ăn hơn",
-                    Url = "https://www.youtube.com/shorts/SqhQGMfw3Vg",
-                    Duration = 20,
-                    Thumbnail = "https://i.ytimg.com/vi/SqhQGMfw3Vg/hqdefault.jpg",
-                    Uploader = "Smart Dog Tricks",
-                    ViewCount = 4900000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "IgRtbJybJms",
-                    Title = "Mẹo vặt chế tạo và công cụ thông minh cực đỉnh",
-                    Url = "https://www.youtube.com/shorts/IgRtbJybJms",
-                    Duration = 30,
-                    Thumbnail = "https://i.ytimg.com/vi/IgRtbJybJms/hqdefault.jpg",
-                    Uploader = "Genius Hacks",
-                    ViewCount = 3400000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "F4eJwJvZRYg",
-                    Title = "Kỹ năng gọt hoa quả dưa hấu khổng lồ siêu mãn nhãn",
-                    Url = "https://www.youtube.com/shorts/F4eJwJvZRYg",
-                    Duration = 62,
-                    Thumbnail = "https://i.ytimg.com/vi/F4eJwJvZRYg/hqdefault.jpg",
-                    Uploader = "Street Food Art",
-                    ViewCount = 12500000,
-                    Platform = "YouTube"
-                },
-                new()
-                {
                     Id = "U3a1-omUuWY",
                     Title = "Phục chế thanh kim loại rỉ sét sáng bóng như mới",
                     Url = "https://www.youtube.com/shorts/U3a1-omUuWY",
@@ -350,35 +307,24 @@ namespace VideoNarrator.Services
                     Uploader = "Restoration ASMR",
                     ViewCount = 7500000,
                     Platform = "YouTube"
-                },
-                new()
-                {
-                    Id = "e4AZWrpJ4ww",
-                    Title = "Kỹ thuật tiện cơ khí chính xác lathe machining đỉnh cao",
-                    Url = "https://www.youtube.com/shorts/e4AZWrpJ4ww",
-                    Duration = 30,
-                    Thumbnail = "https://i.ytimg.com/vi/e4AZWrpJ4ww/hqdefault.jpg",
-                    Uploader = "Machining Tech",
-                    ViewCount = 3100000,
-                    Platform = "YouTube"
                 }
             };
 
             string lower = (query ?? string.Empty).ToLowerInvariant();
             var matched = allCurated.Where(v =>
             {
-                if (lower.Contains("asmr") || lower.Contains("thoả mãn") || lower.Contains("thoa man"))
-                    return v.Id is "RUmWVSGkDe0" or "qwc4filNNBI" or "iuIT5wc-7AQ";
-                if (lower.Contains("khoa học") || lower.Contains("khoa hoc") || lower.Contains("thí nghiệm") || lower.Contains("thi nghiem"))
+                if (lower.Contains("asmr") || lower.Contains("thoả mãn") || lower.Contains("thoa man") || lower.Contains("xà phòng") || lower.Contains("cát"))
+                    return v.Id is "RUmWVSGkDe0" or "qwc4filNNBI";
+                if (lower.Contains("khoa học") || lower.Contains("khoa hoc") || lower.Contains("thí nghiệm") || lower.Contains("thi nghiem") || lower.Contains("vật lý"))
                     return v.Id is "7x2oL3Kzoog" or "Oqm7YrV9Qcc" or "C9XH7R0It8w";
-                if (lower.Contains("động vật") || lower.Contains("dong vat") || lower.Contains("thú cưng") || lower.Contains("thu cung") || lower.Contains("chó") || lower.Contains("cho"))
-                    return v.Id is "woze7VTcawI" or "__VcPjEzeOI" or "HVGOCJ8IhZM" or "SqhQGMfw3Vg";
-                if (lower.Contains("mẹo") || lower.Contains("meo"))
+                if (lower.Contains("cơ khí") || lower.Contains("co khi") || lower.Contains("tiện") || lower.Contains("kim loại") || lower.Contains("chế tác"))
+                    return v.Id is "e4AZWrpJ4ww" or "U3a1-omUuWY";
+                if (lower.Contains("ảo giác") || lower.Contains("ao giac") || lower.Contains("illusion"))
+                    return v.Id is "4sC5FgiGvjY" or "C9XH7R0It8w";
+                if (lower.Contains("mẹo") || lower.Contains("meo") || lower.Contains("thông minh"))
                     return v.Id is "IgRtbJybJms" or "U3a1-omUuWY";
-                if (lower.Contains("món") || lower.Contains("mon") || lower.Contains("ăn") || lower.Contains("ẩm thực"))
+                if (lower.Contains("món") || lower.Contains("mon") || lower.Contains("ăn") || lower.Contains("ẩm thực") || lower.Contains("hoa quả"))
                     return v.Id is "F4eJwJvZRYg";
-                if (lower.Contains("cơ khí") || lower.Contains("chế tác") || lower.Contains("phục chế"))
-                    return v.Id is "U3a1-omUuWY" or "e4AZWrpJ4ww";
                 return true;
             }).ToList();
 

@@ -26,36 +26,37 @@ BLACKLIST_KEYWORDS = [
 
 # Ánh xạ chủ đề tiếng Việt sang từ khóa tìm kiếm video gốc chất lượng cao (HD, màu sắc rực rỡ, lôi cuốn triệu view)
 TOPIC_ENHANCEMENT_MAP = {
-    'động vật': '#shorts funny cute puppy dog golden retriever clever',
-    'động vật đáng yêu': '#shorts cute puppy golden retriever adorable playful',
-    'động vật thông minh': '#shorts clever dog smart animal trick',
-    'thú cưng': '#shorts funny dog cat cute playful tricks',
-    'chó': '#shorts smart clever dog golden retriever funny',
-    'mèo': '#shorts funny cute kitten cat playful',
-    'sự thật': '#shorts mind blowing nature moments optical illusion satisfying',
-    'sự thật thú vị': '#shorts mind blowing nature moments optical illusion satisfying',
-    'sự thật thú vị về thế giới': '#shorts mind blowing nature moments optical illusion satisfying',
-    'sự thật lạ': '#shorts mind blowing nature moments optical illusion satisfying',
-    'khoa học': '#shorts satisfying science experiments physics demonstration',
-    'khoa học kỳ thú': '#shorts satisfying science experiments physics demonstration',
-    'thí nghiệm': '#shorts satisfying science experiments physics demonstration',
-    'asmr': '#shorts oddly satisfying soap cutting kinetic sand slime',
-    'asmr thoả mãn': '#shorts oddly satisfying soap cutting kinetic sand slime',
-    'asmr thoải mái': '#shorts oddly satisfying soap cutting kinetic sand slime',
-    'món ngon': '#shorts street food cooking master skills satisfying',
-    'ẩm thực': '#shorts delicious street food cooking master skills',
-    'mẹo hay': '#shorts genius woodworking tricks clever handy tools diy',
-    'mẹo vặt': '#shorts clever handy life hacks woodworking tools diy',
-    'chế tác': '#shorts satisfying rusty tool restoration craft lathe',
-    'cơ khí': '#shorts precision metal lathe machining restoration',
-    'thủ công': '#shorts satisfying handmade craft woodworking restoration',
-    'bí ẩn': '#shorts mind blowing natural wonders incredible phenomena',
-    'kỳ thú': '#shorts fascinating real world phenomena satisfying',
-    'thể thao': '#shorts incredible human athletic skill parkour',
-    'ảo thuật': '#shorts magic trick illusion close up street'
+    'động vật': '#shorts wild animals nature predator camouflage -dog -cat -puppy -kitten',
+    'động vật hoang dã': '#shorts wild animals nature predator camouflage -dog -cat',
+    'động vật thông minh': '#shorts clever wild animals nature -dog -cat',
+    'thú cưng': '#shorts clever wild animals funny moments -dog -cat',
+    'chó': '#shorts amazing wild animals nature documentary -dog -cat',
+    'mèo': '#shorts amazing wild animals big cats cheetah lion leopard -kitten -pet',
+    'sự thật': '#shorts mind blowing nature moments optical illusion satisfying -dog -cat',
+    'sự thật thú vị': '#shorts mind blowing nature moments optical illusion satisfying -dog -cat',
+    'sự thật thú vị về thế giới': '#shorts mind blowing nature moments optical illusion satisfying -dog -cat',
+    'sự thật lạ': '#shorts mind blowing nature moments optical illusion satisfying -dog -cat',
+    'khoa học': '#shorts satisfying science experiments physics demonstration -dog -cat',
+    'khoa học kỳ thú': '#shorts satisfying science experiments physics demonstration -dog -cat',
+    'thí nghiệm': '#shorts satisfying science experiments physics demonstration -dog -cat',
+    'asmr': '#shorts oddly satisfying soap cutting kinetic sand slime -dog -cat',
+    'asmr thoả mãn': '#shorts oddly satisfying soap cutting kinetic sand slime -dog -cat',
+    'asmr thoải mái': '#shorts oddly satisfying soap cutting kinetic sand slime -dog -cat',
+    'món ngon': '#shorts street food cooking master skills satisfying -dog -cat',
+    'ẩm thực': '#shorts delicious street food cooking master skills -dog -cat',
+    'mẹo hay': '#shorts genius woodworking tricks clever handy tools diy -dog -cat',
+    'mẹo vặt': '#shorts clever handy life hacks woodworking tools diy -dog -cat',
+    'chế tác': '#shorts satisfying rusty tool restoration craft lathe -dog -cat',
+    'cơ khí': '#shorts precision metal lathe machining restoration -dog -cat',
+    'thủ công': '#shorts satisfying handmade craft woodworking restoration -dog -cat',
+    'bí ẩn': '#shorts mind blowing natural wonders incredible phenomena -dog -cat',
+    'kỳ thú': '#shorts fascinating real world phenomena satisfying -dog -cat',
+    'thể thao': '#shorts incredible human athletic skill parkour -dog -cat',
+    'ảo thuật': '#shorts magic trick illusion close up street -dog -cat',
+    'ảo giác': '#shorts optical illusion 3d visual mind bending -dog -cat'
 }
 
-# Kho video triệu view chất lượng cao dự phòng (đảm bảo luôn đủ 6-8 video đẹp)
+# Kho video triệu view chất lượng cao dự phòng (đảm bảo luôn đủ 8-11 video đẹp, đa dạng, KHÔNG chó mèo)
 CURATED_VIRAL_POOL = [
     {
         "id": "pm2NhM30TtA",
@@ -68,38 +69,68 @@ CURATED_VIRAL_POOL = [
         "platform": "YouTube"
     },
     {
-        "id": "iuIT5wc-7AQ",
-        "title": "A 3D rug that fools the dogs - Amazing Optical Illusion",
-        "url": "https://www.youtube.com/shorts/iuIT5wc-7AQ",
-        "duration": 38,
-        "thumbnail": "https://i.ytimg.com/vi/iuIT5wc-7AQ/hqdefault.jpg",
-        "uploader": "Visual Wonders",
-        "viewCount": 8200000,
+        "id": "RUmWVSGkDe0",
+        "title": "Nghệ thuật cắt xà phòng Soap Cut ASMR cực kỳ thỏa mãn",
+        "url": "https://www.youtube.com/shorts/RUmWVSGkDe0",
+        "duration": 21,
+        "thumbnail": "https://i.ytimg.com/vi/RUmWVSGkDe0/hqdefault.jpg",
+        "uploader": "ASMR Master",
+        "viewCount": 9200000,
         "platform": "YouTube"
     },
     {
-        "id": "woze7VTcawI",
-        "title": "Cún cưng phản ứng đáng yêu khi nghe gọi qua chuông cửa",
-        "url": "https://www.youtube.com/shorts/woze7VTcawI",
-        "duration": 35,
-        "thumbnail": "https://i.ytimg.com/vi/woze7VTcawI/hqdefault.jpg",
-        "uploader": "RingTV",
-        "viewCount": 4200000,
+        "id": "e4AZWrpJ4ww",
+        "title": "Kỹ thuật tiện cơ khí chính xác lathe machining đỉnh cao",
+        "url": "https://www.youtube.com/shorts/e4AZWrpJ4ww",
+        "duration": 30,
+        "thumbnail": "https://i.ytimg.com/vi/e4AZWrpJ4ww/hqdefault.jpg",
+        "uploader": "Machining Tech",
+        "viewCount": 6800000,
         "platform": "YouTube"
     },
     {
-        "id": "__VcPjEzeOI",
-        "title": "Chú chó Husky thông minh xử lý tình huống cực đỉnh",
-        "url": "https://www.youtube.com/shorts/__VcPjEzeOI",
-        "duration": 46,
-        "thumbnail": "https://i.ytimg.com/vi/__VcPjEzeOI/hqdefault.jpg",
-        "uploader": "Smart Pets",
-        "viewCount": 3850000,
+        "id": "Oqm7YrV9Qcc",
+        "title": "Fun With Physics - Khoa học kỳ thú chuyển động",
+        "url": "https://www.youtube.com/shorts/Oqm7YrV9Qcc",
+        "duration": 39,
+        "thumbnail": "https://i.ytimg.com/vi/Oqm7YrV9Qcc/hqdefault.jpg",
+        "uploader": "Science Lab",
+        "viewCount": 4500000,
+        "platform": "YouTube"
+    },
+    {
+        "id": "IgRtbJybJms",
+        "title": "Mẹo vặt chế tạo và công cụ thông minh cực đỉnh",
+        "url": "https://www.youtube.com/shorts/IgRtbJybJms",
+        "duration": 30,
+        "thumbnail": "https://i.ytimg.com/vi/IgRtbJybJms/hqdefault.jpg",
+        "uploader": "Clever Hacks",
+        "viewCount": 7100000,
+        "platform": "YouTube"
+    },
+    {
+        "id": "F4eJwJvZRYg",
+        "title": "Kỹ năng gọt hoa quả khổng lồ siêu mãn nhãn",
+        "url": "https://www.youtube.com/shorts/F4eJwJvZRYg",
+        "duration": 62,
+        "thumbnail": "https://i.ytimg.com/vi/F4eJwJvZRYg/hqdefault.jpg",
+        "uploader": "Food Skills",
+        "viewCount": 8300000,
+        "platform": "YouTube"
+    },
+    {
+        "id": "qwc4filNNBI",
+        "title": "Cắt cát động lực học Kinetic Sand ASMR thư giãn",
+        "url": "https://www.youtube.com/shorts/qwc4filNNBI",
+        "duration": 59,
+        "thumbnail": "https://i.ytimg.com/vi/qwc4filNNBI/hqdefault.jpg",
+        "uploader": "Sand ASMR",
+        "viewCount": 11000000,
         "platform": "YouTube"
     },
     {
         "id": "4sC5FgiGvjY",
-        "title": "Spiral Illusion Hypnotic Visual - Ảo giác thị giác kỳ thú",
+        "title": "Spiral Illusion Hypnotic Visual - Ảo giác thị giác xoắn ốc kỳ thú",
         "url": "https://www.youtube.com/shorts/4sC5FgiGvjY",
         "duration": 50,
         "thumbnail": "https://i.ytimg.com/vi/4sC5FgiGvjY/hqdefault.jpg",
@@ -119,7 +150,7 @@ CURATED_VIRAL_POOL = [
     },
     {
         "id": "7x2oL3Kzoog",
-        "title": "Thí nghiệm vật lý độc lạ và mãn nhãn",
+        "title": "Thí nghiệm vật lý độc lạ và cực kỳ mãn nhãn",
         "url": "https://www.youtube.com/shorts/7x2oL3Kzoog",
         "duration": 46,
         "thumbnail": "https://i.ytimg.com/vi/7x2oL3Kzoog/hqdefault.jpg",
@@ -139,18 +170,28 @@ CURATED_VIRAL_POOL = [
     }
 ]
 
+DEFAULT_QUERIES = [
+    'satisfying science experiments physics demonstration #shorts -dog -cat',
+    'optical illusion mind blowing visual #shorts -dog -cat',
+    'precision metal lathe machining restoration craft #shorts -dog -cat',
+    'oddly satisfying soap cutting kinetic sand slime #shorts -dog -cat',
+    'genius woodworking tricks clever handy tools diy #shorts -dog -cat',
+    'street food cooking master skills satisfying #shorts -dog -cat'
+]
+
 def enhance_search_query(raw_query):
     clean = (raw_query or "").strip()
     if not clean:
-        return "oddly satisfying raw clip #shorts -compilation -top"
+        import random
+        return random.choice(DEFAULT_QUERIES)
 
     clean_lower = clean.lower()
     for key, enhanced in TOPIC_ENHANCEMENT_MAP.items():
         if key in clean_lower:
             return enhanced
 
-    # Nếu người dùng nhập từ khóa riêng, thêm tiền tố #shorts và loại trừ compilation/review
-    return f"{clean} #shorts -compilation -reaction -review -top"
+    # Nếu người dùng nhập từ khóa riêng, thêm tiền tố #shorts và loại trừ compilation/review/pet
+    return f"{clean} #shorts -compilation -reaction -review -top -dog -cat"
 
 def is_compilation_or_commentary(title, uploader):
     text = f"{title or ''} {uploader or ''}".lower()
