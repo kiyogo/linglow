@@ -165,7 +165,7 @@ namespace VideoNarrator.Services.PersonalityEngine
   ""overallPacing"": ""medium""
 }");
 
-            string? responseJson = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), fileUri, mimeType, isCustomApi, apiUrl, probeResult?.KeyframeBase64List, cancellationToken);
+            string? responseJson = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), fileUri, mimeType, isCustomApi, apiUrl, probeResult?.KeyframeBase64List, cancellationToken, forceJson: true);
             VideoContentAnalysis? analysis = null;
 
             if (!string.IsNullOrWhiteSpace(responseJson))
@@ -286,7 +286,12 @@ namespace VideoNarrator.Services.PersonalityEngine
                 sbPrompt.AppendLine();
             }
 
-            sbPrompt.AppendLine("CHỈ XUẤT RA DUY NHẤT LỜI THOẠI THUYẾT MINH HOÀN CHỈNH BẰNG TIẾNG VIỆT, KHÔNG THÊM LỜI DẪN, KHÔNG THÊM NGOẶC VUÔNG GIẢI THÍCH.");
+            sbPrompt.AppendLine("=== NGUYÊN TẮC ĐẦU RA BẮT BUỘC (CRITICAL) ===");
+            sbPrompt.AppendLine("- CHỈ XUẤT RA DUY NHẤT LỜI THOẠI THUYẾT MINH TIẾNG VIỆT ĐỂ ĐỌC THÀNH TIẾNG. MỌI TỪ BẠN XUẤT RA ĐỀU SẼ ĐƯỢC ĐỌC LÊN VIDEO.");
+            sbPrompt.AppendLine("- TUYỆT ĐỐI KHÔNG CHÀO HỎI (Cấm: 'Chào bạn', 'Xin chào', 'Chào mừng').");
+            sbPrompt.AppendLine("- TUYỆT ĐỐI KHÔNG XƯNG DANH HAY GIỚI THIỆU VAI TRÒ (Cấm: 'Với tư cách là...', 'Tôi là...').");
+            sbPrompt.AppendLine("- TUYỆT ĐỐI KHÔNG THÊM TIÊU ĐỀ ('Kịch bản hoàn chỉnh:', 'Lời thoại:', 'Kịch bản:').");
+            sbPrompt.AppendLine("- BẮT ĐẦU NGAY LẬP TỨC BẰNG CÂU HOOK MỞ ĐẦU.");
 
             string? draft = await CallGeminiAsync(apiKey, model, sbPrompt.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken);
             if (string.IsNullOrWhiteSpace(draft))
@@ -351,7 +356,7 @@ namespace VideoNarrator.Services.PersonalityEngine
   ""revisionInstructions"": ""chỉ thị chỉnh sửa nếu cần...""
 }");
 
-            string? evalJson = await CallGeminiAsync(apiKey, model, sbEval.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken);
+            string? evalJson = await CallGeminiAsync(apiKey, model, sbEval.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken, forceJson: true);
             ScriptQualityEvaluation? evaluation = null;
 
             if (!string.IsNullOrWhiteSpace(evalJson))
@@ -384,8 +389,8 @@ namespace VideoNarrator.Services.PersonalityEngine
                 _fileService.Log($"Thực hiện Targeted Revision cho {evaluation.WeakSentences.Count} câu yếu...");
 
                 var sbRevise = new StringBuilder();
-                sbRevise.AppendLine("BẠN LÀ CHUYÊN GIA SỬA LỖI KỊCH BẢN CÓ MỤC TIÊU (TARGETED REVISION EDITOR).");
-                sbRevise.AppendLine("Dưới đây là kịch bản gốc và danh sách các câu cần sửa:");
+                sbRevise.AppendLine("BẠN LÀ BỘ CHỈNH SỬA KỊCH BẢN TỰ ĐỘNG (SCRIPT REVISION ENGINE).");
+                sbRevise.AppendLine("Dưới đây là kịch bản gốc và danh sách các câu cần thay thế:");
                 sbRevise.AppendLine($"KỊCH BẢN GỐC:\n\"{draftScript}\"");
                 sbRevise.AppendLine();
                 sbRevise.AppendLine("DANH SÁCH CÂU LỖI CẦN SỬA:");
@@ -393,12 +398,20 @@ namespace VideoNarrator.Services.PersonalityEngine
                 {
                     sbRevise.AppendLine($"- Câu lỗi: \"{ws.OriginalSentence}\"");
                     sbRevise.AppendLine($"  + Lý do: {ws.Reason}");
-                    sbRevise.AppendLine($"  + Hướng sửa: {ws.SuggestedFix}");
+                    sbRevise.AppendLine($"  + Gợi ý sửa: {ws.SuggestedFix}");
                 }
                 sbRevise.AppendLine();
-                sbRevise.AppendLine("YÊU CẦU: CHỈ VIẾT LẠI ĐÚNG CÁC CÂU LỖI, GIỮ NGUYÊN CÁC CÂU ĐÃ ĐẠT CHUẨN VÀ GIỮ TRỌN VẸN CÁ TÍNH PHONG CÁCH. Xuất ra toàn bộ kịch bản hoàn chỉnh sau khi thay thế.");
+                sbRevise.AppendLine("=== QUY TẮC ĐẦU RA BẮT BUỘC (CRITICAL) ===");
+                sbRevise.AppendLine("1. Thay thế chính xác các câu lỗi bằng câu mới hay hơn, giữ nguyên các câu đạt chuẩn.");
+                sbRevise.AppendLine("2. TUYỆT ĐỐI KHÔNG CHÀO HỎI (Cấm: 'Chào bạn', 'Xin chào', 'Chào mừng').");
+                sbRevise.AppendLine("3. TUYỆT ĐỐI KHÔNG XƯNG DANH HAY NÓI LỜI MỞ ĐẦU (Cấm: 'với tư cách là...', 'tôi đã thay thế...', 'dưới đây là...').");
+                sbRevise.AppendLine("4. TUYỆT ĐỐI KHÔNG CÓ TIÊU ĐỀ ('KỊCH BẢN HOÀN CHỈNH:', 'Kịch bản:').");
+                sbRevise.AppendLine("5. Xuất ra duy nhất đối tượng JSON:");
+                sbRevise.AppendLine("{");
+                sbRevise.AppendLine("  \"revisedScript\": \"Toàn bộ kịch bản hoàn chỉnh sau khi sửa, chỉ chứa lời đọc thành tiếng, bắt đầu ngay lập tức bằng câu Hook\"");
+                sbRevise.AppendLine("}");
 
-                string? revised = await CallGeminiAsync(apiKey, model, sbRevise.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken);
+                string? revised = await CallGeminiAsync(apiKey, model, sbRevise.ToString(), null, null, isCustomApi, apiUrl, null, cancellationToken, forceJson: true);
                 if (!string.IsNullOrWhiteSpace(revised))
                 {
                     draftScript = CleanNarrationScript(revised);
@@ -447,7 +460,8 @@ namespace VideoNarrator.Services.PersonalityEngine
             bool isCustomApi,
             string? apiUrl,
             List<string>? keyframeBase64List,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool forceJson = false)
         {
             if (string.IsNullOrWhiteSpace(apiKey) && !isCustomApi)
             {
@@ -532,16 +546,17 @@ namespace VideoNarrator.Services.PersonalityEngine
 
                     partsList.Add(new { text = prompt });
 
+                    object genConfig = forceJson
+                        ? new { temperature = 0.72, response_mime_type = "application/json" }
+                        : new { temperature = 0.72 };
+
                     requestPayload = new
                     {
                         contents = new[]
                         {
                             new { parts = partsList.ToArray() }
                         },
-                        generationConfig = new
-                        {
-                            temperature = 0.72
-                        }
+                        generationConfig = genConfig
                     };
                 }
 
@@ -651,15 +666,98 @@ namespace VideoNarrator.Services.PersonalityEngine
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
             string s = text.Trim();
-            // Xóa code block markdown ```json hoặc ```
+
+            // 1. Kiểm tra nếu phản hồi trả về đối tượng JSON hoặc chứa khối JSON
+            int firstBrace = s.IndexOf('{');
+            int lastBrace = s.LastIndexOf('}');
+            if (firstBrace >= 0 && lastBrace > firstBrace)
+            {
+                try
+                {
+                    string jsonCandidate = s.Substring(firstBrace, lastBrace - firstBrace + 1);
+                    using var doc = JsonDocument.Parse(jsonCandidate);
+                    var root = doc.RootElement;
+                    string[] candidateKeys = { "revisedScript", "finalScript", "script", "narration", "text", "content" };
+                    foreach (var key in candidateKeys)
+                    {
+                        if (root.TryGetProperty(key, out var prop) && prop.ValueKind == JsonValueKind.String)
+                        {
+                            string? val = prop.GetString();
+                            if (!string.IsNullOrWhiteSpace(val) && val.Trim().Length > 10)
+                            {
+                                return CleanNarrationScript(val);
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // 2. Xóa code block markdown ```json hoặc ```
             s = Regex.Replace(s, @"```[a-zA-Z]*\s*", "", RegexOptions.Multiline);
             s = Regex.Replace(s, @"```\s*$", "", RegexOptions.Multiline);
 
-            // Xóa tiền tố kịch bản như "Lời thoại:", "Kịch bản:"
-            s = Regex.Replace(s, @"^(Lời thoại|Kịch bản|Narration|Voiceover|Script)\s*:\s*", "", RegexOptions.IgnoreCase);
+            // 3. Xóa dấu ngoặc kép bao bọc toàn bộ chuỗi nếu có
+            if ((s.StartsWith("\"") && s.EndsWith("\"")) || (s.StartsWith("'") && s.EndsWith("'")))
+            {
+                s = s.Substring(1, s.Length - 2).Trim();
+            }
 
-            // Bỏ các ngoặc vuông ghi chú thời gian nếu có [00:00 - 00:05]
-            s = Regex.Replace(s, @"\[\d{2}:\d{2}\s*-\s*\d{2}:\d{2}\]", "").Trim();
+            // 4. Loại bỏ lời chào hỏi / lời dẫn xã giao của trợ lý AI (AI Chatbot Preamble)
+            // Ví dụ: "Chào bạn, với tư cách là Chuyên gia sửa lỗi kịch bản... Dưới đây là kịch bản hoàn chỉnh... KỊCH BẢN HOÀN CHỈNH, "
+            string lower = s.ToLowerInvariant();
+            if (lower.StartsWith("chào ") || lower.StartsWith("xin chào") ||
+                lower.StartsWith("với tư cách") || lower.StartsWith("tôi là") ||
+                lower.StartsWith("dưới đây là") || lower.StartsWith("sau đây là") ||
+                lower.StartsWith("đây là kịch bản"))
+            {
+                string[] markerPatterns = new[]
+                {
+                    @"(?:dưới\s+đây|sau\s+đây|đây)\s+là\s+kịch\s+bản[^\.,\n\?!]*[\.,:\n\?!]*",
+                    @"kịch\s+bản\s+(?:hoàn\s+chỉnh|chi\s+tiết|mới|sau\s+khi\s+(?:tinh\s+chỉnh|chỉnh\s+sửa))[^\.,\n\?!]*[\.,:\n\?!]*",
+                    @"lời\s+thoại\s+(?:hoàn\s+chỉnh|mới)[^\.,\n\?!]*[\.,:\n\?!]*",
+                    @"kịch\s+bản\s*:\s*",
+                    @"lời\s+thoại\s*:\s*",
+                    @"narration\s*:\s*",
+                    @"voiceover\s*:\s*"
+                };
+
+                int bestCutIdx = -1;
+                int searchWindow = Math.Min(s.Length, 600);
+                string sub = s.Substring(0, searchWindow);
+
+                foreach (var mp in markerPatterns)
+                {
+                    var matches = Regex.Matches(sub, mp, RegexOptions.IgnoreCase);
+                    foreach (Match m in matches)
+                    {
+                        if (m.Index + m.Length > bestCutIdx)
+                        {
+                            bestCutIdx = m.Index + m.Length;
+                        }
+                    }
+                }
+
+                if (bestCutIdx > 0 && bestCutIdx < s.Length)
+                {
+                    s = s.Substring(bestCutIdx).Trim();
+                }
+                else
+                {
+                    var matchFirstSent = Regex.Match(sub, @"^.*?(?:[\.\n\?!]+)\s*");
+                    if (matchFirstSent.Success && matchFirstSent.Length < s.Length)
+                    {
+                        s = s.Substring(matchFirstSent.Length).Trim();
+                    }
+                }
+            }
+
+            // 5. Xóa các tiền tố, tiêu đề thừa ở đầu kịch bản
+            s = Regex.Replace(s, @"^(?:(?:\*\*|###?|===)?\s*(?:kịch\s+bản\s+(?:hoàn\s+chỉnh|chi\s+tiết|mới)?|lời\s+thoại\s+(?:hoàn\s+chỉnh|mới)?|kịch\s+bản|lời\s+thoại|narration|script)\s*(?:\*\*|###?|===)?[:,\-–\.]*\s*)+", "", RegexOptions.IgnoreCase).Trim();
+            s = Regex.Replace(s, @"^[:,\-–\.]+\s*", "").Trim();
+
+            // 6. Bỏ các ngoặc vuông ghi chú thời gian nếu có [00:00 - 00:05]
+            s = Regex.Replace(s, @"\[\s*\d{1,2}:\d{2}(?:\.\d+)?\s*(?:-|–|to)\s*\d{1,2}:\d{2}(?:\.\d+)?\s*\]", "").Trim();
 
             return s.Trim();
         }

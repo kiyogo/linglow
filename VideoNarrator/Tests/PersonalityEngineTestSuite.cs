@@ -571,18 +571,25 @@ namespace VideoNarrator.Tests
                 string rawAiOutput = "```json\nLời thoại:\n[00:00 - 00:05] Đây là câu chuyện thật không thể tin nổi.\n```";
                 string cleaned = MultiStageNarrationEngine.CleanNarrationScript(rawAiOutput);
 
+                string rawAiChatbotOutput = "Chào bạn, với tư cách là Chuyên gia sửa lỗi kịch bản có mục tiêu Targeted Revision Editor, tôi đã thực hiện thay thế chính xác các câu lỗi bằng những nội dung mô tả thực tế, khách quan và hiện đại hơn theo đúng hướng dẫn của bạn. Dưới đây là kịch bản hoàn chỉnh sau khi đã được tinh chỉnh, KỊCH BẢN HOÀN CHỈNH, Nhìn kìa! Bạn có thấy hàng chục sinh vật đang chuyển động như một thực thể duy nhất không?";
+                string cleanedChatbot = MultiStageNarrationEngine.CleanNarrationScript(rawAiChatbotOutput);
+
                 bool passed = !cleaned.Contains("```") &&
                               !cleaned.Contains("Lời thoại:") &&
                               !cleaned.Contains("[00:00") &&
-                              cleaned.Contains("Đây là câu chuyện thật");
+                              cleaned.Contains("Đây là câu chuyện thật") &&
+                              !cleanedChatbot.Contains("Chào bạn") &&
+                              !cleanedChatbot.Contains("Chuyên gia") &&
+                              !cleanedChatbot.Contains("KỊCH BẢN HOÀN CHỈNH") &&
+                              cleanedChatbot.StartsWith("Nhìn kìa!");
 
                 reports.Add(new TestReportItem
                 {
                     TestName = "20. Script Sanitizer & Clean Spoken Narration Output",
                     Passed = passed,
                     Details = passed
-                        ? $"Thành công: Đã loại bỏ code block markdown, nhãn tiền tố và timestamp. Kết quả: \"{cleaned}\""
-                        : $"Thất bại: Chuỗi chưa được làm sạch: \"{cleaned}\""
+                        ? $"Thành công: Đã loại bỏ code block, tiền tố, timestamp và 100% lời chào AI chatbot. Kết quả: \"{cleanedChatbot.Substring(0, Math.Min(60, cleanedChatbot.Length))}...\""
+                        : $"Thất bại: Chuỗi chưa được làm sạch: \"{cleanedChatbot}\""
                 });
             }
             catch (Exception ex)

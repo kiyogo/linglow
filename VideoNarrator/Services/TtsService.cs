@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using VideoNarrator.Models;
+using VideoNarrator.Services.PersonalityEngine;
 
 namespace VideoNarrator.Services
 {
@@ -173,7 +174,10 @@ namespace VideoNarrator.Services
         {
             if (string.IsNullOrWhiteSpace(script)) return string.Empty;
 
-            var lines = script.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            // Làm sạch toàn diện bất kỳ lời chào hỏi, xưng danh hay tiền đề trò chuyện AI nào
+            string cleaned = MultiStageNarrationEngine.CleanNarrationScript(script);
+
+            var lines = cleaned.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             var sb = new StringBuilder();
 
             foreach (var rawLine in lines)
