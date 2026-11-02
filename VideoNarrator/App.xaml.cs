@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,9 +16,83 @@ namespace VideoNarrator
     public partial class App : Application
     {
         private ServiceProvider? _serviceProvider;
+        private static Mutex? _singleInstanceMutex;
 
         public static bool DemoDataRequested { get; private set; }
         public static bool OpenSettingsRequested { get; private set; }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
+
+        private const int SW_RESTORE = 9;
+
+        private static void ActivateExistingInstance()
+        {
+            try
+            {
+                var currentProc = System.Diagnostics.Process.GetCurrentProcess();
+                var processes = System.Diagnostics.Process.GetProcessesByName(currentProc.ProcessName)
+                    .Where(p => p.Id != currentProc.Id)
+                    .ToList();
+
+                if (processes.Count == 0) return;
+
+                var targetPids = processes.Select(p => (uint)p.Id).ToHashSet();
+
+                for (int attempt = 0; attempt < 5; attempt++)
+                {
+                    bool activated = false;
+
+                    // 1. Direct MainWindowHandle check
+                    foreach (var proc in processes)
+                    {
+                        proc.Refresh();
+                        if (proc.MainWindowHandle != IntPtr.Zero)
+                        {
+                            ShowWindowAsync(proc.MainWindowHandle, SW_RESTORE);
+                            SetForegroundWindow(proc.MainWindowHandle);
+                            return;
+                        }
+                    }
+
+                    // 2. Win32 EnumWindows fallback
+                    EnumWindows((hWnd, lParam) =>
+                    {
+                        GetWindowThreadProcessId(hWnd, out uint pid);
+                        if (targetPids.Contains(pid) && IsWindowVisible(hWnd))
+                        {
+                            ShowWindowAsync(hWnd, SW_RESTORE);
+                            SetForegroundWindow(hWnd);
+                            activated = true;
+                            return false;
+                        }
+                        return true;
+                    }, IntPtr.Zero);
+
+                    if (activated) return;
+
+                    System.Threading.Thread.Sleep(200);
+                }
+            }
+            catch { }
+        }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -97,6 +174,25 @@ namespace VideoNarrator
                 {
                     File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "test_video_result.txt"), $"ERROR: {ex.Message}\n{ex}", System.Text.Encoding.UTF8);
                 }
+                Shutdown(0);
+                return;
+            }
+
+            // Single-Instance Enforcement to prevent duplicate UI instances and WebView2 file-lock contention
+            const string MutexName = @"Local\VideoNarrator_SingleInstance_Mutex";
+            bool createdNew;
+            try
+            {
+                _singleInstanceMutex = new Mutex(true, MutexName, out createdNew);
+            }
+            catch
+            {
+                createdNew = true;
+            }
+
+            if (!createdNew)
+            {
+                ActivateExistingInstance();
                 Shutdown(0);
                 return;
             }
@@ -192,6 +288,17 @@ namespace VideoNarrator
 
         protected override void OnExit(ExitEventArgs e)
         {
+            try
+            {
+                if (_singleInstanceMutex != null)
+                {
+                    _singleInstanceMutex.ReleaseMutex();
+                    _singleInstanceMutex.Dispose();
+                    _singleInstanceMutex = null;
+                }
+            }
+            catch { }
+
             _serviceProvider?.Dispose();
             base.OnExit(e);
         }

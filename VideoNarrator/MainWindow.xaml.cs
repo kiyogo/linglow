@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using Microsoft.Web.WebView2.Core;
@@ -63,7 +65,6 @@ namespace VideoNarrator
         {
             try
             {
-                var userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoNarrator", "WebView2");
                 var options = new CoreWebView2EnvironmentOptions
                 {
                     AdditionalBrowserArguments = 
@@ -79,8 +80,65 @@ namespace VideoNarrator
                         "--ignore-gpu-blocklist " +
                         "--force-gpu-rasterization"
                 };
-                var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
-                await webView.EnsureCoreWebView2Async(env);
+
+                CoreWebView2Environment? env = null;
+
+                // Priority candidate user data folders to completely eliminate 0x800700AA (ERROR_BUSY) conflicts
+                var candidateFolders = new List<string>
+                {
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoNarrator", "WebView2"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoNarrator", "WebView2_Sessions", $"Session_{Environment.ProcessId}"),
+                    Path.Combine(Path.GetTempPath(), "VideoNarrator", "WV2", $"PID_{Environment.ProcessId}_{Guid.NewGuid():N}")
+                };
+
+                foreach (var folder in candidateFolders)
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(folder);
+                        env = await CoreWebView2Environment.CreateAsync(null, folder, options);
+                        if (env != null)
+                        {
+                            await webView.EnsureCoreWebView2Async(env);
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Folder locked (0x800700AA) or in use by another instance: log and try next candidate
+                        try
+                        {
+                            string logPath = Path.Combine(AppContext.BaseDirectory, "crash.log");
+                            File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] WebView2 folder busy/failed ({folder}): {ex.Message}. Falling back to next directory...\n");
+                        }
+                        catch { }
+                    }
+                }
+
+                if (webView.CoreWebView2 == null)
+                {
+                    // Emergency fallback: fresh temporary directory with default environment
+                    try
+                    {
+                        var emergencyFolder = Path.Combine(Path.GetTempPath(), "VideoNarrator", "WV2_Emergency", Guid.NewGuid().ToString("N"));
+                        Directory.CreateDirectory(emergencyFolder);
+                        env = await CoreWebView2Environment.CreateAsync(null, emergencyFolder);
+                        await webView.EnsureCoreWebView2Async(env);
+                    }
+                    catch (Exception finalEx)
+                    {
+                        MessageBox.Show($"Failed to initialize WebView2: {finalEx.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
+                if (webView.CoreWebView2 == null)
+                {
+                    return;
+                }
+
+                // Cleanup stale session folders from previous runs asynchronously
+                _ = Task.Run(() => CleanupStaleWebViewSessions());
 
                 // Prevent white/black flash during tab switches and activation
                 webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(19, 19, 20);
@@ -188,6 +246,47 @@ namespace VideoNarrator
             {
                 MessageBox.Show($"Failed to initialize WebView2: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private static void CleanupStaleWebViewSessions()
+        {
+            try
+            {
+                var sessionsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoNarrator", "WebView2_Sessions");
+                if (Directory.Exists(sessionsDir))
+                {
+                    var cutoff = DateTime.UtcNow.AddHours(-12);
+                    foreach (var dir in Directory.GetDirectories(sessionsDir))
+                    {
+                        try
+                        {
+                            if (Directory.GetCreationTimeUtc(dir) < cutoff)
+                            {
+                                Directory.Delete(dir, true);
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+                var tempWv2Dir = Path.Combine(Path.GetTempPath(), "VideoNarrator", "WV2");
+                if (Directory.Exists(tempWv2Dir))
+                {
+                    var cutoff = DateTime.UtcNow.AddHours(-6);
+                    foreach (var dir in Directory.GetDirectories(tempWv2Dir))
+                    {
+                        try
+                        {
+                            if (Directory.GetCreationTimeUtc(dir) < cutoff)
+                            {
+                                Directory.Delete(dir, true);
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
         }
 
         private static string ResolveHtmlPath()
