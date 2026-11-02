@@ -1817,19 +1817,6 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
                         Duration = 0.3
                     });
                 }
-
-                // SFX
-                if (settings.EnableSoundEffects && i > 0)
-                {
-                    sfxs.Add(new SoundEffectEvent
-                    {
-                        Start = Math.Round(sc.Start, 2),
-                        Duration = 0.5,
-                        Volume = 0.4,
-                        Reason = "Chuyển cảnh sinh động",
-                        SfxType = "whoosh"
-                    });
-                }
             }
 
             plan.Subtitles = subs;
@@ -2008,43 +1995,27 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
             if (totalDuration <= 0) totalDuration = 30.0;
             var sfxList = new List<SoundEffectEvent>();
 
-            // 1. Hook Entrance SFX (0.0s - 0.2s)
-            sfxList.Add(new SoundEffectEvent
-            {
-                Start = 0.05,
-                Duration = 0.8,
-                Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 1.1, 0.2, 1.0),
-                Reason = "Khai màn ấn tượng (Hook)",
-                SfxType = "impact",
-                FilePath = AudioMixService.ResolveSfxFilePath("impact") ?? string.Empty
-            });
+            // 1. CHỈ thêm âm thanh chuyển cảnh (whoosh) KHI THỰC SỰ CÓ ĐỔI CẢNH / CHUYỂN ẢNH THẬT
+            // Nếu video không cắt cảnh (phát liên tục hoặc 1 cảnh duy nhất), TUYỆT ĐỐI không phát âm thanh chuyển cảnh!
+            var scenes = plan.Scenes;
+            bool hasRealTransitions = plan.Transitions != null && plan.Transitions.Count > 0;
 
-            // 1.1. Red Circle Snap SFX (0.15s)
-            if (plan.Stickers != null && plan.Stickers.Any(s => s.StickerType == "red_circle"))
+            if (scenes != null && scenes.Count > 1 && hasRealTransitions)
             {
-                sfxList.Add(new SoundEffectEvent
+                for (int i = 1; i < scenes.Count; i++)
                 {
-                    Start = 0.15,
-                    Duration = 0.25,
-                    Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 1.0, 0.2, 0.95),
-                    Reason = "Âm thanh khoanh tròn đỏ tiêu điểm (Focus Snap)",
-                    SfxType = "camera_click",
-                    FilePath = AudioMixService.ResolveSfxFilePath("camera_click") ?? string.Empty
-                });
-            }
+                    var sc = scenes[i];
+                    var prevSc = scenes[i - 1];
 
-            // 2. Scene Transition SFX
-            if (plan.Scenes != null)
-            {
-                foreach (var sc in plan.Scenes)
-                {
-                    if (sc.Start > 1.2 && sc.Start < totalDuration - 2.5)
+                    // Chỉ phát âm thanh chuyển cảnh khi có cắt ghép nhảy cảnh thật (jump cut giữa 2 phân đoạn khác nhau)
+                    bool isRealJumpCut = Math.Abs(sc.Start - prevSc.End) > 0.4;
+                    if (isRealJumpCut && sc.Start > 1.2 && sc.Start < totalDuration - 2.5)
                     {
                         sfxList.Add(new SoundEffectEvent
                         {
                             Start = Math.Round(sc.Start, 2),
-                            Duration = 0.4,
-                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.85, 0.2, 0.9),
+                            Duration = 0.35,
+                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.65, 0.15, 0.75),
                             Reason = "Chuyển cảnh sinh động",
                             SfxType = "whoosh",
                             FilePath = AudioMixService.ResolveSfxFilePath("whoosh") ?? string.Empty
@@ -2053,20 +2024,32 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
                 }
             }
 
-            // 3. Sticker Pop / Ding SFX
+            // 2. Sticker Pop / Snap SFX: Chỉ phát khi nhãn dán xuất hiện trên màn hình
             if (plan.Stickers != null)
             {
                 foreach (var st in plan.Stickers)
                 {
-                    if (st.Start > 0.3 && st.Start < totalDuration - 0.5)
+                    if (st.StickerType == "red_circle")
+                    {
+                        sfxList.Add(new SoundEffectEvent
+                        {
+                            Start = Math.Round(st.Start, 2),
+                            Duration = 0.2,
+                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.65, 0.15, 0.7),
+                            Reason = "Âm thanh khoanh tròn đỏ tiêu điểm (Focus Snap)",
+                            SfxType = "camera_click",
+                            FilePath = AudioMixService.ResolveSfxFilePath("camera_click") ?? string.Empty
+                        });
+                    }
+                    else if (st.Start > 1.0 && st.Start < totalDuration - 1.0)
                     {
                         bool isSubscribe = st.StickerType == "subscribe_callout";
                         string type = isSubscribe ? "sparkle" : (st.StickerType == "fact_badge" ? "ding" : "pop");
                         sfxList.Add(new SoundEffectEvent
                         {
                             Start = Math.Round(st.Start, 2),
-                            Duration = isSubscribe ? 0.6 : 0.25,
-                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.9, 0.2, 0.9),
+                            Duration = isSubscribe ? 0.4 : 0.2,
+                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.6, 0.15, 0.65),
                             Reason = $"Âm thanh nhãn dán ({st.Text})",
                             SfxType = type,
                             FilePath = AudioMixService.ResolveSfxFilePath(type) ?? string.Empty

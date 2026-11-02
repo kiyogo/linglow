@@ -112,13 +112,15 @@ namespace VideoNarrator.Services
             var fc = new StringBuilder();
             fc.Append("\"");
 
-            string currentVoice = "[0:a]";
+            string voiceOutput = "[0:a]";
             if (targetDuration > 0)
             {
                 string targetDurStr = targetDuration.ToString("0.000", CultureInfo.InvariantCulture);
-                fc.Append($"[0:a]apad=whole_dur={targetDurStr}[voice_padded];");
-                currentVoice = "[voice_padded]";
+                fc.Append($"[0:a]apad=whole_dur={targetDurStr}[v_pad];");
+                voiceOutput = "[v_pad]";
             }
+
+            var mixInputs = new List<string> { voiceOutput };
 
             if (hasMusic)
             {
@@ -126,40 +128,39 @@ namespace VideoNarrator.Services
 
                 if (enableDucking)
                 {
-                    // Sidechain compression ducks music whenever voice speaks (uses [0:a] original speech as sidechain key)
+                    // Sidechain compression ducks music whenever voice speaks
                     fc.Append($"[{musicIndex}:a]volume={normVol}[bgm_norm];");
-                    fc.Append($"[bgm_norm][0:a]sidechaincompress=threshold=0.06:ratio=4:attack=50:release=300[ducked_bgm];");
-                    fc.Append($"{currentVoice}[ducked_bgm]amix=inputs=2:duration=first:dropout_transition=0.5[voice_music];");
-                    currentVoice = "[voice_music]";
+                    fc.Append($"[bgm_norm][0:a]sidechaincompress=threshold=0.08:ratio=3:attack=20:release=150[ducked_bgm];");
+                    mixInputs.Add("[ducked_bgm]");
                 }
                 else
                 {
                     fc.Append($"[{musicIndex}:a]volume={normVol}[bgm_norm];");
-                    fc.Append($"{currentVoice}[bgm_norm]amix=inputs=2:duration=first:dropout_transition=0.5[voice_music];");
-                    currentVoice = "[voice_music]";
+                    mixInputs.Add("[bgm_norm]");
                 }
             }
 
-            if (validSfx.Count > 0)
+            for (int i = 0; i < validSfx.Count; i++)
             {
-                // Mix in SFX with adelay
-                var sfxMixInputs = new StringBuilder(currentVoice);
-                for (int i = 0; i < validSfx.Count; i++)
-                {
-                    var sfx = validSfx[i];
-                    int sfxIdx = sfxIndices[i];
-                    int delayMs = (int)Math.Max(1, Math.Round(sfx.Start * 1000));
-                    string vol = sfx.Volume.ToString("0.00", CultureInfo.InvariantCulture);
+                var sfx = validSfx[i];
+                int sfxIdx = sfxIndices[i];
+                int delayMs = (int)Math.Max(1, Math.Round(sfx.Start * 1000));
+                string vol = sfx.Volume.ToString("0.00", CultureInfo.InvariantCulture);
 
-                    fc.Append($"[{sfxIdx}:a]adelay={delayMs}|{delayMs},volume={vol}[sfx_{i}];");
-                    sfxMixInputs.Append($"[sfx_{i}]");
-                }
+                fc.Append($"[{sfxIdx}:a]adelay={delayMs}|{delayMs},volume={vol}[sfx_{i}];");
+                mixInputs.Add($"[sfx_{i}]");
+            }
 
-                fc.Append($"{sfxMixInputs}amix=inputs={1 + validSfx.Count}:duration=first:dropout_transition=0.5[aout]");
+            if (mixInputs.Count > 1)
+            {
+                // KHẮC PHỤC TRIỆT ĐỂ: normalize=0 và dropout_transition=0 đảm bảo giọng đọc đạt 100% âm lượng chuẩn
+                // ngay từ mili-giây đầu tiên, xóa bỏ hoàn toàn hiện tượng 'lúc đầu âm thanh nhỏ rồi to dần lên'.
+                string allInputs = string.Join("", mixInputs);
+                fc.Append($"{allInputs}amix=inputs={mixInputs.Count}:duration=first:dropout_transition=0:normalize=0[aout]");
             }
             else
             {
-                fc.Append($"{currentVoice}anull[aout]");
+                fc.Append($"{voiceOutput}anull[aout]");
             }
 
             fc.Append("\"");
