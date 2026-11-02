@@ -16,7 +16,9 @@ namespace VideoNarrator.Services
             string outputPath,
             int videoWidth = 1080,
             int videoHeight = 1920,
-            bool enableKeywordHighlight = true);
+            bool enableKeywordHighlight = true,
+            List<StickerOverlayEvent>? stickers = null,
+            string? topicBadge = null);
 
         List<SubtitleSegment> BuildSubtitlesFromWordTimestamps(
             List<WordTimestamp> words,
@@ -207,7 +209,9 @@ namespace VideoNarrator.Services
             string outputPath,
             int videoWidth = 1080,
             int videoHeight = 1920,
-            bool enableKeywordHighlight = true)
+            bool enableKeywordHighlight = true,
+            List<StickerOverlayEvent>? stickers = null,
+            string? topicBadge = null)
         {
             var sb = new StringBuilder();
 
@@ -299,11 +303,66 @@ namespace VideoNarrator.Services
             sb.AppendLine("[V4+ Styles]");
             sb.AppendLine("Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding");
             sb.AppendLine($"Style: Default,{fontName},{finalFontSize},{primaryColor},&H000000FF,{outlineColor},{backColor},-1,0,0,0,100,100,0,0,1,{outline},{shadow},2,40,40,{marginV},1");
+
+            // Additional Rich Media Styles: Topic Badge, Fact Stickers, Highlight Callouts, Subscribe Badge
+            int badgeFontSize = Math.Max(20, (int)Math.Round(38 * scaleFactor));
+            int factFontSize = Math.Max(22, (int)Math.Round(42 * scaleFactor));
+            int subFontSize = Math.Max(20, (int)Math.Round(38 * scaleFactor));
+            int boxOutline = Math.Max(5, (int)Math.Round(9 * scaleFactor));
+            int topBadgeMarginV = isLandscape ? (int)Math.Round(45 * (videoHeight / 1080.0)) : (int)Math.Round(140 * scaleFactor);
+            int factMarginV = isLandscape ? (int)Math.Round(90 * (videoHeight / 1080.0)) : (int)Math.Round(220 * scaleFactor);
+            int subscribeMarginV = isLandscape ? (int)Math.Round(60 * (videoHeight / 1080.0)) : (int)Math.Round(260 * scaleFactor);
+
+            // TopicBadge: Alignment 8 (top center), BorderStyle 3 (opaque rounded dark box with cyan/gold outline)
+            sb.AppendLine($"Style: TopicBadge,Segoe UI Black,{badgeFontSize},&H00FFFFFF,&H000000FF,&H0000D0FF,&HD0121212,-1,0,0,0,100,100,0,0,3,{boxOutline},2,8,30,30,{topBadgeMarginV},1");
+            // FactSticker: Alignment 8 (top center below badge), BorderStyle 3 (opaque dark pill with yellow pop)
+            sb.AppendLine($"Style: FactSticker,Segoe UI Black,{factFontSize},&H0000FFFF,&H000000FF,&H000A0A0A,&HE0000000,-1,0,0,0,100,100,0,0,3,{boxOutline},3,8,30,30,{factMarginV},1");
+            // HighlightSticker: Alignment 8, BorderStyle 3 (punchy cyan highlight)
+            sb.AppendLine($"Style: HighlightSticker,Segoe UI Black,{factFontSize},&H0033FFFF,&H000000FF,&H000000FF,&HE0000000,-1,0,0,0,100,100,0,0,3,{boxOutline},3,8,30,30,{factMarginV},1");
+            // SubscribeSticker: Alignment 2 (bottom center above subtitles), BorderStyle 3
+            sb.AppendLine($"Style: SubscribeSticker,Segoe UI Black,{subFontSize},&H0000E6FF,&H000000FF,&H00000000,&HDD050505,-1,0,0,0,100,100,0,0,3,{boxOutline},3,2,30,30,{subscribeMarginV},1");
             sb.AppendLine();
 
             // Events
             sb.AppendLine("[Events]");
             sb.AppendLine("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text");
+
+            double maxEndSec = (segments != null && segments.Count > 0) ? segments.Max(s => s.End) : 30.0;
+
+            // 1. Render Topic Headline Badge (Layer 1 - Persistent Information)
+            if (!string.IsNullOrWhiteSpace(topicBadge))
+            {
+                string endStr = FormatAssTime(Math.Max(5.0, maxEndSec));
+                string badgeText = topicBadge.Trim();
+                if (!badgeText.StartsWith("💡") && !badgeText.StartsWith("🔬") && !badgeText.StartsWith("⚡") && !badgeText.StartsWith("⚙️") && !badgeText.StartsWith("🔥"))
+                {
+                    badgeText = $"💡 {badgeText}";
+                }
+                sb.AppendLine($"Dialogue: 1,0:00:00.00,{endStr},TopicBadge,,0,0,0,,{{\\fade(250,250)}}{badgeText}");
+            }
+
+            // 2. Render Animated Stickers & Fact Badges (Layer 2)
+            if (stickers != null && stickers.Count > 0)
+            {
+                foreach (var st in stickers)
+                {
+                    if (string.IsNullOrWhiteSpace(st.Text)) continue;
+                    string stStyle = st.StickerType switch
+                    {
+                        "topic_badge" => "TopicBadge",
+                        "subscribe_callout" => "SubscribeSticker",
+                        "highlight_callout" => "HighlightSticker",
+                        _ => "FactSticker"
+                    };
+                    double startSec = Math.Max(0, st.Start);
+                    double endSec = Math.Max(startSec + 1.2, st.End);
+                    string sStr = FormatAssTime(startSec);
+                    string eStr = FormatAssTime(endSec);
+                    string content = !string.IsNullOrWhiteSpace(st.Emoji) ? $"{st.Emoji} {st.Text.Trim()}" : st.Text.Trim();
+                    // Entrance POP bounce animation
+                    sb.AppendLine($"Dialogue: 2,{sStr},{eStr},{stStyle},,0,0,0,,{{\\t(0,120,\\fscx112\\fscy112)\\t(120,240,\\fscx100\\fscy100)\\fade(120,150)}}{content}");
+                }
+            }
 
             var viCulture = new CultureInfo("vi-VN");
 

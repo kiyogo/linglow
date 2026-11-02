@@ -407,6 +407,20 @@ const safeBridge = {
         if (b) {
             try { await b.SetDurationMode(mode); } catch {}
         }
+    },
+
+    async setToggle(name, value) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SetToggle(name, value); } catch {}
+        }
+    },
+
+    async setSoundEffectsVolume(volume) {
+        const b = getBridge();
+        if (b) {
+            try { await b.SetSoundEffectsVolume(volume); } catch {}
+        }
     }
 };
 
@@ -679,6 +693,17 @@ async function initBridgeConnection() {
                 updateMusicUI(settings.backgroundMusicName || settings.backgroundMusicPath, settings.backgroundMusicVolume, settings.enableBackgroundMusic);
             }
 
+            if (settings.enableSoundEffects !== undefined && document.getElementById('chkSoundEffects')) {
+                document.getElementById('chkSoundEffects').checked = settings.enableSoundEffects;
+            }
+            if (settings.soundEffectsVolume !== undefined && document.getElementById('sfxVolumeSlider')) {
+                document.getElementById('sfxVolumeSlider').value = settings.soundEffectsVolume;
+                document.getElementById('sfxVolumeDisplay').textContent = `${Math.round(settings.soundEffectsVolume * 100)}%`;
+            }
+            if (settings.enableStickers !== undefined && document.getElementById('chkStickers')) {
+                document.getElementById('chkStickers').checked = settings.enableStickers;
+            }
+
             if (settings.hasFinalVideo && settings.finalVideoUrl) {
                 handleFinalVideoReady({ mediaUrl: settings.finalVideoUrl });
             } else if (settings.hasVideo && settings.videoUrl) {
@@ -803,6 +828,20 @@ function initEventListeners() {
         await safeBridge.saveSettings(gKey, tKey, gModel, tVoice, outDir, gUrl);
         settingsModal?.classList.add('hidden');
         showToast("Đã lưu các tùy chọn nâng cao thành công!");
+    });
+
+    document.getElementById('chkSoundEffects')?.addEventListener('change', (e) => {
+        safeBridge.setToggle('soundeffects', e.target.checked);
+        showToast(e.target.checked ? "🔊 Đã bật Hiệu ứng âm thanh (SFX)" : "🔇 Đã tắt Hiệu ứng âm thanh (SFX)");
+    });
+    document.getElementById('sfxVolumeSlider')?.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        document.getElementById('sfxVolumeDisplay').textContent = `${Math.round(val * 100)}%`;
+        safeBridge.setSoundEffectsVolume(val);
+    });
+    document.getElementById('chkStickers')?.addEventListener('change', (e) => {
+        safeBridge.setToggle('stickers', e.target.checked);
+        showToast(e.target.checked ? "✨ Đã bật Nhãn dán & Bảng thông tin" : "Đã tắt Nhãn dán & Bảng thông tin");
     });
 
     // STEP 1: 1-Click Social Video Download & Auto Produce
@@ -1237,7 +1276,8 @@ function triggerVideoCreation() {
         autoSubtitle: document.getElementById('chkAutoSubtitle').checked,
         keywordHighlight: document.getElementById('chkKeywordHighlight').checked,
         musicDucking: document.getElementById('chkMusicDucking').checked,
-        soundEffects: document.getElementById('chkSoundEffects').checked
+        soundEffects: document.getElementById('chkSoundEffects')?.checked ?? true,
+        stickers: document.getElementById('chkStickers')?.checked ?? true
     };
 
     setProcessing(true, true);

@@ -53,12 +53,18 @@ namespace VideoNarrator.Services
 
             bool hasMusic = !string.IsNullOrWhiteSpace(musicPath) && File.Exists(musicPath);
 
-            // Filter valid sound effects
+            // Filter and resolve valid sound effects
             var validSfx = new List<SoundEffectEvent>();
             if (soundEffects != null)
             {
                 foreach (var sfx in soundEffects)
                 {
+                    if (string.IsNullOrWhiteSpace(sfx.FilePath) || !File.Exists(sfx.FilePath))
+                    {
+                        string? resolved = ResolveSfxFilePath(sfx.SfxType);
+                        if (!string.IsNullOrEmpty(resolved)) sfx.FilePath = resolved;
+                    }
+
                     if (!string.IsNullOrWhiteSpace(sfx.FilePath) && File.Exists(sfx.FilePath))
                     {
                         validSfx.Add(sfx);
@@ -142,7 +148,7 @@ namespace VideoNarrator.Services
                 {
                     var sfx = validSfx[i];
                     int sfxIdx = sfxIndices[i];
-                    int delayMs = (int)Math.Max(0, sfx.Start * 1000);
+                    int delayMs = (int)Math.Max(1, Math.Round(sfx.Start * 1000));
                     string vol = sfx.Volume.ToString("0.00", CultureInfo.InvariantCulture);
 
                     fc.Append($"[{sfxIdx}:a]adelay={delayMs}|{delayMs},volume={vol}[sfx_{i}];");
@@ -174,6 +180,55 @@ namespace VideoNarrator.Services
             }
 
             return outputPath;
+        }
+
+        public static string? ResolveSfxFilePath(string? sfxType)
+        {
+            if (string.IsNullOrWhiteSpace(sfxType)) sfxType = "whoosh";
+            string clean = sfxType.Trim().ToLowerInvariant();
+
+            string primaryName = "whoosh";
+            if (clean.Contains("whoosh") || clean.Contains("transition") || clean.Contains("swipe") || clean.Contains("chuyen"))
+                primaryName = "whoosh";
+            else if (clean.Contains("pop") || clean.Contains("bubble") || clean.Contains("click") || clean.Contains("badge") || clean.Contains("nhan"))
+                primaryName = "pop";
+            else if (clean.Contains("ding") || clean.Contains("bell") || clean.Contains("fact") || clean.Contains("chuong") || clean.Contains("thongtin"))
+                primaryName = "ding";
+            else if (clean.Contains("impact") || clean.Contains("thud") || clean.Contains("boom") || clean.Contains("hook") || clean.Contains("no"))
+                primaryName = "impact";
+            else if (clean.Contains("sparkle") || clean.Contains("chime") || clean.Contains("magic") || clean.Contains("glitter") || clean.Contains("laplanh"))
+                primaryName = "sparkle";
+            else if (clean.Contains("camera") || clean.Contains("snap") || clean.Contains("shutter"))
+                primaryName = "camera_click";
+
+            var folders = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "Assets", "audio", "sfx"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets", "audio", "sfx"),
+                Path.Combine(Directory.GetCurrentDirectory(), "VideoNarrator", "Assets", "audio", "sfx"),
+                Path.Combine(AppContext.BaseDirectory, "sfx")
+            };
+
+            var exts = new[] { ".mp3", ".wav" };
+            foreach (var folder in folders)
+            {
+                if (!Directory.Exists(folder)) continue;
+                foreach (var ext in exts)
+                {
+                    string candidate = Path.Combine(folder, primaryName + ext);
+                    if (File.Exists(candidate)) return candidate;
+                }
+            }
+
+            // Fallback: any sfx in folder
+            foreach (var folder in folders)
+            {
+                if (!Directory.Exists(folder)) continue;
+                var any = Directory.GetFiles(folder, "*.mp3").Concat(Directory.GetFiles(folder, "*.wav")).FirstOrDefault();
+                if (any != null) return any;
+            }
+
+            return null;
         }
     }
 }

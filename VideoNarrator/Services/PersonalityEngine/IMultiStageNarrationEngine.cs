@@ -299,10 +299,18 @@ namespace VideoNarrator.Services.PersonalityEngine
                 sbPrompt.AppendLine("You MUST write the entire voiceover script exclusively in punchy, highly engaging, conversational American English (style of Zack D. Films / MrBeast).");
                 sbPrompt.AppendLine("Hook viewers directly in the first 2 seconds ('Look closely at this...', 'This is why...', 'Here is what happens when...').");
                 sbPrompt.AppendLine("Use crisp, vivid, natural English words. NO cringe, NO cliché greetings ('Welcome back', 'In today's video').");
+                sbPrompt.AppendLine("RICH INFORMATION & FACTS: Deliver deep, intriguing value (explain the real scientific principles, precise mechanics, exact numbers, and surprising insights).");
                 sbPrompt.AppendLine("MANDATORY ENDING: Conclude the script with an engaging subscribe Call-To-Action: 'Make sure to subscribe for more fascinating stories!' or 'Hit subscribe for more awesome videos!'.");
                 sbPrompt.AppendLine("=========================================================================");
                 sbPrompt.AppendLine();
             }
+
+            sbPrompt.AppendLine("=== YÊU CẦU ĐẶC BIỆT: HÀM LƯỢNG THÔNG TIN SÂU & GIÀU TRI THỨC (RICH INFORMATION & FACTS) ===");
+            sbPrompt.AppendLine("1. ĐI SÂU VÀO BẢN CHẤT & NGUYÊN LÝ: Không dừng lại ở việc tả cảnh hời hợt, phải giải thích rõ TẠI SAO điều này lại xảy ra, cơ chế khoa học, vật lý, kỹ thuật hay phản xạ nào đứng sau hiện tượng.");
+            sbPrompt.AppendLine("2. DẪN CHỨNG SỐ LIỆU & THỰC TẾ: Nếu có, lồng ghép các thông số thú vị (tốc độ, nhiệt độ, áp suất, độ bền, độ chính xác cơ khí, niên đại, hoặc điểm độc lạ).");
+            sbPrompt.AppendLine("3. MANG LẠI GIÁ TRỊ CHO NGƯỜI XEM: Đảm bảo người xem sau khi xem xong sẽ cảm thấy mình vừa 'học thêm được một kiến thức mới lạ' hoặc 'hiểu thấu một bí quyết thú vị'.");
+            sbPrompt.AppendLine("==========================================================================================");
+            sbPrompt.AppendLine();
 
             sbPrompt.AppendLine("=== TIÊU CHUẨN VĂN PHONG: NÓI THẬT, ĐỜI THƯỜNG, TUYỆT ĐỐI KHÔNG XÀM XÍ (ZERO CRINGE) ===");
             sbPrompt.AppendLine("1. ❌ CẤM TUYỆT ĐỐI TỪ NGỮ VĂN MẪU XÀM XÍ, PHÓNG ĐẠI TRẺ TRÂU:");

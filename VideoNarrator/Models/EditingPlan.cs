@@ -64,5 +64,11 @@ namespace VideoNarrator.Models
 
         [JsonPropertyName("transitions")]
         public List<TransitionEvent> Transitions { get; set; } = new();
+
+        [JsonPropertyName("stickers")]
+        public List<StickerOverlayEvent> Stickers { get; set; } = new();
+
+        [JsonPropertyName("topicBadge")]
+        public string TopicBadge { get; set; } = string.Empty;
     }
 }

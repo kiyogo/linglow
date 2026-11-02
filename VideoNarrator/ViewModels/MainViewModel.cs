@@ -120,7 +120,10 @@ namespace VideoNarrator.ViewModels
         private string _bRollFolderPath = string.Empty;
         private bool _enableMusicDucking = true;
         private string _musicFolderPath = string.Empty;
-        private bool _enableSoundEffects = false;
+        private bool _enableSoundEffects = true;
+        private double _soundEffectsVolume = 0.50;
+        private bool _enableStickers = true;
+        private string _stickerStyle = "🔥 Nổi bật & Bắt mắt (Triệu view)";
         private string _sfxFolderPath = string.Empty;
 
         private EditingPlan? _currentEditingPlan;
@@ -558,6 +561,24 @@ namespace VideoNarrator.ViewModels
         {
             get => _enableSoundEffects;
             set { if (SetProperty(ref _enableSoundEffects, value)) SaveSettings(); }
+        }
+
+        public double SoundEffectsVolume
+        {
+            get => _soundEffectsVolume;
+            set { if (SetProperty(ref _soundEffectsVolume, value)) SaveSettings(); }
+        }
+
+        public bool EnableStickers
+        {
+            get => _enableStickers;
+            set { if (SetProperty(ref _enableStickers, value)) SaveSettings(); }
+        }
+
+        public string StickerStyle
+        {
+            get => _stickerStyle;
+            set { if (SetProperty(ref _stickerStyle, value)) SaveSettings(); }
         }
 
         public string SfxFolderPath
@@ -1306,6 +1327,9 @@ namespace VideoNarrator.ViewModels
             _enableMusicDucking = s.EnableMusicDucking;
             _musicFolderPath = s.MusicFolderPath;
             _enableSoundEffects = s.EnableSoundEffects;
+            _soundEffectsVolume = s.SoundEffectsVolume > 0 ? s.SoundEffectsVolume : 0.50;
+            _enableStickers = s.EnableStickers;
+            _stickerStyle = !string.IsNullOrWhiteSpace(s.StickerStyle) ? s.StickerStyle : "🔥 Nổi bật & Bắt mắt (Triệu view)";
             _sfxFolderPath = s.SfxFolderPath;
         }
 
@@ -1346,6 +1370,9 @@ namespace VideoNarrator.ViewModels
                 EnableMusicDucking = EnableMusicDucking,
                 MusicFolderPath = MusicFolderPath,
                 EnableSoundEffects = EnableSoundEffects,
+                SoundEffectsVolume = SoundEffectsVolume,
+                EnableStickers = EnableStickers,
+                StickerStyle = StickerStyle,
                 SfxFolderPath = SfxFolderPath
             };
             _settingsService.SaveSettings(s);
@@ -2755,6 +2782,14 @@ namespace VideoNarrator.ViewModels
                     foreach (var sub in subSegments) SubtitleList.Add(sub);
                 });
 
+                // Tự động sinh/cân chỉnh nhãn dán thông tin, sự thật kỳ thú và hiệu ứng âm thanh
+                bool isEng = SelectedTtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true;
+                EditingPlanService.GenerateStickersAndBadges(plan, CustomTopic, targetShortDuration, isEng, new AppSettings { EnableStickers = EnableStickers });
+                if (EnableSoundEffects)
+                {
+                    EditingPlanService.PopulateSoundEffects(plan, new AppSettings { EnableSoundEffects = EnableSoundEffects, SoundEffectsVolume = SoundEffectsVolume }, targetShortDuration);
+                }
+
                 string assPath = Path.Combine(tempDir, "auto_subtitles.ass");
                 _subtitleService.GenerateAssSubtitleFile(
                     subSegments,
@@ -2762,7 +2797,9 @@ namespace VideoNarrator.ViewModels
                     assPath,
                     plan.OutputWidth,
                     plan.OutputHeight,
-                    EnableKeywordHighlight);
+                    EnableKeywordHighlight,
+                    EnableStickers ? plan.Stickers : null,
+                    EnableStickers ? plan.TopicBadge : null);
 
                 _cachedSubtitlePath = assPath;
 
@@ -2967,6 +3004,14 @@ namespace VideoNarrator.ViewModels
                     foreach (var sub in subSegments) SubtitleList.Add(sub);
                 });
 
+                // Tự động sinh/cân chỉnh nhãn dán thông tin, sự thật kỳ thú và hiệu ứng âm thanh
+                bool isFinalEnglish = SelectedTtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true;
+                EditingPlanService.GenerateStickersAndBadges(CurrentEditingPlan, CustomTopic, targetShortDuration, isFinalEnglish, new AppSettings { EnableStickers = EnableStickers });
+                if (EnableSoundEffects)
+                {
+                    EditingPlanService.PopulateSoundEffects(CurrentEditingPlan, new AppSettings { EnableSoundEffects = EnableSoundEffects, SoundEffectsVolume = SoundEffectsVolume }, targetShortDuration);
+                }
+
                 string assPath = Path.Combine(tempDir, "final_subtitles.ass");
                 _subtitleService.GenerateAssSubtitleFile(
                     subSegments,
@@ -2974,7 +3019,9 @@ namespace VideoNarrator.ViewModels
                     assPath,
                     CurrentEditingPlan.OutputWidth,
                     CurrentEditingPlan.OutputHeight,
-                    EnableKeywordHighlight);
+                    EnableKeywordHighlight,
+                    EnableStickers ? CurrentEditingPlan.Stickers : null,
+                    EnableStickers ? CurrentEditingPlan.TopicBadge : null);
 
                 // Mixed audio
                 ProgressPercentage = 45;

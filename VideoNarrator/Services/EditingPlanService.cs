@@ -539,8 +539,12 @@ namespace VideoNarrator.Services
 
             ValidateAndSanitizePlan(plan, videoDurationSeconds);
 
+            // Tự động sinh nhãn dán thông tin, sự thật kỳ thú và hiệu ứng âm thanh phong phú
+            GenerateStickersAndBadges(plan, topic, videoDurationSeconds, isEnglish, settings);
+            PopulateSoundEffects(plan, settings, videoDurationSeconds);
+
             progressCallback?.Invoke("Kế hoạch dựng video AI hoàn tất!", 85);
-            _fileService.Log($"Kế hoạch dựng hoàn tất: {plan.Scenes.Count} scenes, {plan.Subtitles.Count} subtitles, {plan.ZoomEffects.Count} zooms.");
+            _fileService.Log($"Kế hoạch dựng hoàn tất: {plan.Scenes.Count} scenes, {plan.Subtitles.Count} subtitles, {plan.Stickers.Count} stickers, {plan.SoundEffects.Count} SFX.");
 
             return plan;
         }
@@ -1822,10 +1826,208 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
             plan.Subtitles = subs;
             plan.ZoomEffects = zooms;
             plan.Transitions = trans;
-            plan.SoundEffects = sfxs;
             plan.NarrationScript = sbNarration.ToString().Trim();
 
+            bool isOfflineEnglish = settings != null && (
+                settings.TtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true ||
+                string.Equals(settings.NarrationLanguage, "en", StringComparison.OrdinalIgnoreCase)
+            );
+            GenerateStickersAndBadges(plan, topic, durationSeconds, isOfflineEnglish, settings);
+            PopulateSoundEffects(plan, settings ?? new AppSettings(), durationSeconds);
+
             return plan;
+        }
+
+        public static void GenerateStickersAndBadges(EditingPlan plan, string topic, double totalDuration, bool isEnglish, AppSettings? settings = null)
+        {
+            if (plan == null) return;
+            if (settings != null && !settings.EnableStickers) return;
+
+            if (totalDuration <= 0) totalDuration = 30.0;
+
+            // 1. TOPIC HEADLINE BADGE
+            if (string.IsNullOrWhiteSpace(plan.TopicBadge))
+            {
+                string cleanTopic = !string.IsNullOrWhiteSpace(topic) ? topic.Trim() : "Khám Phá Video";
+                cleanTopic = Regex.Replace(cleanTopic, @"#\w+", "").Trim();
+                cleanTopic = Regex.Replace(cleanTopic, @"^(Shorts|Video|Khám phá|Xem)\s*[-:]?\s*", "", RegexOptions.IgnoreCase).Trim();
+                if (cleanTopic.Length > 36) cleanTopic = cleanTopic.Substring(0, 36).Trim() + "...";
+
+                if (isEnglish)
+                {
+                    plan.TopicBadge = $"💡 DID YOU KNOW? | {cleanTopic.ToUpperInvariant()}";
+                }
+                else
+                {
+                    string icon = cleanTopic.Contains("cơ khí", StringComparison.OrdinalIgnoreCase) || cleanTopic.Contains("tiện", StringComparison.OrdinalIgnoreCase) ? "⚙️" :
+                                 cleanTopic.Contains("khoa học", StringComparison.OrdinalIgnoreCase) || cleanTopic.Contains("thí nghiệm", StringComparison.OrdinalIgnoreCase) ? "🔬" :
+                                 cleanTopic.Contains("ảo giác", StringComparison.OrdinalIgnoreCase) || cleanTopic.Contains("3d", StringComparison.OrdinalIgnoreCase) ? "🌀" :
+                                 cleanTopic.Contains("ẩm thực", StringComparison.OrdinalIgnoreCase) || cleanTopic.Contains("món", StringComparison.OrdinalIgnoreCase) ? "🍳" :
+                                 cleanTopic.Contains("mẹo", StringComparison.OrdinalIgnoreCase) ? "🛠️" : "💡";
+                    plan.TopicBadge = $"{icon} BẠN CÓ BIẾT? | {cleanTopic.ToUpper(new CultureInfo("vi-VN"))}";
+                }
+            }
+
+            // 2. DYNAMIC FACT & HIGHLIGHT STICKERS
+            if (plan.Stickers == null) plan.Stickers = new List<StickerOverlayEvent>();
+            if (plan.Stickers.Count == 0 && totalDuration >= 10.0)
+            {
+                string script = plan.NarrationScript ?? string.Empty;
+
+                // Sticker 1: Mid-early fact (25% - 35% of total duration)
+                double st1Start = Math.Round(Math.Clamp(totalDuration * 0.28, 2.5, Math.Max(2.5, totalDuration - 6.0)), 2);
+                double st1End = Math.Round(st1Start + 3.2, 2);
+
+                string factText1 = isEnglish ? "FASCINATING FACT!" : "SỰ THẬT KINH NGẠC!";
+                string factEmoji1 = "🔬";
+
+                if (Regex.IsMatch(script, @"\b(\d+[\.,]?\d*)\s*(độ|°C|km|m|vòng|lần|năm|tấn|kg|giây|phút)\b", RegexOptions.IgnoreCase))
+                {
+                    var match = Regex.Match(script, @"\b(\d+[\.,]?\d*\s*(?:độ|°C|km|m|vòng|lần|năm|tấn|kg|giây|phút))\b", RegexOptions.IgnoreCase);
+                    factText1 = isEnglish ? $"KEY SPEC: {match.Value.ToUpperInvariant()}" : $"THÔNG SỐ: {match.Value.ToUpper(new CultureInfo("vi-VN"))}!";
+                    factEmoji1 = "📊";
+                }
+                else if (script.Contains("khoa học", StringComparison.OrdinalIgnoreCase) || script.Contains("vật lý", StringComparison.OrdinalIgnoreCase))
+                {
+                    factText1 = isEnglish ? "SCIENCE IN ACTION!" : "HIỆN TƯỢNG VẬT LÝ!";
+                    factEmoji1 = "🔬";
+                }
+                else if (script.Contains("ảo giác", StringComparison.OrdinalIgnoreCase) || script.Contains("thị giác", StringComparison.OrdinalIgnoreCase))
+                {
+                    factText1 = isEnglish ? "OPTICAL ILLUSION!" : "ẢO ẢNH THỊ GIÁC 3D!";
+                    factEmoji1 = "🌀";
+                }
+                else if (script.Contains("cơ khí", StringComparison.OrdinalIgnoreCase) || script.Contains("tiện", StringComparison.OrdinalIgnoreCase))
+                {
+                    factText1 = isEnglish ? "PRECISION MACHINING!" : "CƠ KHÍ CHÍNH XÁC!";
+                    factEmoji1 = "⚙️";
+                }
+                else if (script.Contains("ẩm thực", StringComparison.OrdinalIgnoreCase) || script.Contains("món ngon", StringComparison.OrdinalIgnoreCase))
+                {
+                    factText1 = isEnglish ? "STREET FOOD SKILL!" : "MÓN NGON ĐỘC LẠ!";
+                    factEmoji1 = "🍳";
+                }
+
+                plan.Stickers.Add(new StickerOverlayEvent
+                {
+                    Start = st1Start,
+                    End = st1End,
+                    Text = factText1,
+                    Emoji = factEmoji1,
+                    StickerType = "fact_badge",
+                    Position = "upper_center"
+                });
+
+                // Sticker 2: Climax (60% - 70% of total duration) if video is long enough (>= 18s)
+                if (totalDuration >= 18.0)
+                {
+                    double st2Start = Math.Round(Math.Clamp(totalDuration * 0.62, st1End + 1.8, Math.Max(st1End + 1.8, totalDuration - 4.5)), 2);
+                    double st2End = Math.Round(st2Start + 3.0, 2);
+                    plan.Stickers.Add(new StickerOverlayEvent
+                    {
+                        Start = st2Start,
+                        End = st2End,
+                        Text = isEnglish ? "MIND BLOWING RESULT!" : "KẾT QUẢ BẤT NGỜ!",
+                        Emoji = "🤯",
+                        StickerType = "highlight_callout",
+                        Position = "upper_center"
+                    });
+                }
+
+                // Sticker 3: Call-To-Action (last 3.5 seconds)
+                double outroStart = Math.Round(Math.Max(st1End + 1.0, totalDuration - 3.5), 2);
+                double outroEnd = Math.Round(totalDuration, 2);
+                plan.Stickers.Add(new StickerOverlayEvent
+                {
+                    Start = outroStart,
+                    End = outroEnd,
+                    Text = isEnglish ? "HIT SUBSCRIBE FOR MORE! 🚀" : "BẤM ĐĂNG KÝ ĐỂ XEM TIẾP! 🚀",
+                    Emoji = "🔔",
+                    StickerType = "subscribe_callout",
+                    Position = "bottom"
+                });
+            }
+        }
+
+        public static void PopulateSoundEffects(EditingPlan plan, AppSettings settings, double totalDuration)
+        {
+            if (plan == null) return;
+            if (!settings.EnableSoundEffects)
+            {
+                plan.SoundEffects = new List<SoundEffectEvent>();
+                return;
+            }
+
+            if (totalDuration <= 0) totalDuration = 30.0;
+            var sfxList = new List<SoundEffectEvent>();
+
+            // 1. Hook Entrance SFX (0.0s - 0.2s)
+            sfxList.Add(new SoundEffectEvent
+            {
+                Start = 0.05,
+                Duration = 0.8,
+                Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 1.1, 0.2, 1.0),
+                Reason = "Khai màn ấn tượng (Hook)",
+                SfxType = "impact",
+                FilePath = AudioMixService.ResolveSfxFilePath("impact") ?? string.Empty
+            });
+
+            // 2. Scene Transition SFX
+            if (plan.Scenes != null)
+            {
+                foreach (var sc in plan.Scenes)
+                {
+                    if (sc.Start > 1.2 && sc.Start < totalDuration - 2.5)
+                    {
+                        sfxList.Add(new SoundEffectEvent
+                        {
+                            Start = Math.Round(sc.Start, 2),
+                            Duration = 0.4,
+                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.85, 0.2, 0.9),
+                            Reason = "Chuyển cảnh sinh động",
+                            SfxType = "whoosh",
+                            FilePath = AudioMixService.ResolveSfxFilePath("whoosh") ?? string.Empty
+                        });
+                    }
+                }
+            }
+
+            // 3. Sticker Pop / Ding SFX
+            if (plan.Stickers != null)
+            {
+                foreach (var st in plan.Stickers)
+                {
+                    if (st.Start > 0.3 && st.Start < totalDuration - 0.5)
+                    {
+                        bool isSubscribe = st.StickerType == "subscribe_callout";
+                        string type = isSubscribe ? "sparkle" : (st.StickerType == "fact_badge" ? "ding" : "pop");
+                        sfxList.Add(new SoundEffectEvent
+                        {
+                            Start = Math.Round(st.Start, 2),
+                            Duration = isSubscribe ? 0.6 : 0.25,
+                            Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 0.9, 0.2, 0.9),
+                            Reason = $"Âm thanh nhãn dán ({st.Text})",
+                            SfxType = type,
+                            FilePath = AudioMixService.ResolveSfxFilePath(type) ?? string.Empty
+                        });
+                    }
+                }
+            }
+
+            // Sort by start time and deduplicate closely spaced SFX (< 0.25s apart)
+            var sorted = sfxList.OrderBy(s => s.Start).ToList();
+            var filtered = new List<SoundEffectEvent>();
+            double lastTime = -1.0;
+            foreach (var s in sorted)
+            {
+                if (s.Start - lastTime >= 0.25)
+                {
+                    filtered.Add(s);
+                    lastTime = s.Start;
+                }
+            }
+
+            plan.SoundEffects = filtered;
         }
 
         private async Task<string?> ExpandScriptToTargetDurationAsync(

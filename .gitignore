@@ -54,6 +54,8 @@ test_req*.json
 *.mp3
 !Assets/audio/music/*.mp3
 !VideoNarrator/Assets/audio/music/*.mp3
+!Assets/audio/sfx/*
+!VideoNarrator/Assets/audio/sfx/*
 *.mp4
 *.m4a
 *.aac

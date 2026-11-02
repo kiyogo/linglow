@@ -824,9 +824,23 @@
                         <label class="vn-switch-card">
                             <div class="switch-content">
                                 <span class="switch-title">Hiệu Ứng Âm Thanh (SFX)</span>
-                                <span class="switch-sub">Chèn âm thanh whoosh chuyển cảnh</span>
+                                <span class="switch-sub">Whoosh chuyển cảnh, pop nhãn dán, ding kiến thức</span>
                             </div>
-                            <input type="checkbox" id="chkSoundEffects">
+                            <input type="checkbox" id="chkSoundEffects" checked>
+                            <span class="switch-pill"></span>
+                        </label>
+                        <div class="flex items-center gap-2 mt-1 mb-2" id="sfxVolumeRow" style="padding: 0 4px;">
+                            <span class="text-xs text-muted" style="min-width: 85px;">Âm lượng SFX:</span>
+                            <input type="range" id="sfxVolumeSlider" min="0.1" max="1.0" step="0.05" value="0.5" class="vn-slider flex-1">
+                            <span class="text-xs text-muted" id="sfxVolumeDisplay" style="min-width: 32px; text-align: right;">50%</span>
+                        </div>
+
+                        <label class="vn-switch-card">
+                            <div class="switch-content">
+                                <span class="switch-title">Nhãn Dán & Bảng Thông Tin (Stickers & Fact Badges)</span>
+                                <span class="switch-sub">Tự gắn banner chủ đề, nhãn dán tri thức sâu & nút Đăng ký</span>
+                            </div>
+                            <input type="checkbox" id="chkStickers" checked>
                             <span class="switch-pill"></span>
                         </label>
                     </div>

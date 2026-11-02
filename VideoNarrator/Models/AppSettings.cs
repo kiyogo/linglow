@@ -29,7 +29,7 @@ namespace VideoNarrator.Models
         public string SubtitleStylePreset { get; set; } = "TikTok"; // "Clean", "Documentary", "News", "Educational", "Military", "TikTok"
         public string DurationMode { get; set; } = "⚡ Cắt ghép Highlight (Khớp 100% giọng đọc)";
         public string NarrationTone { get; set; } = "🤖 Tự Động Phân Tích (Theo nội dung video)";
-        public string AiTrainingInstruction { get; set; } = "🔥 Phong cách Video Nhét Chữ: Lối kể chuyện cực kỳ cuốn hút, giữ chân người xem từ giây đầu đến cuối, dùng từ đắt giá tự nhiên không giới hạn, không dùng từ xàm ít người dùng, nội dung kịch tính lôi cuốn.";
+        public string AiTrainingInstruction { get; set; } = "🔥 Phong cách Video Nhét Chữ Triệu View: Lối kể chuyện cực kỳ cuốn hút, giàu kiến thức và thông tin chiều sâu (giải thích nguyên lý, hiện tượng khoa học, thông số chính xác), giữ chân người xem từ giây đầu đến cuối, dùng từ ngữ đắt giá tự nhiên, tuyệt đối không dùng từ xàm xí sáo rỗng, kịch tính và lôi cuốn.";
         
         public bool EnableSceneDetection { get; set; } = true;
         public bool EnableAutoCut { get; set; } = true;
@@ -42,8 +42,11 @@ namespace VideoNarrator.Models
         public string BRollFolderPath { get; set; } = string.Empty;
         public bool EnableMusicDucking { get; set; } = true;
         public string MusicFolderPath { get; set; } = string.Empty;
-        public bool EnableSoundEffects { get; set; } = false;
+        public bool EnableSoundEffects { get; set; } = true;
+        public double SoundEffectsVolume { get; set; } = 0.50;
         public string SfxFolderPath { get; set; } = string.Empty;
+        public bool EnableStickers { get; set; } = true;
+        public string StickerStyle { get; set; } = "🔥 Nổi bật & Bắt mắt (Triệu view)";
 
         public static string GetDefaultOutputDirectory()
         {

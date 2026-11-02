@@ -358,6 +358,9 @@ namespace VideoNarrator.ViewModels
                 enableKeywordHighlight = _viewModel.EnableKeywordHighlight,
                 enableMusicDucking = _viewModel.EnableMusicDucking,
                 enableSoundEffects = _viewModel.EnableSoundEffects,
+                soundEffectsVolume = _viewModel.SoundEffectsVolume,
+                enableStickers = _viewModel.EnableStickers,
+                stickerStyle = _viewModel.StickerStyle,
                 geminiApiKey = _viewModel.GeminiApiKey,
                 ttsApiKey = _viewModel.TtsApiKey,
                 outputDirectory = _viewModel.OutputDirectory,
@@ -630,10 +633,21 @@ namespace VideoNarrator.ViewModels
                     case "soundeffects":
                         _viewModel.EnableSoundEffects = enabled;
                         break;
+                    case "stickers":
+                        _viewModel.EnableStickers = enabled;
+                        break;
                     case "scenedetection":
                         _viewModel.EnableSceneDetection = enabled;
                         break;
                 }
+            });
+        }
+
+        public void SetSoundEffectsVolume(double volume)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                _viewModel.SoundEffectsVolume = Math.Clamp(volume, 0.05, 1.0);
             });
         }
 
