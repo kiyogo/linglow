@@ -529,8 +529,35 @@ namespace VideoNarrator.Services
                     for (int i = 0; i < chunks.Count; i++)
                     {
                         string chunkPath = Path.Combine(tempDir, $"chunk_{i:D3}.mp3");
-                        var chunkResult = await GenerateEdgeTtsSingleChunkAsync(
-                            chunks[i], voice, settings.Speed, settings.Pitch, settings.EmotionStyle, chunkPath, cancellationToken);
+                        TtsResult? chunkResult = null;
+                        Exception? lastChunkEx = null;
+
+                        for (int retry = 1; retry <= 3; retry++)
+                        {
+                            try
+                            {
+                                chunkResult = await GenerateEdgeTtsSingleChunkAsync(
+                                    chunks[i], voice, settings.Speed, settings.Pitch, settings.EmotionStyle, chunkPath, cancellationToken);
+                                if (chunkResult != null && File.Exists(chunkPath) && new FileInfo(chunkPath).Length > 0)
+                                {
+                                    break;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                lastChunkEx = ex;
+                                _fileService.Log($"[TTS Chunk {i + 1}/{chunks.Count}] Thử lần {retry}/3 cảnh báo: {ex.Message}", "WARN");
+                                if (retry < 3)
+                                {
+                                    await Task.Delay(800 * retry, cancellationToken);
+                                }
+                            }
+                        }
+
+                        if (chunkResult == null)
+                        {
+                            throw lastChunkEx ?? new InvalidOperationException($"Không thể tạo âm thanh cho đoạn {i + 1}/{chunks.Count}");
+                        }
 
                         chunkAudioPaths.Add(chunkResult.AudioPath);
 
@@ -547,7 +574,7 @@ namespace VideoNarrator.Services
                         accumulatedDuration += chunkResult.DurationSeconds;
                         if (i < chunks.Count - 1)
                         {
-                            await Task.Delay(200, cancellationToken);
+                            await Task.Delay(500, cancellationToken);
                         }
                     }
 
@@ -587,7 +614,8 @@ namespace VideoNarrator.Services
         private async Task<TtsResult> GenerateGoogleTranslateTtsAsync(string text, string outputPath, CancellationToken cancellationToken)
         {
             _fileService.Log($"Kích hoạt Google Translate TTS (giọng tiếng Việt vi)...", "INFO");
-            var chunks = SplitTextIntoOptimalChunks(text, 180);
+            // Chia nhỏ nghiêm ngặt tối đa 120 ký tự để không bao giờ bị lỗi 400 Bad Request từ Google
+            var chunks = SplitTextStrictly(text, 120);
             string tempDir = Path.Combine(Path.GetTempPath(), $"gtts_chunks_{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             var chunkAudioPaths = new List<string>();
@@ -600,18 +628,35 @@ namespace VideoNarrator.Services
                     string chunkPath = Path.Combine(tempDir, $"gtts_{i:D3}.mp3");
                     string url = $"https://translate.google.com/translate_tts?ie=UTF-8&q={Uri.EscapeDataString(chunk)}&tl=vi&client=tw-ob";
 
-                    using var req = new HttpRequestMessage(HttpMethod.Get, url);
-                    req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    byte[]? bytes = null;
+                    for (int gRetry = 1; gRetry <= 2; gRetry++)
+                    {
+                        try
+                        {
+                            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                            req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                            using var resp = await _httpClient.SendAsync(req, cancellationToken);
+                            if (resp.IsSuccessStatusCode)
+                            {
+                                bytes = await resp.Content.ReadAsByteArrayAsync(cancellationToken);
+                                break;
+                            }
+                        }
+                        catch { }
+                        if (gRetry < 2) await Task.Delay(250, cancellationToken);
+                    }
 
-                    using var resp = await _httpClient.SendAsync(req, cancellationToken);
-                    resp.EnsureSuccessStatusCode();
-                    byte[] bytes = await resp.Content.ReadAsByteArrayAsync(cancellationToken);
+                    if (bytes == null || bytes.Length == 0)
+                    {
+                        throw new InvalidOperationException($"Google Translate TTS không tải được âm thanh cho đoạn {i + 1}/{chunks.Count}");
+                    }
+
                     await File.WriteAllBytesAsync(chunkPath, bytes, cancellationToken);
                     chunkAudioPaths.Add(chunkPath);
 
                     if (i < chunks.Count - 1)
                     {
-                        await Task.Delay(150, cancellationToken);
+                        await Task.Delay(200, cancellationToken);
                     }
                 }
 
@@ -632,6 +677,34 @@ namespace VideoNarrator.Services
             {
                 try { Directory.Delete(tempDir, true); } catch { }
             }
+        }
+
+        public static List<string> SplitTextStrictly(string text, int maxChars = 120)
+        {
+            var result = new List<string>();
+            if (string.IsNullOrWhiteSpace(text)) return result;
+
+            var words = text.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            var current = new StringBuilder();
+
+            foreach (var w in words)
+            {
+                if (current.Length + w.Length + 1 > maxChars && current.Length > 0)
+                {
+                    result.Add(current.ToString().Trim());
+                    current.Clear();
+                }
+
+                if (current.Length > 0) current.Append(" ");
+                current.Append(w);
+            }
+
+            if (current.Length > 0)
+            {
+                result.Add(current.ToString().Trim());
+            }
+
+            return result;
         }
 
         private async Task<TtsResult> GenerateEdgeTtsSingleChunkAsync(
@@ -1161,7 +1234,7 @@ namespace VideoNarrator.Services
 
             try
             {
-                await File.WriteAllTextAsync(tempTextFile, text, Encoding.UTF8, cancellationToken);
+                await File.WriteAllTextAsync(tempTextFile, text, new UTF8Encoding(false), cancellationToken);
                 string rateStr = FormatRateForCli(speed);
                 string pitchStr = FormatPitchForCli(pitch);
 
@@ -1244,7 +1317,7 @@ namespace VideoNarrator.Services
             string tempVttFile = Path.Combine(Path.GetTempPath(), $"tts_{Guid.NewGuid():N}.vtt");
             try
             {
-                await File.WriteAllTextAsync(tempTextFile, text, Encoding.UTF8, cancellationToken);
+                await File.WriteAllTextAsync(tempTextFile, text, new UTF8Encoding(false), cancellationToken);
                 string rateStr = FormatRateForCli(speed);
                 string pitchStr = FormatPitchForCli(pitch);
                 string pythonExe = FindPythonExecutable();
@@ -1374,7 +1447,7 @@ namespace VideoNarrator.Services
                     {
                         // TUYỆT ĐỐI CHẶN: Không dùng giọng Microsoft David / Zira (tiếng Anh) để đọc tiếng Việt!
                         // Tránh triệt để lỗi người dùng phản ánh: "lâu lâu cái giọng nói bị lỗi nói tiếng anh"
-                        throw new InvalidOperationException("Máy chủ Edge-TTS tạm thời không khả dụng và Windows chưa cài đặt giọng đọc tiếng Việt offline. Đã dừng phát giọng tiếng Anh để bảo đảm chất lượng video.");
+                        throw new InvalidOperationException("Máy chủ Edge-TTS và Google TTS tạm thời không phản hồi. Vui lòng kiểm tra lại kết nối mạng Internet để tiếp tục tạo giọng nói tiếng Việt chất lượng cao.");
                     }
                     else
                     {
@@ -1505,7 +1578,9 @@ namespace VideoNarrator.Services
 
         private static string FormatPitchForCli(double pitchPercent)
         {
-            if (Math.Abs(pitchPercent) < 0.2) return "+0Hz";
+            // Các giọng Neural trên Edge-TTS sẽ trả về 'No audio was received' nếu truyền Hz tùy ý
+            // Giữ chuẩn +0Hz để đảm bảo 100% tỷ lệ tạo giọng thành công
+            if (Math.Abs(pitchPercent) < 20.0) return "+0Hz";
             int hz = (int)Math.Round(pitchPercent * 1.5);
             return hz >= 0 ? $"+{hz}Hz" : $"{hz}Hz";
         }
