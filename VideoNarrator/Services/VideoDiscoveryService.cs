@@ -178,7 +178,9 @@ namespace VideoNarrator.Services
                 "thuyết minh", "lồng tiếng", "tóm tắt", "giải thích", "kể chuyện", "podcast",
                 "audiobook", "sách nói", "part ", "tập ", "phần ", "cho bé", "dạy bé",
                 "security cam", "cctv", "dashcam", "surveillance", "alien", "ufo", "ghost",
-                "paranormal", "unexplained", "caught on tape", "camera footage"
+                "paranormal", "unexplained", "caught on tape", "camera footage",
+                "chó mèo", "mèo hài", "chó hài", "thú cưng", "chó", "mèo", "cute cat", "cute dog", "funny pets", "puppy", "kitten", "dog", "cat",
+                "tai nạn", "đánh ghen", "kinh dị", "kinh hoàng", "máu me", "chết người"
             };
             return bad.Any(b => lower.Contains(b));
         }
@@ -211,6 +213,17 @@ namespace VideoNarrator.Services
                 },
                 new()
                 {
+                    Id = "FN-FbrQU8Ik",
+                    Title = "Cắt cát động lực học 7 màu Rainbow Kinetic Sand ASMR",
+                    Url = "https://www.youtube.com/shorts/FN-FbrQU8Ik",
+                    Duration = 34,
+                    Thumbnail = "https://i.ytimg.com/vi/FN-FbrQU8Ik/hqdefault.jpg",
+                    Uploader = "Color Satisfaction",
+                    ViewCount = 8900000,
+                    Platform = "YouTube"
+                },
+                new()
+                {
                     Id = "e4AZWrpJ4ww",
                     Title = "Kỹ thuật tiện cơ khí chính xác lathe machining đỉnh cao",
                     Url = "https://www.youtube.com/shorts/e4AZWrpJ4ww",
@@ -223,7 +236,7 @@ namespace VideoNarrator.Services
                 new()
                 {
                     Id = "Oqm7YrV9Qcc",
-                    Title = "Fun With Physics - Khoa học kỳ thú chuyển động",
+                    Title = "Fun With Physics - Khoa học kỳ thú chuyển động vật lý",
                     Url = "https://www.youtube.com/shorts/Oqm7YrV9Qcc",
                     Duration = 39,
                     Thumbnail = "https://i.ytimg.com/vi/Oqm7YrV9Qcc/hqdefault.jpg",
@@ -307,6 +320,17 @@ namespace VideoNarrator.Services
                     Uploader = "Restoration ASMR",
                     ViewCount = 7500000,
                     Platform = "YouTube"
+                },
+                new()
+                {
+                    Id = "XVMzGOR4lpQ",
+                    Title = "Âm thanh và hình ảnh ASMR thoả mãn kích thích giác quan",
+                    Url = "https://www.youtube.com/shorts/XVMzGOR4lpQ",
+                    Duration = 62,
+                    Thumbnail = "https://i.ytimg.com/vi/XVMzGOR4lpQ/hqdefault.jpg",
+                    Uploader = "Sound Lab",
+                    ViewCount = 4200000,
+                    Platform = "YouTube"
                 }
             };
 
@@ -314,7 +338,7 @@ namespace VideoNarrator.Services
             var matched = allCurated.Where(v =>
             {
                 if (lower.Contains("asmr") || lower.Contains("thoả mãn") || lower.Contains("thoa man") || lower.Contains("xà phòng") || lower.Contains("cát"))
-                    return v.Id is "RUmWVSGkDe0" or "qwc4filNNBI";
+                    return v.Id is "RUmWVSGkDe0" or "qwc4filNNBI" or "FN-FbrQU8Ik" or "XVMzGOR4lpQ";
                 if (lower.Contains("khoa học") || lower.Contains("khoa hoc") || lower.Contains("thí nghiệm") || lower.Contains("thi nghiem") || lower.Contains("vật lý"))
                     return v.Id is "7x2oL3Kzoog" or "Oqm7YrV9Qcc" or "C9XH7R0It8w";
                 if (lower.Contains("cơ khí") || lower.Contains("co khi") || lower.Contains("tiện") || lower.Contains("kim loại") || lower.Contains("chế tác"))
@@ -328,8 +352,16 @@ namespace VideoNarrator.Services
                 return true;
             }).ToList();
 
-            var pool = matched.Count >= count ? matched : allCurated;
-            return pool.Take(Math.Max(1, count)).ToList();
+            var result = new List<DiscoveredVideoItem>(matched);
+            foreach (var item in allCurated)
+            {
+                if (result.Count >= count) break;
+                if (result.All(x => x.Id != item.Id))
+                {
+                    result.Add(item);
+                }
+            }
+            return result.Take(Math.Max(count, 6)).ToList();
         }
 
         public async Task<DiscoveredVideoItem?> FindBestVideoForTopicAsync(

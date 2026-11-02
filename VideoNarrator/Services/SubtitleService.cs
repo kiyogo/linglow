@@ -321,6 +321,11 @@ namespace VideoNarrator.Services
             sb.AppendLine($"Style: HighlightSticker,Segoe UI Black,{factFontSize},&H0033FFFF,&H000000FF,&H000000FF,&HE0000000,-1,0,0,0,100,100,0,0,3,{boxOutline},3,8,30,30,{factMarginV},1");
             // SubscribeSticker: Alignment 2 (bottom center above subtitles), BorderStyle 3
             sb.AppendLine($"Style: SubscribeSticker,Segoe UI Black,{subFontSize},&H0000E6FF,&H000000FF,&H00000000,&HDD050505,-1,0,0,0,100,100,0,0,3,{boxOutline},3,2,30,30,{subscribeMarginV},1");
+
+            // RedCircle: Vector drawing style for viral opening hook (pure vibrant red outline, transparent center)
+            sb.AppendLine($"Style: RedCircle,Arial,40,&H000000FF,&H000000FF,&H000000FF,&H80000000,-1,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1");
+            // RedCirclePointer: Callout pointer badge above the red circle
+            sb.AppendLine($"Style: RedCirclePointer,Segoe UI Black,{Math.Max(20, (int)Math.Round(34 * scaleFactor))},&H000000FF,&H000000FF,&H00FFFFFF,&HD0000000,-1,0,0,0,100,100,0,0,3,{Math.Max(3, (int)Math.Round(5 * scaleFactor))},2,5,10,10,10,1");
             sb.AppendLine();
 
             // Events
@@ -341,11 +346,43 @@ namespace VideoNarrator.Services
                 sb.AppendLine($"Dialogue: 1,0:00:00.00,{endStr},TopicBadge,,0,0,0,,{{\\fade(250,250)}}{badgeText}");
             }
 
-            // 2. Render Animated Stickers & Fact Badges (Layer 2)
+            // 2. Render Animated Stickers, Fact Badges & Red Circle Hook (Layer 2 & 3)
             if (stickers != null && stickers.Count > 0)
             {
                 foreach (var st in stickers)
                 {
+                    if (st == null) continue;
+                    if (st.StickerType == "red_circle")
+                    {
+                        // Vector Red Circle Hook (0-2s)
+                        double startSec = Math.Max(0, st.Start);
+                        double endSec = Math.Max(startSec + 0.8, st.End);
+                        string sStr = FormatAssTime(startSec);
+                        string eStr = FormatAssTime(endSec);
+
+                        int posX = (int)Math.Round((st.FocusX > 0 ? st.FocusX : 0.5) * videoWidth);
+                        int posY = (int)Math.Round((st.FocusY > 0 ? st.FocusY : 0.46) * videoHeight);
+                        int rx = (int)Math.Round((st.RadiusX > 0 ? st.RadiusX : 145) * scaleFactor);
+                        int ry = (int)Math.Round((st.RadiusY > 0 ? st.RadiusY : 125) * scaleFactor);
+                        int kx = (int)Math.Round(0.55228 * rx);
+                        int ky = (int)Math.Round(0.55228 * ry);
+                        int borderThick = Math.Max(8, (int)Math.Round(14 * scaleFactor));
+
+                        // Smooth cubic Bézier ellipse path
+                        string ellipsePath = $"m {-rx} 0 b {-rx} {-ky} {-kx} {-ry} 0 {-ry} b {kx} {-ry} {rx} {-ky} {rx} 0 b {rx} {ky} {kx} {ry} 0 {ry} b {-kx} {ry} {-rx} {ky} {-rx} 0";
+
+                        // Draw Red Circle vector with pop bounce and subtle 5-deg tilt for natural hand-drawn feel
+                        sb.AppendLine($"Dialogue: 3,{sStr},{eStr},RedCircle,,0,0,0,,{{\\pos({posX},{posY})\\an5\\1a&HFF&\\3c&H0000FF&\\bord{borderThick}\\shad3\\4c&H80000000&\\frz-5\\t(0,140,\\fscx112\\fscy112)\\t(140,260,\\fscx100\\fscy100)\\fade(60,150)\\p1}}{ellipsePath}{{\\p0}}");
+
+                        // Red Circle Callout pointer above circle
+                        if (!string.IsNullOrWhiteSpace(st.Text))
+                        {
+                            int calloutY = Math.Max(60, posY - ry - (int)Math.Round(45 * scaleFactor));
+                            sb.AppendLine($"Dialogue: 3,{sStr},{eStr},RedCirclePointer,,0,0,0,,{{\\pos({posX},{calloutY})\\an5\\fade(80,150)}}{st.Text.Trim()}");
+                        }
+                        continue;
+                    }
+
                     if (string.IsNullOrWhiteSpace(st.Text)) continue;
                     string stStyle = st.StickerType switch
                     {
@@ -354,13 +391,13 @@ namespace VideoNarrator.Services
                         "highlight_callout" => "HighlightSticker",
                         _ => "FactSticker"
                     };
-                    double startSec = Math.Max(0, st.Start);
-                    double endSec = Math.Max(startSec + 1.2, st.End);
-                    string sStr = FormatAssTime(startSec);
-                    string eStr = FormatAssTime(endSec);
+                    double sSec = Math.Max(0, st.Start);
+                    double eSec = Math.Max(sSec + 1.2, st.End);
+                    string startAss = FormatAssTime(sSec);
+                    string endAss = FormatAssTime(eSec);
                     string content = !string.IsNullOrWhiteSpace(st.Emoji) ? $"{st.Emoji} {st.Text.Trim()}" : st.Text.Trim();
                     // Entrance POP bounce animation
-                    sb.AppendLine($"Dialogue: 2,{sStr},{eStr},{stStyle},,0,0,0,,{{\\t(0,120,\\fscx112\\fscy112)\\t(120,240,\\fscx100\\fscy100)\\fade(120,150)}}{content}");
+                    sb.AppendLine($"Dialogue: 2,{startAss},{endAss},{stStyle},,0,0,0,,{{\\t(0,120,\\fscx112\\fscy112)\\t(120,240,\\fscx100\\fscy100)\\fade(120,150)}}{content}");
                 }
             }
 
@@ -368,7 +405,7 @@ namespace VideoNarrator.Services
 
             foreach (var seg in segments)
             {
-                if (string.IsNullOrWhiteSpace(seg.Text)) continue;
+                if (seg == null || string.IsNullOrWhiteSpace(seg.Text)) continue;
 
                 // Extract word list with individual timestamps
                 var wordList = new List<(string word, double start, double end)>();

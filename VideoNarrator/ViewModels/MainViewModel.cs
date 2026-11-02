@@ -124,6 +124,7 @@ namespace VideoNarrator.ViewModels
         private double _soundEffectsVolume = 0.50;
         private bool _enableStickers = true;
         private string _stickerStyle = "🔥 Nổi bật & Bắt mắt (Triệu view)";
+        private bool _enableRedCircleHook = true;
         private string _sfxFolderPath = string.Empty;
 
         private EditingPlan? _currentEditingPlan;
@@ -579,6 +580,12 @@ namespace VideoNarrator.ViewModels
         {
             get => _stickerStyle;
             set { if (SetProperty(ref _stickerStyle, value)) SaveSettings(); }
+        }
+
+        public bool EnableRedCircleHook
+        {
+            get => _enableRedCircleHook;
+            set { if (SetProperty(ref _enableRedCircleHook, value)) SaveSettings(); }
         }
 
         public string SfxFolderPath
@@ -1330,6 +1337,7 @@ namespace VideoNarrator.ViewModels
             _soundEffectsVolume = s.SoundEffectsVolume > 0 ? s.SoundEffectsVolume : 0.50;
             _enableStickers = s.EnableStickers;
             _stickerStyle = !string.IsNullOrWhiteSpace(s.StickerStyle) ? s.StickerStyle : "🔥 Nổi bật & Bắt mắt (Triệu view)";
+            _enableRedCircleHook = s.EnableRedCircleHook;
             _sfxFolderPath = s.SfxFolderPath;
         }
 
@@ -1373,6 +1381,7 @@ namespace VideoNarrator.ViewModels
                 SoundEffectsVolume = SoundEffectsVolume,
                 EnableStickers = EnableStickers,
                 StickerStyle = StickerStyle,
+                EnableRedCircleHook = EnableRedCircleHook,
                 SfxFolderPath = SfxFolderPath
             };
             _settingsService.SaveSettings(s);
@@ -1390,6 +1399,27 @@ namespace VideoNarrator.ViewModels
             if (TtsVoices.Count > 0 && !TtsVoices.Contains(SelectedTtsVoice))
             {
                 SelectedTtsVoice = TtsVoices[0];
+            }
+        }
+
+        public void SafeInvokeOnUI(Action action)
+        {
+            if (action == null) return;
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.HasShutdownStarted && !dispatcher.HasShutdownFinished)
+            {
+                if (dispatcher.CheckAccess())
+                {
+                    action();
+                }
+                else
+                {
+                    dispatcher.Invoke(action);
+                }
+            }
+            else
+            {
+                action();
             }
         }
 
@@ -1438,7 +1468,7 @@ namespace VideoNarrator.ViewModels
                             var probe = await _videoProbeService.ProbeVideoAsync(filePath);
                             if (probe != null && probe.Success)
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
+                                SafeInvokeOnUI(() =>
                                 {
                                     if (string.IsNullOrWhiteSpace(CustomTopic) && !string.IsNullOrWhiteSpace(probe.SuggestedTopic))
                                     {
@@ -1695,7 +1725,7 @@ namespace VideoNarrator.ViewModels
         {
             try
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                SafeInvokeOnUI(() =>
                 {
                     _ttsPlayer?.Close();
                     _ttsPlayer = new MediaPlayer();
@@ -1753,13 +1783,13 @@ namespace VideoNarrator.ViewModels
                     GeminiApiUrl,
                     (status, prog) =>
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = status;
                             ProgressPercentage = prog;
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 ScriptText = result.FormattedScriptText;
                 ProgressPercentage = 100;
@@ -1814,8 +1844,8 @@ namespace VideoNarrator.ViewModels
                 {
                     ProgressPercentage = 20;
                     StatusMessage = "Đang nhận diện các phân cảnh...";
-                    scenes = await _sceneDetectionService.DetectScenesAsync(SelectedVideoPath, VideoInfo.DurationSeconds, _cts.Token);
-                    Application.Current.Dispatcher.Invoke(() =>
+                    scenes = await _sceneDetectionService.DetectScenesAsync(SelectedVideoPath, VideoInfo?.DurationSeconds ?? 0, _cts?.Token ?? CancellationToken.None);
+                    SafeInvokeOnUI(() =>
                     {
                         DetectedScenes.Clear();
                         foreach (var sc in scenes) DetectedScenes.Add(sc);
@@ -1825,7 +1855,7 @@ namespace VideoNarrator.ViewModels
                 ProgressPercentage = 40;
                 StatusMessage = "AI đang sáng tạo kịch bản (áp dụng Persona & Mật độ câu từ)...";
 
-                var currentSettings = _settingsService.CurrentSettings;
+                var currentSettings = _settingsService?.CurrentSettings ?? new AppSettings();
                 if ((SelectedResolution.Contains("Original") || SelectedResolution.Contains("Gốc") || SelectedResolution.Contains("gốc")) && VideoInfo != null && VideoInfo.Width > 0 && VideoInfo.Height > 0)
                 {
                     currentSettings.OutputResolution = $"Original ({VideoInfo.Width}x{VideoInfo.Height})";
@@ -1844,7 +1874,7 @@ namespace VideoNarrator.ViewModels
                     GeminiApiKey,
                     SelectedGeminiModel,
                     SelectedVideoPath,
-                    VideoInfo.DurationSeconds,
+                    VideoInfo?.DurationSeconds ?? 30.0,
                     SelectedStylePreset,
                     scenes,
                     currentSettings,
@@ -1852,13 +1882,13 @@ namespace VideoNarrator.ViewModels
                     CustomTopic,
                     (st, p) =>
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = st;
                             ProgressPercentage = p;
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 CurrentEditingPlan = plan;
                 HasEditingPlan = true;
@@ -1867,7 +1897,7 @@ namespace VideoNarrator.ViewModels
 
                 ProgressPercentage = 100;
                 StatusMessage = "Đã tạo kịch bản xong! Bạn có thể chỉnh sửa kịch bản hoặc bấm 'Dựng Video 9:16'.";
-                _fileService.Log($"Tạo kịch bản thành công cho '{VideoInfo.FileName}'.");
+                _fileService.Log($"Tạo kịch bản thành công cho '{VideoInfo?.FileName ?? "Video"}'.");
             }
             catch (OperationCanceledException)
             {
@@ -1936,9 +1966,9 @@ namespace VideoNarrator.ViewModels
 
                 var ttsSettings = BuildCurrentTtsSettings();
 
-                await _ttsService.GenerateSpeechAsync(ScriptText, ttsSettings, rawAudioPath, _cts.Token);
+                await _ttsService.GenerateSpeechAsync(ScriptText, ttsSettings, rawAudioPath, _cts?.Token ?? CancellationToken.None);
 
-                double actualAudioDuration = await _ffmpegService.GetMediaDurationAsync(rawAudioPath, _cts.Token);
+                double actualAudioDuration = await _ffmpegService.GetMediaDurationAsync(rawAudioPath, _cts?.Token ?? CancellationToken.None);
                 if (actualAudioDuration <= 0) actualAudioDuration = 40.0;
 
                 double outroPadding = 1.5;
@@ -2082,13 +2112,13 @@ namespace VideoNarrator.ViewModels
                     null,
                     (msg, pct) =>
                     {
-                        Application.Current?.Dispatcher?.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = msg;
                             ProgressPercentage = pct;
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 if (!downloadResult.Success || string.IsNullOrEmpty(downloadResult.FilePath) || !File.Exists(downloadResult.FilePath))
                 {
@@ -2160,13 +2190,13 @@ namespace VideoNarrator.ViewModels
                     null,
                     (msg, pct) =>
                     {
-                        Application.Current?.Dispatcher?.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = $"⚡ [1-Click] {msg}";
                             ProgressPercentage = Math.Min(35, pct * 0.35);
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 if (!downloadResult.Success || string.IsNullOrEmpty(downloadResult.FilePath) || !File.Exists(downloadResult.FilePath))
                 {
@@ -2252,7 +2282,7 @@ namespace VideoNarrator.ViewModels
             try
             {
                 var list = await _videoDiscoveryService.SearchVideosAsync(targetQuery, 8);
-                Application.Current?.Dispatcher?.Invoke(() =>
+                SafeInvokeOnUI(() =>
                 {
                     DiscoveredVideos.Clear();
                     foreach (var v in list) DiscoveredVideos.Add(v);
@@ -2387,7 +2417,7 @@ namespace VideoNarrator.ViewModels
                     throw new InvalidOperationException("Không tìm thấy video nào phù hợp để dựng hàng loạt.");
                 }
 
-                Application.Current?.Dispatcher?.Invoke(() =>
+                SafeInvokeOnUI(() =>
                 {
                     DiscoveredVideos.Clear();
                     foreach (var v in validShorts) DiscoveredVideos.Add(v);
@@ -2401,7 +2431,7 @@ namespace VideoNarrator.ViewModels
             {
                 SetError($"Lỗi khi tự động tìm và dựng video hàng loạt: {ex.Message}");
                 StatusMessage = "Tự động tạo hàng loạt thất bại.";
-                _fileService.Log($"[Batch Auto Discovery] Lỗi: {ex}", "ERROR");
+                _fileService.Log($"[Batch Auto Discovery] Lỗi: {ex}", "ERROR", ex);
                 return new List<string>();
             }
             finally
@@ -2449,12 +2479,13 @@ namespace VideoNarrator.ViewModels
                 {
                     if (batchCts.IsCancellationRequested) break;
 
+                    int currentIdx = i + 1;
+                    var v = cleanVideos[i];
+                    string displayTitle = !string.IsNullOrWhiteSpace(v.Title) ? v.Title : $"Video {currentIdx}";
+
                     try
                     {
-                        var v = cleanVideos[i];
-                        int currentIdx = i + 1;
-                        string displayTitle = !string.IsNullOrWhiteSpace(v.Title) ? v.Title : $"Video {currentIdx}";
-                        _fileService.Log($"[Batch Auto-Produce] === Bắt đầu video {currentIdx}/{total}: {displayTitle} ({v.Duration}s) ===");
+                        _fileService.Log($"[Batch Auto-Produce] === Bắt đầu video {currentIdx}/{total}: {displayTitle} ({v.Duration:F0}s) ===");
                         StatusMessage = $"🚀 [Tự Động Hàng Loạt ({currentIdx}/{total})] Đang xử lý: {displayTitle}...";
                         ProgressPercentage = ((double)i / total) * 100.0;
 
@@ -2467,7 +2498,7 @@ namespace VideoNarrator.ViewModels
                             null,
                             (msg, pct) =>
                             {
-                                Application.Current?.Dispatcher?.Invoke(() =>
+                                SafeInvokeOnUI(() =>
                                 {
                                     StatusMessage = $"🚀 [{currentIdx}/{total}] {msg}";
                                 });
@@ -2508,7 +2539,7 @@ namespace VideoNarrator.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        _fileService.Log($"[Batch Auto-Produce] Lỗi xử lý video {i + 1}: {ex.Message}", "ERROR", ex);
+                        _fileService.Log($"[Batch Auto-Produce] Lỗi xử lý video {currentIdx}: {ex.Message}", "ERROR", ex);
                     }
                 }
 
@@ -2589,9 +2620,9 @@ namespace VideoNarrator.ViewModels
                 {
                     ProgressPercentage = 15;
                     StatusMessage = "Đang nhận diện các phân đoạn (Scene Detection)...";
-                    scenes = await _sceneDetectionService.DetectScenesAsync(SelectedVideoPath, VideoInfo.DurationSeconds, _cts?.Token ?? CancellationToken.None);
+                    scenes = await _sceneDetectionService.DetectScenesAsync(SelectedVideoPath, VideoInfo?.DurationSeconds ?? 30.0, _cts?.Token ?? CancellationToken.None);
 
-                    Application.Current?.Dispatcher?.Invoke(() =>
+                    SafeInvokeOnUI(() =>
                     {
                         DetectedScenes.Clear();
                         foreach (var sc in scenes) DetectedScenes.Add(sc);
@@ -2602,7 +2633,7 @@ namespace VideoNarrator.ViewModels
                 ProgressPercentage = 30;
                 StatusMessage = "AI đang phân tích nội dung, tạo hook và lên kế hoạch dựng 9:16...";
 
-                var currentSettings = _settingsService.CurrentSettings;
+                var currentSettings = _settingsService?.CurrentSettings ?? new AppSettings();
                 if ((SelectedResolution.Contains("Original") || SelectedResolution.Contains("Gốc") || SelectedResolution.Contains("gốc")) && VideoInfo != null && VideoInfo.Width > 0 && VideoInfo.Height > 0)
                 {
                     currentSettings.OutputResolution = $"Original ({VideoInfo.Width}x{VideoInfo.Height})";
@@ -2623,7 +2654,7 @@ namespace VideoNarrator.ViewModels
                     GeminiApiKey,
                     SelectedGeminiModel,
                     SelectedVideoPath,
-                    VideoInfo.DurationSeconds,
+                    VideoInfo?.DurationSeconds ?? 30.0,
                     SelectedStylePreset,
                     scenes,
                     currentSettings,
@@ -2631,13 +2662,13 @@ namespace VideoNarrator.ViewModels
                     CustomTopic,
                     (st, p) =>
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = st;
                             ProgressPercentage = p;
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 CurrentEditingPlan = plan;
                 HasEditingPlan = true;
@@ -2650,7 +2681,7 @@ namespace VideoNarrator.ViewModels
                 }
 
                 // Cập nhật Subtitle list
-                Application.Current?.Dispatcher?.Invoke(() =>
+                SafeInvokeOnUI(() =>
                 {
                     SubtitleList.Clear();
                     if (plan.Subtitles != null)
@@ -2666,20 +2697,21 @@ namespace VideoNarrator.ViewModels
                 string rawAudioPath = Path.Combine(tempDir, "auto_narration.mp3");
                 var ttsSettings = BuildCurrentTtsSettings();
 
-                var ttsResult = await _ttsService.GenerateSpeechWithTimestampsAsync(ScriptText, ttsSettings, rawAudioPath, _cts.Token);
+                var ttsResult = await _ttsService.GenerateSpeechWithTimestampsAsync(ScriptText, ttsSettings, rawAudioPath, _cts?.Token ?? CancellationToken.None);
 
-                double actualAudioDuration = await _ffmpegService.GetMediaDurationAsync(rawAudioPath, _cts.Token);
+                double actualAudioDuration = await _ffmpegService.GetMediaDurationAsync(rawAudioPath, _cts?.Token ?? CancellationToken.None);
                 if (actualAudioDuration <= 0) actualAudioDuration = (ttsResult.DurationSeconds > 0) ? ttsResult.DurationSeconds : 40.0;
                 ttsResult.DurationSeconds = actualAudioDuration;
 
                 double outroPadding = 1.5; // Đệm 1.5 giây sau khi dứt giọng nói để câu cuối không bao giờ bị cắt cụt
                 double speechAndOutro = actualAudioDuration + outroPadding;
+                double sourceDuration = VideoInfo?.DurationSeconds ?? speechAndOutro;
                 double targetShortDuration;
 
                 if (SelectedDurationMode.Contains("Highlight") || SelectedDurationMode.Contains("Cắt ghép"))
                 {
                     // Cắt ghép highlight ăn khớp 100% từng câu thuyết minh với phân cảnh hành động
-                    var aligned = EditingPlanService.AlignScenesToSpeech(plan, ttsResult, VideoInfo.DurationSeconds, scenes, outroPadding);
+                    var aligned = EditingPlanService.AlignScenesToSpeech(plan, ttsResult, sourceDuration, scenes, outroPadding);
                     plan.Scenes = aligned ?? new List<VideoScene>();
                     targetShortDuration = plan.Scenes.Count > 0 
                         ? Math.Max(plan.Scenes.Sum(s => Math.Max(0, s.End - s.Start)), speechAndOutro)
@@ -2695,7 +2727,7 @@ namespace VideoNarrator.ViewModels
                         {
                             Id = "scene_full_01",
                             Start = 0.0,
-                            End = VideoInfo.DurationSeconds,
+                            End = sourceDuration,
                             Description = "Toàn bộ video gốc",
                             Importance = "High",
                             ImportanceScore = 1.0,
@@ -2703,7 +2735,7 @@ namespace VideoNarrator.ViewModels
                             FocusY = plan.FocusY
                         }
                     };
-                    targetShortDuration = Math.Max(VideoInfo.DurationSeconds, speechAndOutro);
+                    targetShortDuration = Math.Max(sourceDuration, speechAndOutro);
                     _fileService.Log($"Giữ toàn bộ video gốc: {targetShortDuration:F1}s (Giọng đọc: {actualAudioDuration:F1}s).");
                 }
                 else
@@ -2713,7 +2745,7 @@ namespace VideoNarrator.ViewModels
                     // 1. Nếu giọng đọc đã phủ kín sát cuối video (chênh lệch <= 2.5s): Giữ trọn vẹn toàn bộ video gốc!
                     // 2. Nếu giọng đọc dừng sớm hơn video gốc > 2.5s (ví dụ: video 46s nhưng bài thuyết minh kết thúc ở 33s):
                     //    -> Tự động kết thúc video tại điểm dứt lời thoại (speechAndOutro), không để lại 10-15s chết lặng!
-                    double gap = VideoInfo.DurationSeconds - speechAndOutro;
+                    double gap = sourceDuration - speechAndOutro;
                     if (gap <= 2.5)
                     {
                         plan.Scenes = new List<VideoScene>
@@ -2722,7 +2754,7 @@ namespace VideoNarrator.ViewModels
                             {
                                 Id = "scene_full_01",
                                 Start = 0.0,
-                                End = VideoInfo.DurationSeconds,
+                                End = sourceDuration,
                                 Description = "Toàn bộ video gốc",
                                 Importance = "High",
                                 ImportanceScore = 1.0,
@@ -2730,12 +2762,12 @@ namespace VideoNarrator.ViewModels
                                 FocusY = plan.FocusY
                             }
                         };
-                        targetShortDuration = Math.Max(VideoInfo.DurationSeconds, speechAndOutro);
-                        _fileService.Log($"[Smart Auto] Giọng đọc phủ kín ({actualAudioDuration:F1}s/{VideoInfo.DurationSeconds:F1}s, chênh lệch {gap:F1}s). Giữ trọn vẹn toàn bộ video gốc.");
+                        targetShortDuration = Math.Max(sourceDuration, speechAndOutro);
+                        _fileService.Log($"[Smart Auto] Giọng đọc phủ kín ({actualAudioDuration:F1}s/{sourceDuration:F1}s, chênh lệch {gap:F1}s). Giữ trọn vẹn toàn bộ video gốc.");
                     }
                     else
                     {
-                        double trimmedEnd = Math.Min(VideoInfo.DurationSeconds, speechAndOutro);
+                        double trimmedEnd = Math.Min(sourceDuration, speechAndOutro);
                         plan.Scenes = new List<VideoScene>
                         {
                             new()
@@ -2757,7 +2789,7 @@ namespace VideoNarrator.ViewModels
 
                 // Đồng bộ thời lượng audio
                 string syncedAudioPath = Path.Combine(tempDir, "auto_synced.mp3");
-                await _ffmpegService.AdjustAudioDurationAsync(rawAudioPath, syncedAudioPath, targetShortDuration, _cts.Token);
+                await _ffmpegService.AdjustAudioDurationAsync(rawAudioPath, syncedAudioPath, targetShortDuration, _cts?.Token ?? CancellationToken.None);
                 string audioToMix = File.Exists(syncedAudioPath) ? syncedAudioPath : rawAudioPath;
 
                 // BƯỚC 4: Tạo Subtitle ASS đồng bộ 100% khớp với âm thanh
@@ -2776,7 +2808,7 @@ namespace VideoNarrator.ViewModels
 
                 // Ghi đè vào plan và cập nhật giao diện để phụ đề khớp 100% với giọng nói
                 plan.Subtitles = subSegments;
-                Application.Current.Dispatcher.Invoke(() =>
+                SafeInvokeOnUI(() =>
                 {
                     SubtitleList.Clear();
                     foreach (var sub in subSegments) SubtitleList.Add(sub);
@@ -2784,7 +2816,7 @@ namespace VideoNarrator.ViewModels
 
                 // Tự động sinh/cân chỉnh nhãn dán thông tin, sự thật kỳ thú và hiệu ứng âm thanh
                 bool isEng = SelectedTtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true;
-                EditingPlanService.GenerateStickersAndBadges(plan, CustomTopic, targetShortDuration, isEng, new AppSettings { EnableStickers = EnableStickers });
+                EditingPlanService.GenerateStickersAndBadges(plan, CustomTopic, targetShortDuration, isEng, new AppSettings { EnableStickers = EnableStickers, EnableRedCircleHook = EnableRedCircleHook });
                 if (EnableSoundEffects)
                 {
                     EditingPlanService.PopulateSoundEffects(plan, new AppSettings { EnableSoundEffects = EnableSoundEffects, SoundEffectsVolume = SoundEffectsVolume }, targetShortDuration);
@@ -2817,7 +2849,7 @@ namespace VideoNarrator.ViewModels
                     plan.DuckingVolume,
                     targetShortDuration,
                     mixedAudioPath,
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 _cachedMixedAudioPath = mixedAudioPath;
 
@@ -2832,7 +2864,7 @@ namespace VideoNarrator.ViewModels
                     assPath,
                     plan,
                     proxyOutPath,
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 ProgressPercentage = 100;
                 StatusMessage = "Đã dựng xong bản xem trước HD sắc nét! Bạn có thể xem ngay và bấm 'Render Video 9:16' để xuất bản.";
@@ -2900,9 +2932,9 @@ namespace VideoNarrator.ViewModels
 
                 ProgressPercentage = 15;
                 StatusMessage = "Đang tổng hợp giọng đọc từ kịch bản hoàn chỉnh...";
-                var ttsResult = await _ttsService.GenerateSpeechWithTimestampsAsync(ScriptText, ttsSettings, rawAudioPath, _cts.Token);
+                var ttsResult = await _ttsService.GenerateSpeechWithTimestampsAsync(ScriptText, ttsSettings, rawAudioPath, _cts?.Token ?? CancellationToken.None);
 
-                double actualAudioDuration = await _ffmpegService.GetMediaDurationAsync(rawAudioPath, _cts.Token);
+                double actualAudioDuration = await _ffmpegService.GetMediaDurationAsync(rawAudioPath, _cts?.Token ?? CancellationToken.None);
                 if (actualAudioDuration <= 0) actualAudioDuration = (ttsResult.DurationSeconds > 0) ? ttsResult.DurationSeconds : 40.0;
                 ttsResult.DurationSeconds = actualAudioDuration;
 
@@ -2912,8 +2944,10 @@ namespace VideoNarrator.ViewModels
 
                 if (SelectedDurationMode.Contains("Highlight") || SelectedDurationMode.Contains("Cắt ghép"))
                 {
-                    CurrentEditingPlan.Scenes = EditingPlanService.AlignScenesToSpeech(CurrentEditingPlan, ttsResult, VideoInfo.DurationSeconds, DetectedScenes.ToList(), outroPadding);
-                    targetShortDuration = Math.Max(CurrentEditingPlan.Scenes.Sum(s => Math.Max(0, s.End - s.Start)), speechAndOutro);
+                    CurrentEditingPlan.Scenes = EditingPlanService.AlignScenesToSpeech(CurrentEditingPlan, ttsResult, VideoInfo?.DurationSeconds ?? 30.0, DetectedScenes.ToList(), outroPadding) ?? new List<VideoScene>();
+                    targetShortDuration = CurrentEditingPlan.Scenes.Count > 0
+                        ? Math.Max(CurrentEditingPlan.Scenes.Sum(s => Math.Max(0, s.End - s.Start)), speechAndOutro)
+                        : speechAndOutro;
                     _fileService.Log($"Đồng bộ {CurrentEditingPlan.Scenes.Count} cảnh Highlight khớp từng câu giọng đọc ({actualAudioDuration:F1}s + {outroPadding:F1}s outro = {targetShortDuration:F1}s).");
                 }
                 else if (SelectedDurationMode.Contains("Toàn bộ") || SelectedDurationMode.Contains("Không cắt"))
@@ -2924,7 +2958,7 @@ namespace VideoNarrator.ViewModels
                         {
                             Id = "scene_full_01",
                             Start = 0.0,
-                            End = VideoInfo.DurationSeconds,
+                            End = VideoInfo?.DurationSeconds ?? speechAndOutro,
                             Description = "Toàn bộ video gốc",
                             Importance = "High",
                             ImportanceScore = 1.0,
@@ -2932,13 +2966,14 @@ namespace VideoNarrator.ViewModels
                             FocusY = CurrentEditingPlan.FocusY
                         }
                     };
-                    targetShortDuration = Math.Max(VideoInfo.DurationSeconds, speechAndOutro);
+                    targetShortDuration = Math.Max(VideoInfo?.DurationSeconds ?? speechAndOutro, speechAndOutro);
                     _fileService.Log($"Giữ toàn bộ video gốc: {targetShortDuration:F1}s (Giọng đọc: {actualAudioDuration:F1}s).");
                 }
                 else
                 {
                     // Tự Động Thông Minh: nếu giọng đọc dừng sớm > 2.5s, kết thúc video tại speechAndOutro
-                    double gap = VideoInfo.DurationSeconds - speechAndOutro;
+                    double videoDur = VideoInfo?.DurationSeconds ?? speechAndOutro;
+                    double gap = videoDur - speechAndOutro;
                     if (gap <= 2.5)
                     {
                         CurrentEditingPlan.Scenes = new List<VideoScene>
@@ -2947,7 +2982,7 @@ namespace VideoNarrator.ViewModels
                             {
                                 Id = "scene_full_01",
                                 Start = 0.0,
-                                End = VideoInfo.DurationSeconds,
+                                End = videoDur,
                                 Description = "Toàn bộ video gốc",
                                 Importance = "High",
                                 ImportanceScore = 1.0,
@@ -2955,12 +2990,12 @@ namespace VideoNarrator.ViewModels
                                 FocusY = CurrentEditingPlan.FocusY
                             }
                         };
-                        targetShortDuration = Math.Max(VideoInfo.DurationSeconds, speechAndOutro);
-                        _fileService.Log($"[Smart Auto] Giọng đọc phủ kín ({actualAudioDuration:F1}s/{VideoInfo.DurationSeconds:F1}s, chênh lệch {gap:F1}s). Giữ trọn vẹn video.");
+                        targetShortDuration = Math.Max(videoDur, speechAndOutro);
+                        _fileService.Log($"[Smart Auto] Giọng đọc phủ kín ({actualAudioDuration:F1}s/{videoDur:F1}s, chênh lệch {gap:F1}s). Giữ trọn vẹn video.");
                     }
                     else
                     {
-                        double trimmedEnd = Math.Min(VideoInfo.DurationSeconds, speechAndOutro);
+                        double trimmedEnd = Math.Min(videoDur, speechAndOutro);
                         CurrentEditingPlan.Scenes = new List<VideoScene>
                         {
                             new()
@@ -2980,7 +3015,7 @@ namespace VideoNarrator.ViewModels
                     }
                 }
 
-                await _ffmpegService.AdjustAudioDurationAsync(rawAudioPath, syncedAudioPath, targetShortDuration, _cts.Token);
+                await _ffmpegService.AdjustAudioDurationAsync(rawAudioPath, syncedAudioPath, targetShortDuration, _cts?.Token ?? CancellationToken.None);
                 string audioToMix = File.Exists(syncedAudioPath) ? syncedAudioPath : rawAudioPath;
 
                 // Subtitles
@@ -2998,7 +3033,7 @@ namespace VideoNarrator.ViewModels
                 }
 
                 CurrentEditingPlan.Subtitles = subSegments;
-                Application.Current.Dispatcher.Invoke(() =>
+                SafeInvokeOnUI(() =>
                 {
                     SubtitleList.Clear();
                     foreach (var sub in subSegments) SubtitleList.Add(sub);
@@ -3006,7 +3041,7 @@ namespace VideoNarrator.ViewModels
 
                 // Tự động sinh/cân chỉnh nhãn dán thông tin, sự thật kỳ thú và hiệu ứng âm thanh
                 bool isFinalEnglish = SelectedTtsVoice?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true;
-                EditingPlanService.GenerateStickersAndBadges(CurrentEditingPlan, CustomTopic, targetShortDuration, isFinalEnglish, new AppSettings { EnableStickers = EnableStickers });
+                EditingPlanService.GenerateStickersAndBadges(CurrentEditingPlan, CustomTopic, targetShortDuration, isFinalEnglish, new AppSettings { EnableStickers = EnableStickers, EnableRedCircleHook = EnableRedCircleHook });
                 if (EnableSoundEffects)
                 {
                     EditingPlanService.PopulateSoundEffects(CurrentEditingPlan, new AppSettings { EnableSoundEffects = EnableSoundEffects, SoundEffectsVolume = SoundEffectsVolume }, targetShortDuration);
@@ -3036,7 +3071,7 @@ namespace VideoNarrator.ViewModels
                     CurrentEditingPlan.DuckingVolume,
                     targetShortDuration,
                     mixedAudioPath,
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 // Final Compose
                 ProgressPercentage = 60;
@@ -3051,15 +3086,15 @@ namespace VideoNarrator.ViewModels
                     preset: "medium",
                     (st, p) =>
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = st;
                             ProgressPercentage = 60 + (p * 0.35);
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
-                double finalDur = await _ffmpegService.GetMediaDurationAsync(finalOutputPath, _cts.Token);
+                double finalDur = await _ffmpegService.GetMediaDurationAsync(finalOutputPath, _cts?.Token ?? CancellationToken.None);
                 FinalVideoPath = finalOutputPath;
                 HasFinalVideo = true;
                 FinalVideoDuration = TimeSpan.FromSeconds(finalDur).ToString(@"hh\:mm\:ss\.ff");
@@ -3478,13 +3513,13 @@ namespace VideoNarrator.ViewModels
                     settings,
                     (msg, p) =>
                     {
-                        App.Current.Dispatcher.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = msg;
                             ProgressPercentage = p;
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 CurrentProject = proj;
                 HookText = proj.Hook;
@@ -3540,13 +3575,13 @@ namespace VideoNarrator.ViewModels
                     isDraftPreview: false,
                     (msg, p) =>
                     {
-                        App.Current.Dispatcher.Invoke(() =>
+                        SafeInvokeOnUI(() =>
                         {
                             StatusMessage = msg;
                             ProgressPercentage = p;
                         });
                     },
-                    _cts.Token);
+                    _cts?.Token ?? CancellationToken.None);
 
                 CurrentProject.FinalVideoPath = finalPath;
                 FinalVideoPath = finalPath;

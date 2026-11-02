@@ -17,6 +17,8 @@ BLACKLIST_KEYWORDS = [
     # Grainy CCTV / Security Cameras / Dashcams / Paranormal (Loại bỏ triệt để video đen trắng, camera giám sát mờ)
     'security cam', 'cctv', 'dashcam', 'surveillance', 'alien', 'ufo', 'ghost', 'paranormal',
     'unexplained', 'caught on tape', 'camera footage',
+    # Pets & Dogs & Cats (Tuyệt đối không lấy video chó mèo thú cưng trừ khi yêu cầu)
+    'dog', 'cat', 'puppy', 'kitten', 'chó', 'mèo', 'thú cưng', 'pets', 'pet', 'cún',
     # Series, Movies, Music, Gaming
     'tập ', 'phần ', 'part ', 'episode', 'ep ', 'mv', 'official video', 'karaoke', 'remix',
     'full hd', 'trailer', 'teaser', 'gameplay', 'walkthrough',
@@ -166,6 +168,26 @@ CURATED_VIRAL_POOL = [
         "thumbnail": "https://i.ytimg.com/vi/U3a1-omUuWY/hqdefault.jpg",
         "uploader": "Restoration ASMR",
         "viewCount": 7500000,
+        "platform": "YouTube"
+    },
+    {
+        "id": "FN-FbrQU8Ik",
+        "title": "Cắt cát động lực học 7 màu Rainbow Kinetic Sand ASMR",
+        "url": "https://www.youtube.com/shorts/FN-FbrQU8Ik",
+        "duration": 34,
+        "thumbnail": "https://i.ytimg.com/vi/FN-FbrQU8Ik/hqdefault.jpg",
+        "uploader": "Color Satisfaction",
+        "viewCount": 8900000,
+        "platform": "YouTube"
+    },
+    {
+        "id": "XVMzGOR4lpQ",
+        "title": "Âm thanh và hình ảnh ASMR thoả mãn kích thích giác quan",
+        "url": "https://www.youtube.com/shorts/XVMzGOR4lpQ",
+        "duration": 62,
+        "thumbnail": "https://i.ytimg.com/vi/XVMzGOR4lpQ/hqdefault.jpg",
+        "uploader": "Sound Lab",
+        "viewCount": 4200000,
         "platform": "YouTube"
     }
 ]

@@ -361,6 +361,7 @@ namespace VideoNarrator.ViewModels
                 soundEffectsVolume = _viewModel.SoundEffectsVolume,
                 enableStickers = _viewModel.EnableStickers,
                 stickerStyle = _viewModel.StickerStyle,
+                enableRedCircleHook = _viewModel.EnableRedCircleHook,
                 geminiApiKey = _viewModel.GeminiApiKey,
                 ttsApiKey = _viewModel.TtsApiKey,
                 outputDirectory = _viewModel.OutputDirectory,
@@ -635,6 +636,9 @@ namespace VideoNarrator.ViewModels
                         break;
                     case "stickers":
                         _viewModel.EnableStickers = enabled;
+                        break;
+                    case "redcircle":
+                        _viewModel.EnableRedCircleHook = enabled;
                         break;
                     case "scenedetection":
                         _viewModel.EnableSceneDetection = enabled;

@@ -47,6 +47,7 @@ namespace VideoNarrator.Models
         public string SfxFolderPath { get; set; } = string.Empty;
         public bool EnableStickers { get; set; } = true;
         public string StickerStyle { get; set; } = "🔥 Nổi bật & Bắt mắt (Triệu view)";
+        public bool EnableRedCircleHook { get; set; } = true;
 
         public static string GetDefaultOutputDirectory()
         {

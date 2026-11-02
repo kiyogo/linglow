@@ -703,6 +703,9 @@ async function initBridgeConnection() {
             if (settings.enableStickers !== undefined && document.getElementById('chkStickers')) {
                 document.getElementById('chkStickers').checked = settings.enableStickers;
             }
+            if (settings.enableRedCircleHook !== undefined && document.getElementById('chkRedCircle')) {
+                document.getElementById('chkRedCircle').checked = settings.enableRedCircleHook;
+            }
 
             if (settings.hasFinalVideo && settings.finalVideoUrl) {
                 handleFinalVideoReady({ mediaUrl: settings.finalVideoUrl });
@@ -842,6 +845,10 @@ function initEventListeners() {
     document.getElementById('chkStickers')?.addEventListener('change', (e) => {
         safeBridge.setToggle('stickers', e.target.checked);
         showToast(e.target.checked ? "✨ Đã bật Nhãn dán & Bảng thông tin" : "Đã tắt Nhãn dán & Bảng thông tin");
+    });
+    document.getElementById('chkRedCircle')?.addEventListener('change', (e) => {
+        safeBridge.setToggle('redcircle', e.target.checked);
+        showToast(e.target.checked ? "⭕ Đã bật Khoanh tròn đỏ tiêu điểm" : "Đã tắt Khoanh tròn đỏ");
     });
 
     // STEP 1: 1-Click Social Video Download & Auto Produce
@@ -1277,7 +1284,8 @@ function triggerVideoCreation() {
         keywordHighlight: document.getElementById('chkKeywordHighlight').checked,
         musicDucking: document.getElementById('chkMusicDucking').checked,
         soundEffects: document.getElementById('chkSoundEffects')?.checked ?? true,
-        stickers: document.getElementById('chkStickers')?.checked ?? true
+        stickers: document.getElementById('chkStickers')?.checked ?? true,
+        redCircle: document.getElementById('chkRedCircle')?.checked ?? true
     };
 
     setProcessing(true, true);

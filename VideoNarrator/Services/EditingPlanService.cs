@@ -154,6 +154,7 @@ namespace VideoNarrator.Services
                 {
                     _fileService.Log($"Chưa cấu hình Gemini API Key: Tiến hành dựng video dựa trên kịch bản người dùng đã nhập...", "INFO");
                     progressCallback?.Invoke($"Đang lập kế hoạch dựng 9:16 theo kịch bản của bạn...", 40);
+                    settings ??= new AppSettings();
                     var offlinePlan = GenerateSmartOfflineEditingPlan(videoDurationSeconds, stylePreset, detectedScenes, settings, topic, customScript);
                     ParseResolution(settings.OutputResolution, offlinePlan);
                     offlinePlan.StylePreset = stylePreset;
@@ -164,6 +165,8 @@ namespace VideoNarrator.Services
 
                 throw new InvalidOperationException("Chưa cấu hình Gemini API Key. Vui lòng mở Cài Đặt (biểu tượng bánh răng) và nhập Gemini API Key để AI phân tích video.");
             }
+
+            settings ??= new AppSettings();
 
             VideoProbeResult? probeResult = null;
             if (_videoProbeService != null && File.Exists(videoFilePath))
@@ -274,7 +277,7 @@ namespace VideoNarrator.Services
                 }
             }
 
-            string prompt = BuildEditingPrompt(videoDurationSeconds, stylePreset, detectedScenes, settings, topic, customScript, probeResult);
+            string prompt = BuildEditingPrompt(videoDurationSeconds, stylePreset, detectedScenes, settings ?? new AppSettings(), topic, customScript, probeResult);
 
             // Setup candidate models list
             var candidateModels = new List<string>();
@@ -910,13 +913,17 @@ namespace VideoNarrator.Services
             double outroPadding = 1.5)
         {
             if (sourceVideoDuration <= 0) sourceVideoDuration = 60.0;
+            if (plan == null) return SelectHighlightScenes(sourceVideoDuration, Math.Min(sourceVideoDuration, 30.0), detectedScenes);
+            double ttsDur = ttsResult?.DurationSeconds ?? 25.0;
             var result = new List<VideoScene>();
 
             // 1. Phân tách kịch bản thành các câu hoặc phân đoạn riêng biệt
-            string cleanScript = TtsService.StripTimestampsAndFormatText(plan.NarrationScript);
+            string cleanScript = !string.IsNullOrWhiteSpace(plan.NarrationScript)
+                ? TtsService.StripTimestampsAndFormatText(plan.NarrationScript)
+                : string.Empty;
             if (string.IsNullOrWhiteSpace(cleanScript))
             {
-                return SelectHighlightScenes(sourceVideoDuration, ttsResult.DurationSeconds + outroPadding, detectedScenes);
+                return SelectHighlightScenes(sourceVideoDuration, ttsDur + outroPadding, detectedScenes);
             }
 
             var rawSentences = Regex.Split(cleanScript, @"(?<=[.!?\n])\s+")
@@ -964,7 +971,7 @@ namespace VideoNarrator.Services
             // 2. Tính thời lượng âm thanh tương ứng cho từng câu nói
             var sentenceTimings = new List<(double start, double end, double dur)>();
 
-            if (ttsResult.WordTimestamps != null && ttsResult.WordTimestamps.Count > 0)
+            if (ttsResult?.WordTimestamps != null && ttsResult.WordTimestamps.Count > 0)
             {
                 var words = ttsResult.WordTimestamps;
                 int totalScriptWords = 0;
@@ -1030,7 +1037,7 @@ namespace VideoNarrator.Services
 
             if (candidateScenes == null || candidateScenes.Count <= 1)
             {
-                candidateScenes = SelectHighlightScenes(sourceVideoDuration, Math.Min(42.0, sourceVideoDuration), detectedScenes, plan?.Hook)
+                candidateScenes = SelectHighlightScenes(sourceVideoDuration, Math.Min(42.0, sourceVideoDuration), detectedScenes, plan?.Hook ?? "Khám phá video")
                     .Where(s => s != null).ToList();
             }
 
@@ -1309,6 +1316,7 @@ namespace VideoNarrator.Services
             string? customScript,
             VideoProbeResult? probeResult = null)
         {
+            settings ??= new AppSettings();
             string durStr = durationSeconds.ToString("0.0", CultureInfo.InvariantCulture);
             bool isKeepOriginalUncut = IsKeepOriginalUncutMode(settings.DurationMode, durationSeconds);
             bool isHighlightMode = !isKeepOriginalUncut;
@@ -1530,7 +1538,7 @@ namespace VideoNarrator.Services
             sb.AppendLine("   - Xen kẽ câu ngắn dồn dập và câu miêu tả cảm xúc mượt mà.");
             sb.AppendLine("   - Dùng dấu chấm (.) và dấu phẩy (,) chuẩn xác để giọng AI TTS ngắt nhịp thở tự nhiên, đọc tròn vành rõ chữ, có ngữ điệu nhấn nhá truyền cảm.");
             sb.AppendLine("   - Mỗi câu phải hoàn chỉnh (có đủ chủ ngữ - vị ngữ), tránh câu cụt vô nghĩa.");
-            if (!string.IsNullOrWhiteSpace(settings.AiTrainingInstruction))
+            if (settings != null && !string.IsNullOrWhiteSpace(settings.AiTrainingInstruction))
             {
                 sb.AppendLine();
                 sb.AppendLine("5. CHỈ THỊ HUẤN LUYỆN RIÊNG TỪ NGƯỜI DÙNG:");
@@ -1663,6 +1671,7 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
             string? customScript = null)
         {
             if (durationSeconds <= 0) durationSeconds = 60;
+            settings ??= new AppSettings();
             bool isKeepOriginalUncut = IsKeepOriginalUncutMode(settings.DurationMode, durationSeconds);
             bool isHighlightMode = !isKeepOriginalUncut;
 
@@ -1868,10 +1877,48 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
                 }
             }
 
-            // 2. DYNAMIC FACT & HIGHLIGHT STICKERS
+            // 2. DYNAMIC FACT & HIGHLIGHT STICKERS + RED CIRCLE HOOK
             if (plan.Stickers == null) plan.Stickers = new List<StickerOverlayEvent>();
-            if (plan.Stickers.Count == 0 && totalDuration >= 10.0)
+            if (plan.Stickers.Count == 0 && totalDuration >= 6.0)
             {
+                // 2.0. RED CIRCLE HOOK (0.15s - 2.20s around opening focal object)
+                if (settings == null || settings.EnableRedCircleHook)
+                {
+                    double fX = 0.5;
+                    double fY = 0.46;
+                    if (plan.Scenes != null && plan.Scenes.Count > 0 && plan.Scenes[0] != null)
+                    {
+                        if (plan.Scenes[0].FocusX > 0.05 && plan.Scenes[0].FocusX < 0.95)
+                            fX = plan.Scenes[0].FocusX;
+                        if (plan.Scenes[0].FocusY > 0.05 && plan.Scenes[0].FocusY < 0.95)
+                            fY = plan.Scenes[0].FocusY;
+                    }
+                    else if (plan.FocusX > 0.05 && plan.FocusX < 0.95)
+                    {
+                        fX = plan.FocusX;
+                        if (plan.FocusY > 0.05 && plan.FocusY < 0.95) fY = plan.FocusY;
+                    }
+
+                    // Clamped to comfortable view area (above subtitles and below headline banner)
+                    fX = Math.Clamp(fX, 0.25, 0.75);
+                    fY = Math.Clamp(fY, 0.32, 0.62);
+
+                    string redCallout = isEnglish ? "👇 LOOK CLOSELY!" : "👇 CHÚ Ý ĐÂY!";
+                    plan.Stickers.Add(new StickerOverlayEvent
+                    {
+                        Start = 0.15,
+                        End = 2.20,
+                        Text = redCallout,
+                        Emoji = "⭕",
+                        StickerType = "red_circle",
+                        Position = "custom",
+                        FocusX = fX,
+                        FocusY = fY,
+                        RadiusX = 145,
+                        RadiusY = 125
+                    });
+                }
+
                 string script = plan.NarrationScript ?? string.Empty;
 
                 // Sticker 1: Mid-early fact (25% - 35% of total duration)
@@ -1971,6 +2018,20 @@ QUY TẮC: CHỈ trả về DUY NHẤT một JSON hợp lệ theo cấu trúc sa
                 SfxType = "impact",
                 FilePath = AudioMixService.ResolveSfxFilePath("impact") ?? string.Empty
             });
+
+            // 1.1. Red Circle Snap SFX (0.15s)
+            if (plan.Stickers != null && plan.Stickers.Any(s => s.StickerType == "red_circle"))
+            {
+                sfxList.Add(new SoundEffectEvent
+                {
+                    Start = 0.15,
+                    Duration = 0.25,
+                    Volume = Math.Clamp((settings.SoundEffectsVolume > 0 ? settings.SoundEffectsVolume : 0.5) * 1.0, 0.2, 0.95),
+                    Reason = "Âm thanh khoanh tròn đỏ tiêu điểm (Focus Snap)",
+                    SfxType = "camera_click",
+                    FilePath = AudioMixService.ResolveSfxFilePath("camera_click") ?? string.Empty
+                });
+            }
 
             // 2. Scene Transition SFX
             if (plan.Scenes != null)
